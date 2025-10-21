@@ -1,0 +1,599 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   GLOBAL DESIGN SYSTEM
+   ============================================================================ */
+
+/* Page Background */
+body, main, .page-container {
+  background-color: #F9FAFB !important;
+}
+
+/* Global Button Styles */
+.btn-primary {
+  background: #14B8A6;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  height: 36px;
+  border: none;
+  cursor: pointer;
+  transition: background 200ms;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  background: #0D9488;
+}
+
+.btn-secondary {
+  background: white;
+  color: #374151;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  height: 36px;
+  border: 1px solid #D1D5DB;
+  cursor: pointer;
+  transition: all 200ms;
+}
+
+.btn-secondary:hover {
+  background: #F9FAFB;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 200ms;
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+  color: #6B7280;
+}
+
+.btn-icon:hover {
+  border-color: #14B8A6;
+  background: #F9FAFB;
+}
+
+.btn-icon:hover svg {
+  color: #14B8A6;
+}
+
+/* Global Input Styles */
+input[type="text"], input[type="email"], input[type="password"], 
+select, textarea {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111827;
+  background: white;
+  transition: all 200ms;
+}
+
+input[type="text"]::placeholder, input[type="email"]::placeholder, 
+input[type="password"]::placeholder, textarea::placeholder {
+  color: #9CA3AF;
+}
+
+input[type="text"]:focus, input[type="email"]:focus, 
+input[type="password"]:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: transparent;
+  box-shadow: 0 0 0 2px #14B8A6;
+}
+
+/* Input with left icon */
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: #9CA3AF;
+}
+
+.input-with-icon input {
+  padding-left: 36px;
+}
+
+/* Card Components */
+.card {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 200ms ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.card-with-accent::before {
+  content: '' !important;
+  display: block !important;
+  height: 4px !important;
+  background: linear-gradient(to right, #2DD4BF, #14B8A6) !important;
+  border-radius: 12px 12px 0 0 !important;
+  margin: -1px -1px 0 -1px !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Force the accent bar to show */
+div.card-with-accent::before {
+  content: '' !important;
+  display: block !important;
+  height: 4px !important;
+  background: linear-gradient(to right, #2DD4BF, #14B8A6) !important;
+  border-radius: 12px 12px 0 0 !important;
+  margin: -1px -1px 0 -1px !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Tag Colors */
+.tag-teal {
+  background: #F0FDFA;
+  color: #0F766E;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tag-blue {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tag-amber {
+  background: #FFFBEB;
+  color: #B45309;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tag-emerald {
+  background: #ECFDF5;
+  color: #047857;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tag-gray {
+  background: #F3F4F6;
+  color: #6B7280;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Status Badges */
+.badge-in-progress {
+  background: #DBEAFE;
+  color: #1E40AF;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-not-started {
+  background: #F3F4F6;
+  color: #6B7280;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-completed {
+  background: #D1FAE5;
+  color: #065F46;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Navigation Tabs - Professional Teal Design */
+.nav-tabs-container,
+.nav-tabs-container[class*="flex"],
+.nav-tabs-container[class*="space-x"],
+div[class*="flex"][class*="space-x"] {
+  background: white !important;
+  border-bottom: 1px solid #E5E7EB !important;
+  padding: 0 32px !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+  margin: 0 !important;
+}
+
+.nav-tab-button,
+.nav-tab-button[class*="flex"],
+.nav-tab-button[class*="font"],
+.nav-tab-button[class*="transition"],
+.nav-tab-button[role="tab"],
+button[role="tab"],
+button[class*="flex"][class*="font"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 16px 24px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  background: transparent !important;
+  color: #6B7280 !important;
+  cursor: pointer !important;
+  transition: all 250ms ease !important;
+  min-height: 56px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  flex: 1 !important;
+  margin: 0 !important;
+  outline: none !important;
+  position: relative !important;
+}
+
+.nav-tab-button svg,
+.nav-tab-button svg[class*="h-"],
+.nav-tab-button svg[class*="w-"],
+button[role="tab"] svg,
+button[class*="flex"] svg {
+  width: 20px !important;
+  height: 20px !important;
+  color: inherit !important;
+}
+
+/* ACTIVE STATE - Strong Teal Highlight */
+.nav-tab-button.active,
+.nav-tab-button[data-state="active"],
+.nav-tab-button[aria-selected="true"],
+button[role="tab"][aria-selected="true"],
+button[role="tab"][data-state="active"],
+button[class*="flex"][aria-selected="true"] {
+  color: #FFFFFF !important;
+  border-bottom: 3px solid #14B8A6 !important;
+  background: #14B8A6 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3) !important;
+}
+
+/* INACTIVE STATE */
+.nav-tab-button:not(.active):not([data-state="active"]):not([aria-selected="true"]),
+button[role="tab"]:not([aria-selected="true"]),
+button[role="tab"]:not([data-state="active"]),
+button[class*="flex"]:not([aria-selected="true"]) {
+  color: #6B7280 !important;
+  border-bottom: 2px solid transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* HOVER STATE - Subtle Teal Tint */
+.nav-tab-button:not(.active):not([data-state="active"]):not([aria-selected="true"]):hover,
+button[role="tab"]:not([aria-selected="true"]):hover,
+button[role="tab"]:not([data-state="active"]):hover,
+button[class*="flex"]:not([aria-selected="true"]):hover {
+  color: #111827 !important;
+  background: linear-gradient(to bottom, rgba(20, 184, 166, 0.04), transparent) !important;
+  border-bottom: 2px solid rgba(20, 184, 166, 0.2) !important;
+  box-shadow: 0 1px 3px rgba(20, 184, 166, 0.08) !important;
+}
+
+/* NUCLEAR OPTION - Override EVERYTHING */
+.nav-tab-button[class*="shadow"],
+.nav-tab-button[class*="bg-"],
+.nav-tab-button[class*="border-"],
+.nav-tab-button[class*="text-"],
+.nav-tab-button[class*="rounded"],
+button[role="tab"][class*="shadow"],
+button[role="tab"][class*="bg-"],
+button[role="tab"][class*="border-"],
+button[role="tab"][class*="text-"],
+button[role="tab"][class*="rounded"] {
+  box-shadow: none !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+}
+
+/* NUCLEAR OPTION - Target specific elements by their structure */
+div[class*="flex"][class*="space-x"] button[role="tab"],
+div[class*="flex"] button[role="tab"],
+div button[role="tab"] {
+  color: #6B7280 !important;
+  border-bottom: 2px solid transparent !important;
+  background: transparent !important;
+  font-weight: 500 !important;
+}
+
+div[class*="flex"][class*="space-x"] button[role="tab"][aria-selected="true"],
+div[class*="flex"] button[role="tab"][aria-selected="true"],
+div button[role="tab"][aria-selected="true"] {
+  color: #14B8A6 !important;
+  border-bottom: 2px solid #14B8A6 !important;
+  background: transparent !important;
+  font-weight: 600 !important;
+}
+
+div[class*="flex"][class*="space-x"] button[role="tab"]:not([aria-selected="true"]):hover,
+div[class*="flex"] button[role="tab"]:not([aria-selected="true"]):hover,
+div button[role="tab"]:not([aria-selected="true"]):hover {
+  color: #111827 !important;
+  background: #F9FAFB !important;
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.5s ease-out;
+}
+
+/* Walkthrough guide highlight pulse effect */
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.highlight-pulse {
+  animation: highlight-pulse 1.5s infinite;
+}
+
+/* Modal animations */
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-slide-in {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-overlay {
+  animation: modal-fade-in 0.3s ease-out;
+}
+
+.modal-content {
+  animation: modal-slide-in 0.3s ease-out;
+}
+
+/* Responsive modal sizing */
+@media (min-width: 640px) {
+  .modal-responsive {
+    max-width: 90%;
+    width: 600px;
+  }
+}
+
+@media (min-width: 768px) {
+  .modal-responsive {
+    max-width: 80%;
+    width: 700px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .modal-responsive {
+    max-width: 70%;
+    width: 800px;
+  }
+}
+
+/* Fix for dropdown menus */
+.z-50 {
+  z-index: 50 !important;
+}
+
+/* Ensure dropdowns are above other elements */
+.dropdown-menu {
+  z-index: 100 !important;
+  position: absolute !important;
+}
+
+/* Fix for assign to half-term dropdown */
+.dropdown-menu {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  min-width: 12rem;
+  overflow: hidden;
+}
+
+.dropdown-menu h3 {
+  font-weight: 500;
+  color: #374151;
+}
+
+.dropdown-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+  transition: all 0.2s;
+}
+
+.dropdown-menu button:hover {
+  background-color: #eff6ff;
+  color: #1e40af;
+}
+
+/* Fix for dropdown option highlighting - ensure text remains readable */
+.dropdown-menu li:hover,
+.dropdown-menu button:hover,
+.dropdown-menu option:hover,
+select option:hover {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+}
+
+/* Fix for selected dropdown options - prevent white text on colored backgrounds */
+.dropdown-menu li[aria-selected="true"],
+.dropdown-menu button[aria-selected="true"],
+.dropdown-menu li.selected,
+.dropdown-menu button.selected {
+  background-color: #e5e7eb !important;
+  color: #374151 !important;
+}
+
+/* Override any purple highlighting in dropdowns */
+.dropdown-menu li:hover,
+.dropdown-menu button:hover {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+}
+
+/* Ensure dropdown text is always readable */
+.dropdown-menu,
+.dropdown-menu li,
+.dropdown-menu button,
+.dropdown-menu span {
+  color: #374151 !important;
+}
+
+.dropdown-menu li:hover,
+.dropdown-menu button:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+/* Print styles for lesson plans */
+@media print {
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .pageNumber:before {
+    content: counter(page);
+  }
+  
+  .page-break-inside-avoid {
+    page-break-inside: avoid;
+  }
+  
+  /* Make sure the print content is visible */
+  .print-content {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  
+  /* Hide everything except the print content */
+  body > *:not(.print-content) {
+    display: none !important;
+  }
+  
+  /* Ensure proper page breaks */
+  h2, h3 {
+    page-break-after: avoid;
+  }
+  
+  /* Circular activity boxes */
+  .print-activity {
+    border-radius: 1rem;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  
+  /* Force page breaks between lessons */
+  .lesson-page-break {
+    page-break-after: always;
+  }
+  
+  /* Ensure footer appears on every page */
+  .page-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 0.5rem;
+  }
+}
