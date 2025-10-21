@@ -27,7 +27,7 @@ export function HalfTermView({
   onViewLessonDetails,
   onPrintHalfTerm
 }: HalfTermViewProps) {
-  const { allLessonsData, currentSheetInfo } = useData();
+  const { allLessonsData, currentSheetInfo, getTermSpecificLessonNumber } = useData();
   const { getThemeForClass, getCategoryColor } = useSettings();
   const theme = getThemeForClass('LKG'); // Default theme
 
@@ -110,8 +110,8 @@ export function HalfTermView({
                     }}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      {/* FIXED: Show sequential lesson number instead of actual lesson number */}
-                      <h4 className="font-semibold text-gray-900">Lesson {index + 1}</h4>
+                      {/* FIXED: Show term-specific lesson number instead of actual lesson number */}
+                      <h4 className="font-semibold text-gray-900">Lesson {getTermSpecificLessonNumber(lessonNum, halfTermId)}</h4>
                       <div className="flex items-center print:hidden">
                         <button
                           onClick={(e) => {
@@ -124,8 +124,8 @@ export function HalfTermView({
                         </button>
                       </div>
                     </div>
-                    {/* FIXED: Also update the fallback title to use sequential numbering */}
-                    <p className="text-sm text-gray-600 mb-2">{lessonData.title || `Lesson ${index + 1}`}</p>
+                    {/* FIXED: Also update the fallback title to use term-specific numbering */}
+                    <p className="text-sm text-gray-600 mb-2">{lessonData.title || `Lesson ${getTermSpecificLessonNumber(lessonNum, halfTermId)}`}</p>
                     <div className="flex items-center space-x-2 text-xs text-gray-500 mb-2">
                       <Clock className="h-3 w-3" />
                       <span>{lessonData.totalTime} mins</span>

@@ -31,7 +31,7 @@ export function LessonSelectionModal({
   onSave
 }: LessonSelectionModalProps) {
   // FIXED: Added halfTerms to the destructuring to check lesson assignments
-  const { lessonNumbers, allLessonsData, currentSheetInfo, halfTerms } = useData();
+  const { lessonNumbers, allLessonsData, currentSheetInfo, halfTerms, getTermSpecificLessonNumber } = useData();
   const { getThemeForClass } = useSettings();
   const { stacks } = useLessonStacks();
   
@@ -360,7 +360,7 @@ export function LessonSelectionModal({
                         }}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-gray-900">Lesson {index + 1}</h4>
+                          <h4 className="font-semibold text-gray-900">Lesson {getTermSpecificLessonNumber(lessonNum, halfTermId)}</h4>
                           <div className="flex items-center">
                             <button
                               onClick={(e) => {
@@ -476,14 +476,14 @@ export function LessonSelectionModal({
                               onClick={() => handleLessonSelection(lessonNum)}
                             >
                               <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-semibold text-gray-900">Lesson {lessonNum}</h4>
+                                <h4 className="font-semibold text-gray-900">Lesson {getTermSpecificLessonNumber(lessonNum, halfTermId)}</h4>
                                 <div className="flex items-center">
                                   {isSelected && (
                                     <CheckCircle className="h-5 w-5 text-blue-600" />
                                   )}
                                 </div>
                               </div>
-                              <p className="text-sm text-gray-600 mb-2">{lessonData.title || `Lesson ${lessonNum}`}</p>
+                              <p className="text-sm text-gray-600 mb-2">{lessonData.title || `Lesson ${getTermSpecificLessonNumber(lessonNum, halfTermId)}`}</p>
                               <div className="flex items-center space-x-2 text-xs text-gray-500 mb-2">
                                 <Clock className="h-3 w-3" />
                                 <span>{lessonData.totalTime} mins</span>
