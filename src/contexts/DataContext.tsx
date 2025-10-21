@@ -463,6 +463,18 @@ export function DataProvider({ children }: DataProviderProps) {
     setSupabaseHalfTermsLoaded(false);
   }, [currentAcademicYear]);
 
+  // Synchronize legacy halfTerms state with year-specific data when academic year changes
+  useEffect(() => {
+    if (halfTermsByYear[currentAcademicYear]) {
+      console.log('🔄 DATACONTEXT - Syncing legacy halfTerms with year-specific data:', {
+        currentAcademicYear,
+        yearDataExists: !!halfTermsByYear[currentAcademicYear],
+        yearDataLength: halfTermsByYear[currentAcademicYear]?.length || 0
+      });
+      setHalfTerms(halfTermsByYear[currentAcademicYear]);
+    }
+  }, [currentAcademicYear, halfTermsByYear]);
+
   // ADD: Debug function to help diagnose database issues
   const debugSubjectSetup = async () => {
     console.log('🔧 DEBUGGING SUBJECT SETUP...');
@@ -1250,7 +1262,17 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
     // Use the legacy halfTerms state for now to maintain compatibility
     // TODO: Migrate to use halfTermsByYear when the year-specific system is fully implemented
     const halfTerm = halfTerms.find(term => term.id === halfTermId);
-    return halfTerm ? halfTerm.lessons : [];
+    const lessons = halfTerm ? halfTerm.lessons : [];
+    
+    // DEBUG: Log lesson retrieval
+    console.log(`🔍 getLessonsForHalfTerm(${halfTermId}):`, {
+      halfTermFound: !!halfTerm,
+      lessons: lessons,
+      lessonsLength: lessons.length,
+      allHalfTerms: halfTerms.map(ht => ({ id: ht.id, name: ht.name, lessonsCount: ht.lessons?.length || 0 }))
+    });
+    
+    return lessons;
   };
 
   // Get term-specific lesson number (1-based index in the term)
