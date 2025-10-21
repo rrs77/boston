@@ -155,9 +155,31 @@ export function StackedLessonCard({
     }
   };
 
-  // Safety check - if no valid lessons, show empty state
+  // Safety check - if no valid lessons, show loading or empty state
   if (stackLessons.length === 0) {
-    console.warn(`⚠️ StackedLessonCard: No valid lessons found for stack ${stack.name}`);
+    // Check if allLessonsData is empty (still loading) vs stack truly has no valid lessons
+    const isDataLoading = Object.keys(allLessonsData).length === 0;
+    
+    if (isDataLoading) {
+      // Data is still loading - show loading state
+      return (
+        <div className="relative group cursor-pointer h-60">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 h-full flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <Layers className="h-8 w-8 mx-auto mb-2 text-gray-400 animate-pulse" />
+              <p className="text-sm font-medium">Loading lessons...</p>
+              <p className="text-xs">Stack: {stack.name}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Data is loaded but no valid lessons found
+    console.warn(`⚠️ StackedLessonCard: No valid lessons found for stack "${stack.name}"`, {
+      stackLessons: stack.lessons,
+      allLessonsDataKeys: Object.keys(allLessonsData)
+    });
     return (
       <div className="relative group cursor-pointer h-60">
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 h-full flex items-center justify-center">

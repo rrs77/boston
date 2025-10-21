@@ -1,14 +1,15 @@
 import React from 'react';
-import { X, Clock, Video, Music, FileText, Link as LinkIcon, Image, Volume2, Tag, Users, ExternalLink } from 'lucide-react';
+import { X, Clock, Video, Music, FileText, Link as LinkIcon, Image, Volume2, Tag, Users, ExternalLink, Edit3 } from 'lucide-react';
 import type { Activity } from '../contexts/DataContext';
 
 interface ActivityDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   activity: Activity | null;
+  onEdit?: (activity: Activity) => void;
 }
 
-export function ActivityDetailsModal({ isOpen, onClose, activity }: ActivityDetailsModalProps) {
+export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: ActivityDetailsModalProps) {
   if (!isOpen || !activity) return null;
 
   // Format description with line breaks
@@ -24,13 +25,14 @@ export function ActivityDetailsModal({ isOpen, onClose, activity }: ActivityDeta
     return text.replace(/\n/g, '<br>');
   };
 
-  // Get resources
+  // Get resources - match the actual activity data structure
   const resources = [
     { label: 'Video', url: activity.videoLink, icon: Video, color: 'text-red-600 bg-red-50 border-red-200', type: 'video' },
-    { label: 'Audio', url: activity.audioLink, icon: Volume2, color: 'text-purple-600 bg-purple-50 border-purple-200', type: 'audio' },
-    { label: 'Music', url: activity.musicLink, icon: Music, color: 'bg-green-50 border-green-200', type: 'music' },
-    { label: 'Document', url: activity.documentLink, icon: FileText, color: 'text-blue-600 bg-blue-50 border-blue-200', type: 'document' },
-    { label: 'Link', url: activity.link, icon: LinkIcon, color: 'text-indigo-600 bg-indigo-50 border-indigo-200', type: 'link' },
+    { label: 'Music', url: activity.musicLink, icon: Music, color: 'text-teal-600 bg-teal-50 border-teal-200', type: 'music' },
+    { label: 'Backing', url: activity.backingLink, icon: Volume2, color: 'text-teal-600 bg-teal-50 border-teal-200', type: 'backing' },
+    { label: 'Vocals', url: activity.vocalsLink, icon: Volume2, color: 'text-orange-600 bg-orange-50 border-orange-200', type: 'vocals' },
+    { label: 'Resource', url: activity.resourceLink, icon: FileText, color: 'text-teal-600 bg-teal-50 border-teal-200', type: 'resource' },
+    { label: 'Link', url: activity.link, icon: LinkIcon, color: 'text-gray-600 bg-gray-50 border-gray-200', type: 'link' },
     { label: 'Image', url: activity.imageLink, icon: Image, color: 'text-teal-600 bg-teal-50 border-teal-200', type: 'image' },
   ].filter(resource => resource.url && resource.url.trim());
 
@@ -148,7 +150,19 @@ export function ActivityDetailsModal({ isOpen, onClose, activity }: ActivityDeta
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+        <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+          {onEdit && (
+            <button
+              onClick={() => {
+                onEdit(activity);
+                onClose();
+              }}
+              className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border-2 border-gray-300 transition-colors duration-200 flex items-center space-x-2"
+            >
+              <Edit3 className="h-4 w-4" />
+              <span>Edit</span>
+            </button>
+          )}
           <button
             onClick={onClose}
             className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200"

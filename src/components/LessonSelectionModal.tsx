@@ -34,6 +34,15 @@ export function LessonSelectionModal({
   const { lessonNumbers, allLessonsData, currentSheetInfo, halfTerms } = useData();
   const { getThemeForClass } = useSettings();
   const { stacks } = useLessonStacks();
+  
+  // DEBUG: Log when stacks change
+  useEffect(() => {
+    console.log('🔍 LESSON SELECTION MODAL - Stacks updated:', {
+      stacksLength: stacks.length,
+      stackIds: stacks.map(s => s.id),
+      halfTermId
+    });
+  }, [stacks, halfTermId]);
   // Initialize with all assigned lessons selected (since they're already assigned)
   const [localSelectedLessons, setLocalSelectedLessons] = useState<string[]>(selectedLessons);
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,13 +61,37 @@ export function LessonSelectionModal({
   const assignedStackIds = halfTermData?.stacks || [];
   const assignedStacks = stacks.filter(stack => assignedStackIds.includes(stack.id));
   
-  // DEBUG: Log stack data
+  // Safety check: if halfTermData exists but stacks field is missing, initialize it
+  if (halfTermData && halfTermData.stacks === undefined) {
+    console.warn('⚠️ Half-term data missing stacks field:', {
+      halfTermId,
+      halfTermData,
+      hasStacksField: 'stacks' in halfTermData
+    });
+  }
+  
+  // DEBUG: Log stack data with more detail
   console.log('🔍 LESSON SELECTION MODAL - Stack data:', {
     halfTermId,
-    halfTermData: halfTermData ? { id: halfTermData.id, name: halfTermData.name, stacks: halfTermData.stacks } : null,
+    halfTermData: halfTermData ? { 
+      id: halfTermData.id, 
+      name: halfTermData.name, 
+      stacks: halfTermData.stacks,
+      stacksType: typeof halfTermData.stacks,
+      stacksLength: halfTermData.stacks?.length
+    } : null,
     assignedStackIds,
+    assignedStackIdsType: typeof assignedStackIds,
+    assignedStackIdsLength: assignedStackIds?.length,
     allStacks: stacks.map(s => ({ id: s.id, name: s.name })),
-    assignedStacks: assignedStacks.map(s => ({ id: s.id, name: s.name }))
+    allStacksLength: stacks.length,
+    assignedStacks: assignedStacks.map(s => ({ id: s.id, name: s.name })),
+    assignedStacksLength: assignedStacks.length,
+    stackIdMatching: assignedStackIds?.map(stackId => ({
+      stackId,
+      foundInAllStacks: stacks.some(s => s.id === stackId),
+      matchingStack: stacks.find(s => s.id === stackId)
+    }))
   });
 
   // Load completion status from localStorage

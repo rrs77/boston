@@ -30,7 +30,7 @@ export const activitiesApi = {
       // First, try to load activities for this user
       let { data, error } = await supabase
         .from(TABLES.ACTIVITIES)
-        .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, year_groups')
+        .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, yeargroups')
         .eq('user_id', userId);
       
       if (error) throw error;
@@ -40,7 +40,7 @@ export const activitiesApi = {
         console.log('⚠️ No activities found for user', userId, '- loading all activities');
         const allActivitiesQuery = await supabase
           .from(TABLES.ACTIVITIES)
-          .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, year_groups');
+          .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, yeargroups');
         
         if (allActivitiesQuery.error) throw allActivitiesQuery.error;
         data = allActivitiesQuery.data;
@@ -70,7 +70,7 @@ export const activitiesApi = {
         unitName: item.unit_name,
         lessonNumber: item.lesson_number,
         eyfsStandards: item.eyfs_standards,
-        yearGroups: item.year_groups || [] // Add year_groups field
+        yearGroups: item.yeargroups || [] // Map yeargroups from database
       }));
     } catch (error) {
       console.warn('Failed to get activities from Supabase:', error);
@@ -293,7 +293,8 @@ export const lessonsApi = {
         allLessonsData: data.data || {},
         lessonNumbers: data.lesson_numbers || [],
         teachingUnits: data.teaching_units || [],
-        lessonStandards: data.lesson_standards_map || data.eyfs_statements_map || {}
+        // lessonStandards are stored within the lesson data itself, not as a separate field
+        lessonStandards: {}
       };
     } catch (error) {
       console.error(`❌ Failed to get lessons for ${sheet} (${academicYear || 'default'}) from Supabase:`, error);
@@ -325,8 +326,8 @@ export const lessonsApi = {
           data: data.allLessonsData,
           lesson_numbers: data.lessonNumbers,
           teaching_units: data.teachingUnits,
-        lesson_standards_map: data.lessonStandards,
-        eyfs_statements_map: data.lessonStandards, // Backward compatibility
+        // Note: lesson_standards_map and eyfs_statements_map columns don't exist in the lessons table
+        // Standards are stored within the lesson data itself, not as separate columns
           notes: data.notes || ''
       };
       
@@ -1117,9 +1118,9 @@ export const dataApi = {
           sheet_name: sheet,
           data: sheetData.allLessonsData || {},
           lesson_numbers: sheetData.lessonNumbers || [],
-          teaching_units: sheetData.teachingUnits || [],
-          lesson_standards_map: sheetData.lessonStandards || sheetData.eyfsStatements || {},
-          eyfs_statements_map: sheetData.lessonStandards || sheetData.eyfsStatements || {} // Backward compatibility
+          teaching_units: sheetData.teachingUnits || []
+          // Note: lesson_standards_map and eyfs_statements_map columns don't exist
+          // Standards are stored within the lesson data itself
         }));
         
         promises.push(

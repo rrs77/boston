@@ -98,9 +98,13 @@ export function LessonLibrary({
     getAvailableLessons
   } = useLessonStacks();
   
-  // DEBUG logs removed to reduce console noise
-  // Uncomment below if debugging half-term issues:
-  // console.log('LessonLibrary halfTerms:', halfTerms?.length);
+  // DEBUG: Log allLessonsData to verify it's loaded
+  console.log('📚 LessonLibrary - allLessonsData:', {
+    keys: Object.keys(allLessonsData),
+    count: Object.keys(allLessonsData).length,
+    stacksCount: stacks.length,
+    sample: Object.keys(allLessonsData).slice(0, 3)
+  });
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedHalfTerm, setSelectedHalfTerm] = useState<string>('all');
@@ -123,19 +127,12 @@ export function LessonLibrary({
   // Stack Management State
   const [showStackBuilder, setShowStackBuilder] = useState(false);
   const [editingStack, setEditingStack] = useState<StackedLesson | null>(null);
-  const [showStacksSection, setShowStacksSection] = useState(false);
+  const [showStacksSection, setShowStacksSection] = useState(false); // Always start collapsed
   const [expandedStacks, setExpandedStacks] = useState<Set<string>>(new Set());
   const [showAssignToTermModal, setShowAssignToTermModal] = useState(false);
   const [selectedStackForAssignment, setSelectedStackForAssignment] = useState<StackedLesson | null>(null);
   
-  // Show stacks section by default when stacks are available
-  useEffect(() => {
-    if (stacks.length > 0) {
-      setShowStacksSection(true);
-    } else {
-      setShowStacksSection(false);
-    }
-  }, [stacks.length]);
+  // Lesson stacks section starts collapsed by default - user can expand it manually
   
   // Debug: Log expanded stacks state (removed to reduce console spam)
   
