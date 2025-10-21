@@ -513,7 +513,7 @@ export function StackedLessonCard({
             }`}
             style={{
               borderColor: stack.color,
-              borderWidth: '2px',
+              borderWidth: '0px',
               transform: `translate(${index * 12}px, ${index * 12}px) rotate(${index * 2}deg)`,
               zIndex: stackLessons.length - index,
               width: '100%'

@@ -131,13 +131,9 @@ export function ActivityLibrary({
       // Filter by level if one is selected
       const matchesLevel = selectedLevel === 'all' || activity.level === selectedLevel;
       
-      // Filter by current year group (className prop contains the sheet/year group)
-      // Show ALL activities if they don't have explicit year group info (legacy activities)
-      const hasYearGroupInfo = activity.yearGroups && activity.yearGroups.length > 0;
-      const matchesYearGroup = !hasYearGroupInfo || // Show activities without year group data
-        activity.level === className || 
-        mapActivityLevelToYearGroup(activity.level) === className ||
-        (activity.yearGroups && activity.yearGroups.includes(className));
+      // Show ALL activities regardless of year group
+      // Remove year group filtering to show all 328 activities
+      const matchesYearGroup = true;
       
       return matchesSearch && matchesCategory && matchesLevel && matchesYearGroup;
     });
@@ -154,12 +150,9 @@ export function ActivityLibrary({
                              activity.category.toLowerCase().includes(query)
                            );
       
-      // Filter by current year group - stack must contain activities for this year group
-      const matchesYearGroup = stack.activities.some(activity => 
-        activity.level === className || 
-        mapActivityLevelToYearGroup(activity.level) === className ||
-        (activity.yearGroups && activity.yearGroups.includes(className))
-      );
+      // Show ALL stacks regardless of year group
+      // Remove year group filtering to show all stacks
+      const matchesYearGroup = true;
       
       return matchesSearch && matchesYearGroup;
     });

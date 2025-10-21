@@ -96,7 +96,7 @@ interface HalfTerm {
   id: string;
   name: string;
   months: string;
-  lessons: string[];
+  lessons: string[]; // Array of lesson numbers in display order
   stacks?: string[]; // Array of stack IDs assigned to this half-term
   isComplete: boolean;
 }
@@ -449,14 +449,19 @@ export function DataProvider({ children }: DataProviderProps) {
     loadHalfTerms();
     // ADD: Load subjects
     loadSubjects();
-  }, [currentSheetInfo]);
+  }, [currentSheetInfo, currentAcademicYear]);
 
-  // Load half-terms from Supabase when sheet changes
+  // Load half-terms from Supabase when sheet or academic year changes
   useEffect(() => {
     if (currentSheetInfo.sheet && !supabaseHalfTermsLoaded) {
       loadHalfTermsFromSupabase();
     }
-  }, [currentSheetInfo.sheet, supabaseHalfTermsLoaded]);
+  }, [currentSheetInfo.sheet, currentAcademicYear, supabaseHalfTermsLoaded]);
+
+  // Reset Supabase loading flag when academic year changes
+  useEffect(() => {
+    setSupabaseHalfTermsLoaded(false);
+  }, [currentAcademicYear]);
 
   // ADD: Debug function to help diagnose database issues
   const debugSubjectSetup = async () => {
@@ -958,9 +963,9 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
     });
   };
 
-  // Load half-terms for the current class
+  // Load half-terms for the current class and academic year
   const loadHalfTerms = () => {
-    console.log('🔍 loadHalfTerms called', { currentSheetInfo, dataWasCleared });
+    console.log('🔍 loadHalfTerms called', { currentSheetInfo, currentAcademicYear, dataWasCleared });
     try {
       // If data was cleared, set empty state
       if (dataWasCleared) {
@@ -969,14 +974,21 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
         return;
       }
       
-      // Load from localStorage
-      const savedHalfTerms = localStorage.getItem(`half-terms-${currentSheetInfo.sheet}`);
-      console.log('🔍 localStorage half-terms:', { savedHalfTerms, sheet: currentSheetInfo.sheet });
+      // Load from localStorage with academic year in the key
+      const localStorageKey = `half-terms-${currentSheetInfo.sheet}-${currentAcademicYear}`;
+      const savedHalfTerms = localStorage.getItem(localStorageKey);
+      console.log('🔍 localStorage half-terms:', { 
+        savedHalfTerms, 
+        sheet: currentSheetInfo.sheet, 
+        academicYear: currentAcademicYear,
+        localStorageKey 
+      });
       console.log('🔍 DEFAULT_HALF_TERMS:', DEFAULT_HALF_TERMS);
       if (savedHalfTerms) {
         try {
           const parsedHalfTerms = JSON.parse(savedHalfTerms);
           console.log('🔍 Parsed half-terms from localStorage:', parsedHalfTerms);
+          console.log('🔍 Setting half-terms state with data:', parsedHalfTerms.map(ht => ({ id: ht.id, name: ht.name, lessonsCount: ht.lessons?.length || 0 })));
           setHalfTerms(parsedHalfTerms);
         } catch (error) {
           console.error('Error parsing saved half-terms:', error);
@@ -984,9 +996,9 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
         }
       } else {
         // Initialize with default half-terms
-        console.log('🔍 No saved half-terms, initializing with defaults');
+        console.log('🔍 No saved half-terms for this academic year, initializing with defaults');
         setHalfTerms(DEFAULT_HALF_TERMS);
-        localStorage.setItem(`half-terms-${currentSheetInfo.sheet}`, JSON.stringify(DEFAULT_HALF_TERMS));
+        localStorage.setItem(localStorageKey, JSON.stringify(DEFAULT_HALF_TERMS));
       }
     } catch (error) {
       console.error('Failed to load half-terms:', error);
@@ -1012,8 +1024,8 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
         }));
         setHalfTerms(formattedHalfTerms);
         
-        // Also save to localStorage for offline access
-        localStorage.setItem(`half-terms-${currentSheetInfo.sheet}`, JSON.stringify(formattedHalfTerms));
+        // Also save to localStorage for offline access with academic year in key
+        localStorage.setItem(`half-terms-${currentSheetInfo.sheet}-${currentAcademicYear}`, JSON.stringify(formattedHalfTerms));
       } else {
         // If no data in Supabase, initialize default half-terms
         console.log('No half-terms in Supabase, initializing default half-terms...');
@@ -1168,7 +1180,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
           newStacks: stacks !== undefined ? stacks : existingTerm.stacks
         });
         
-      localStorage.setItem(`half-terms-${currentSheetInfo.sheet}`, JSON.stringify(updatedHalfTerms));
+      localStorage.setItem(`half-terms-${currentSheetInfo.sheet}-${currentAcademicYear}`, JSON.stringify(updatedHalfTerms));
       return updatedHalfTerms;
       } else {
         // Create new term if it doesn't exist
@@ -1196,7 +1208,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
         
         const updatedHalfTerms = [...prev, newTerm];
         console.log('✅ Created new half-term:', newTerm);
-        localStorage.setItem(`half-terms-${currentSheetInfo.sheet}`, JSON.stringify(updatedHalfTerms));
+        localStorage.setItem(`half-terms-${currentSheetInfo.sheet}-${currentAcademicYear}`, JSON.stringify(updatedHalfTerms));
         return updatedHalfTerms;
       }
     });
@@ -1235,9 +1247,29 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
 
   // ADDED: Get lessons for a specific half-term (now year-specific)
   const getLessonsForHalfTerm = (halfTermId: string): string[] => {
-    const currentYearHalfTerms = getCurrentYearHalfTerms; // Use the memoized value directly
-    const halfTerm = currentYearHalfTerms.find(term => term.id === halfTermId);
+    // Use the legacy halfTerms state for now to maintain compatibility
+    // TODO: Migrate to use halfTermsByYear when the year-specific system is fully implemented
+    const halfTerm = halfTerms.find(term => term.id === halfTermId);
     return halfTerm ? halfTerm.lessons : [];
+  };
+
+  // Get term-specific lesson number (1-based index in the term)
+  const getTermSpecificLessonNumber = (lessonNumber: string, halfTermId: string): number => {
+    const lessons = getLessonsForHalfTerm(halfTermId);
+    const index = lessons.indexOf(lessonNumber);
+    return index >= 0 ? index + 1 : 0;
+  };
+
+  // Get display title for a lesson within a specific term
+  const getLessonDisplayTitle = (lessonNumber: string, halfTermId: string): string => {
+    const lessonData = allLessonsData[lessonNumber];
+    const termSpecificNumber = getTermSpecificLessonNumber(lessonNumber, halfTermId);
+    
+    if (termSpecificNumber > 0 && lessonData) {
+      return lessonData.title || `Lesson ${termSpecificNumber}`;
+    }
+    
+    return lessonData?.title || `Lesson ${lessonNumber}`;
   };
 
   // Load all activities
@@ -1763,7 +1795,7 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
             };
           });
           
-          localStorage.setItem(`half-terms-${lessonToDelete.className}`, JSON.stringify(updatedHalfTerms));
+          localStorage.setItem(`half-terms-${lessonToDelete.className}-${currentAcademicYear}`, JSON.stringify(updatedHalfTerms));
           return updatedHalfTerms;
         });
         
@@ -1901,7 +1933,7 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
 
     // Also update any half-terms that contain this lesson
     try {
-      const savedHalfTerms = localStorage.getItem(`half-terms-${currentSheetInfo.sheet}`);
+      const savedHalfTerms = localStorage.getItem(`half-terms-${currentSheetInfo.sheet}-${currentAcademicYear}`);
       if (savedHalfTerms) {
         const halfTerms = JSON.parse(savedHalfTerms);
         let halfTermsUpdated = false;
@@ -1918,7 +1950,7 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
         });
 
         if (halfTermsUpdated) {
-          localStorage.setItem(`half-terms-${currentSheetInfo.sheet}`, JSON.stringify(updatedHalfTerms));
+          localStorage.setItem(`half-terms-${currentSheetInfo.sheet}-${currentAcademicYear}`, JSON.stringify(updatedHalfTerms));
           setHalfTerms(updatedHalfTerms);
         }
       }
@@ -2014,7 +2046,7 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
           );
           
           // Save to localStorage
-          localStorage.setItem(`half-terms-${currentSheetInfo.sheet}`, JSON.stringify(updated));
+          localStorage.setItem(`half-terms-${currentSheetInfo.sheet}-${currentAcademicYear}`, JSON.stringify(updated));
           
           // Sync to Supabase
           if (isSupabaseConfigured()) {
@@ -3406,6 +3438,8 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
     halfTerms,
     updateHalfTerm,
     getLessonsForHalfTerm,
+    getTermSpecificLessonNumber,
+    getLessonDisplayTitle,
     syncHalfTermsToSupabase,
     loadHalfTermsFromSupabase,
     

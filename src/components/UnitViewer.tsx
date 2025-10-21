@@ -87,12 +87,15 @@ export function UnitViewer() {
     halfTerms, 
     updateHalfTerm, 
     getLessonsForHalfTerm,
+    getTermSpecificLessonNumber,
+    getLessonDisplayTitle,
     currentAcademicYear,
     setCurrentAcademicYear,
     getAvailableYears,
     getAcademicYearData,
     copyTermToYear,
-    refreshData
+    refreshData,
+    loading
   } = useData();
   const { getThemeForClass } = useSettings();
   const { stacks } = useLessonStacks();
@@ -148,6 +151,7 @@ export function UnitViewer() {
   useEffect(() => {
     setRefreshKey(prev => prev + 1);
     console.log('🔄 UnitViewer: Half-terms changed, refreshing display', { 
+      loading,
       halfTerms,
       halfTermsWithLessons: halfTerms.map(ht => ({ 
         id: ht.id, 
@@ -156,7 +160,7 @@ export function UnitViewer() {
         stacks: ht.stacks 
       }))
     });
-  }, [halfTerms]);
+  }, [halfTerms, loading]);
 
   // Load units from localStorage
   useEffect(() => {
@@ -667,7 +671,7 @@ export function UnitViewer() {
                   {/* Copy Term Button */}
                   <button
                     onClick={() => setShowTermCopyModal(true)}
-                    className="px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
+                    className="px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2 focus:outline-none focus:ring-0"
                     style={{ backgroundColor: '#14B8A6', height: '36px' }}
                     onMouseEnter={(e) => e.target.style.backgroundColor = '#0D9488'}
                     onMouseLeave={(e) => e.target.style.backgroundColor = '#14B8A6'}
@@ -727,8 +731,14 @@ export function UnitViewer() {
           )}
 
           {/* Half-Term Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {HALF_TERMS.map((halfTerm) => {
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+              <span className="ml-3 text-gray-600">Loading half-terms...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {HALF_TERMS.map((halfTerm) => {
               const lessons = getLessonsForHalfTerm(halfTerm.id);
               const isComplete = isHalfTermComplete(halfTerm.id);
               
@@ -745,6 +755,15 @@ export function UnitViewer() {
               // Total lesson count includes both individual lessons and lessons from stacks
               const totalLessonCount = lessons.length + stackLessons;
               
+              // DEBUG: Log lesson count calculation
+              console.log(`📊 HalfTerm ${halfTerm.id} (${halfTerm.name}):`, {
+                lessons: lessons.length,
+                lessonsList: lessons,
+                stackLessons: stackLessons,
+                totalLessonCount: totalLessonCount,
+                loading: loading
+              });
+              
               return (
                 <HalfTermCard
                   key={halfTerm.id}
@@ -758,8 +777,9 @@ export function UnitViewer() {
                   isComplete={isComplete}
                 />
               );
-            })}
-          </div>
+              })}
+            </div>
+          )}
 
         </div>
 

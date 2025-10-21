@@ -26,7 +26,14 @@ export function LessonPrintModal({
                                    lessonNumbers,
                                    isUnitPrint = false
                                  }: LessonPrintModalProps) {
-  const { allLessonsData, currentSheetInfo, lessonStandards, halfTerms } = useData();
+  const { 
+    allLessonsData, 
+    currentSheetInfo, 
+    lessonStandards, 
+    halfTerms,
+    getTermSpecificLessonNumber,
+    getLessonDisplayTitle
+  } = useData();
   const { getCategoryColor } = useSettings();
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
@@ -262,7 +269,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
           <div class="page-header bg-blue-50 px-6 py-3 border-b border-gray-200">
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium text-blue-800">
-                Lesson ${lessonNum} Preview
+                Lesson ${halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonNum} Preview
               </span>
               <span class="text-xs text-blue-600">
                 Page ${lessonIndex + 1} of ${lessonsToRender.length}
@@ -275,7 +282,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
             <!-- Lesson Title -->
             <div class="mb-3 border-b border-black pb-2">
               <h3 class="text-xl font-bold text-black">
-                Lesson ${lessonNum}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music
+                Lesson ${halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonNum}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music
               </h3>
             </div>
       `;
@@ -772,7 +779,10 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                       <div className="bg-blue-50 px-6 py-3 border-b border-gray-200">
                         <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-blue-800">
-                        Lesson {lessonIndex + 1}, {halfTermName || unitName || 'Autumn 1'} - Lesson Preview
+                        {(() => {
+                          const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonIndex + 1;
+                          return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - Lesson Preview`;
+                        })()}
                       </span>
                           <span className="text-xs text-blue-600">
                         Page {lessonIndex + 1} of {lessonsToRender.length}
@@ -785,7 +795,10 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         {/* Lesson Title */}
                         <div className="mb-3 border-b border-black pb-2">
                           <h3 className="text-xl font-bold text-black">
-                            Lesson {lessonIndex + 1}, {halfTermName || unitName || 'Autumn 1'} - {currentSheetInfo.display}, Music
+                            {(() => {
+                              const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonIndex + 1;
+                              return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music`;
+                            })()}
                           </h3>
                         </div>
 

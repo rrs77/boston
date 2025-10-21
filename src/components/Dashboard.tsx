@@ -36,7 +36,14 @@ const HALF_TERMS = [
 
 export function Dashboard() {
   const { user } = useAuth();
-  const { currentSheetInfo, allLessonsData, updateHalfTerm, getLessonsForHalfTerm } = useData();
+  const { 
+    currentSheetInfo, 
+    allLessonsData, 
+    updateHalfTerm, 
+    getLessonsForHalfTerm,
+    getTermSpecificLessonNumber,
+    getLessonDisplayTitle
+  } = useData();
   const { getThemeForClass } = useSettings();
   const [activeTab, setActiveTab] = useState('unit-viewer');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -218,16 +225,16 @@ export function Dashboard() {
       // Use DataContext's updateHalfTerm function
       updateHalfTerm(halfTermId, updatedLessons, false);
       
-      // Show a success message with sequential numbering
+      // Show a success message with term-specific numbering
       const halfTermName = HALF_TERMS.find(t => t.id === halfTermId)?.name;
-      const sequentialNumber = updatedLessons.sort((a, b) => parseInt(a) - parseInt(b)).indexOf(lessonNumber) + 1;
-      alert(`Lesson ${sequentialNumber} has been added to the ${halfTermName} half-term.`);
+      const termSpecificNumber = getTermSpecificLessonNumber(lessonNumber, halfTermId);
+      alert(`Lesson ${termSpecificNumber} has been added to the ${halfTermName} half-term.`);
     } else {
-      // Get sequential number for this lesson in the target half-term
-      const sequentialNumber = getSequentialLessonNumber(lessonNumber, halfTermId);
+      // Get term-specific number for this lesson in the target half-term
+      const termSpecificNumber = getTermSpecificLessonNumber(lessonNumber, halfTermId);
       const halfTermName = HALF_TERMS.find(t => t.id === halfTermId)?.name;
       console.log('Lesson already assigned to this half-term');
-      alert(`Lesson ${sequentialNumber} is already assigned to ${halfTermName}.`);
+      alert(`Lesson ${termSpecificNumber} is already assigned to ${halfTermName}.`);
     }
   };
 

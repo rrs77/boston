@@ -145,7 +145,7 @@ export function SimpleNestedCategoryDropdown({
             {sortedGroups.map(groupName => (
               <React.Fragment key={groupName}>
                 <li 
-                  className="px-2 py-2 bg-gray-50 border-t border-b border-gray-200 text-sm font-semibold text-gray-800 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-all duration-150"
+                  className="px-2 py-2 bg-gray-50 border-t border-b border-gray-200 text-sm font-semibold text-gray-800 flex items-center justify-between cursor-pointer hover:bg-teal-50 transition-all duration-150"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -177,8 +177,8 @@ export function SimpleNestedCategoryDropdown({
                     key={category.name}
                     className={`flex items-center gap-2 px-6 py-2 text-sm cursor-pointer transition-colors duration-150 ${
                       selectedCategory === category.name 
-                        ? 'bg-gray-100 font-medium' 
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-teal-100 font-medium' 
+                        : 'text-gray-700 hover:bg-teal-50'
                     }`}
                     style={{
                       color: selectedCategory === category.name ? '#374151' : undefined
