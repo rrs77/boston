@@ -496,7 +496,7 @@ return (
                 type="text"
                 value={editedActivity.unitName}
                 onChange={(e) => setEditedActivity(prev => ({ ...prev, unitName: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none"
                 placeholder="Unit name"
                 onClick={(e) => e.stopPropagation()}
                 dir="ltr"
@@ -564,7 +564,7 @@ return (
                       type="url"
                       value={editedActivity[key as keyof Activity] as string}
                       onChange={(e) => setEditedActivity(prev => ({ ...prev, [key]: e.target.value }))}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+                      className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-sm"
                       placeholder={`${label} URL`}
                       dir="ltr"
                     />

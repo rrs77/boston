@@ -4,7 +4,16 @@ import type { Activity, LessonData, LessonPlan } from '../contexts/DataContext';
 // API endpoints for activities
 // Helper function to get current user ID
 const getCurrentUserId = () => {
-  return localStorage.getItem('rhythmstix_user_id');
+  let userId = localStorage.getItem('rhythmstix_user_id');
+  
+  // If no user ID exists, create a default one
+  if (!userId) {
+    userId = '1'; // Default user ID for single-user mode
+    localStorage.setItem('rhythmstix_user_id', userId);
+    console.log('🔑 Created default user ID:', userId);
+  }
+  
+  return userId;
 };
 
 export const activitiesApi = {
@@ -18,14 +27,28 @@ export const activitiesApi = {
       
       console.log('🔄 Loading activities for user:', userId);
       
-      const { data, error } = await supabase
+      // First, try to load activities for this user
+      let { data, error } = await supabase
         .from(TABLES.ACTIVITIES)
-        .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id')
+        .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, year_groups')
         .eq('user_id', userId);
       
       if (error) throw error;
       
-      console.log(`✅ Loaded ${data?.length || 0} activities for user ${userId}`);
+      // If no activities found for this user, load ALL activities (for backwards compatibility)
+      if (!data || data.length === 0) {
+        console.log('⚠️ No activities found for user', userId, '- loading all activities');
+        const allActivitiesQuery = await supabase
+          .from(TABLES.ACTIVITIES)
+          .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, year_groups');
+        
+        if (allActivitiesQuery.error) throw allActivitiesQuery.error;
+        data = allActivitiesQuery.data;
+        
+        console.log(`📦 Loaded ${data?.length || 0} activities (all users)`);
+      } else {
+        console.log(`✅ Loaded ${data?.length || 0} activities for user ${userId}`);
+      }
       
       // Convert snake_case to camelCase for frontend
       return (data || []).map(item => ({
@@ -46,7 +69,8 @@ export const activitiesApi = {
         level: item.level,
         unitName: item.unit_name,
         lessonNumber: item.lesson_number,
-        eyfsStandards: item.eyfs_standards
+        eyfsStandards: item.eyfs_standards,
+        yearGroups: item.year_groups || [] // Add year_groups field
       }));
     } catch (error) {
       console.warn('Failed to get activities from Supabase:', error);
@@ -282,9 +306,10 @@ export const lessonsApi = {
       const year = academicYear || '2025-2026';
       
       // First, check if a record exists for this sheet and academic year
+      // Note: lessons table doesn't have an 'id' column, it uses sheet_name + academic_year as composite key
       const { data: existingRecord, error: checkError } = await supabase
         .from(TABLES.LESSONS)
-        .select('id')
+        .select('sheet_name, academic_year')
         .eq('sheet_name', sheet)
         .eq('academic_year', year)
         .maybeSingle();
@@ -295,14 +320,14 @@ export const lessonsApi = {
       }
       
       const lessonData = {
-        sheet_name: sheet,
+          sheet_name: sheet,
         academic_year: year,
-        data: data.allLessonsData,
-        lesson_numbers: data.lessonNumbers,
-        teaching_units: data.teachingUnits,
+          data: data.allLessonsData,
+          lesson_numbers: data.lessonNumbers,
+          teaching_units: data.teachingUnits,
         lesson_standards_map: data.lessonStandards,
         eyfs_statements_map: data.lessonStandards, // Backward compatibility
-        notes: data.notes || ''
+          notes: data.notes || ''
       };
       
       if (existingRecord) {
@@ -605,14 +630,14 @@ export const halfTermsApi = {
       
       const year = academicYear || '2025-2026';
       const upsertData: any = {
-        id: halfTermId,
-        sheet_name: sheet,
+          id: halfTermId,
+          sheet_name: sheet,
         academic_year: year,
-        name: halfTermNames[halfTermId] || halfTermId,
-        lessons: lessons,
-        is_complete: isComplete,
+          name: halfTermNames[halfTermId] || halfTermId,
+          lessons: lessons,
+          is_complete: isComplete,
         term_id: halfTermId, // Add the missing term_id field
-        updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString()
       };
       
       // Add stacks if provided
@@ -645,9 +670,9 @@ export const halfTermsApi = {
           .eq('id', halfTermId)
           .eq('sheet_name', sheet)
           .eq('academic_year', year)
-          .select()
-          .single();
-        
+        .select()
+        .single();
+      
         data = result.data;
         error = result.error;
         if (error) throw error;

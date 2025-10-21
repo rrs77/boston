@@ -1260,6 +1260,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
                          (activity.level ? [activity.level] : [])
             }));
             setAllActivities(normalizedActivities);
+            console.log('✅ Activities set in DataContext state:', normalizedActivities.length);
             return;
           }
         } catch (error) {
@@ -2778,13 +2779,17 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
           await lessonsApi.updateSheet(currentSheetInfo.sheet, dataToSave, currentAcademicYear);
           console.log('✅ Custom objective saved to Supabase');
         } catch (error) {
-          console.warn('Failed to save custom objective to Supabase:', error);
+          console.error('❌ Failed to save custom objective to Supabase:', error);
+          // Show error to user
+          throw new Error('Failed to save to database. Changes saved locally only.');
         }
       }
       
       console.log('✅ Successfully added custom objective to lesson');
     } catch (error) {
-      console.error('Failed to add custom objective to lesson:', error);
+      console.error('❌ Failed to add custom objective to lesson:', error);
+      // Re-throw so calling code knows it failed
+      throw error;
     }
   };
 
@@ -2841,13 +2846,17 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
           await lessonsApi.updateSheet(currentSheetInfo.sheet, dataToSave, currentAcademicYear);
           console.log('✅ Custom objective removed from Supabase');
         } catch (error) {
-          console.warn('Failed to save custom objective removal to Supabase:', error);
+          console.error('❌ Failed to save custom objective removal to Supabase:', error);
+          // Show error to user
+          throw new Error('Failed to save to database. Changes saved locally only.');
         }
       }
       
       console.log('✅ Successfully removed custom objective from lesson');
     } catch (error) {
-      console.error('Failed to remove custom objective from lesson:', error);
+      console.error('❌ Failed to remove custom objective from lesson:', error);
+      // Re-throw so calling code knows it failed
+      throw error;
     }
   };
 

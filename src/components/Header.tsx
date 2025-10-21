@@ -59,11 +59,7 @@ export function Header() {
                       localStorage.setItem('currentSheetInfo', JSON.stringify(newSheetInfo));
                     }
                   }}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-xs lg:text-sm rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent block w-full p-1.5 lg:p-2 pr-6 lg:pr-8 appearance-none cursor-pointer transition-colors duration-200 hover:bg-gray-100 min-w-[120px] lg:min-w-[180px]"
-                  style={{ 
-                    focusRingColor: theme.primary,
-                    focusBorderColor: theme.primary 
-                  }}
+                  className="bg-gray-50 border-2 border-gray-300 text-gray-900 text-xs lg:text-sm rounded-lg focus:border-teal-500 focus:outline-none block w-full p-1.5 lg:p-2 pr-6 lg:pr-8 appearance-none cursor-pointer transition-colors duration-200 hover:bg-gray-100 min-w-[120px] lg:min-w-[180px]"
                 >
                   {customYearGroups.map((group) => (
                     <option key={group.id} value={group.id}>
@@ -160,7 +156,7 @@ export function Header() {
                         });
                       }
                     }}
-                    className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent block p-2.5"
+                    className="w-full bg-gray-50 border-2 border-gray-300 text-gray-900 text-sm rounded-lg focus:border-teal-500 focus:outline-none block p-2.5"
                     style={{ 
                       focusRingColor: theme.primary,
                       focusBorderColor: theme.primary 

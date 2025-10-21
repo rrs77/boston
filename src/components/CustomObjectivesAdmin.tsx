@@ -580,6 +580,14 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                   const yearGroup = yearGroups.find(yg => yg.id === selectedYearGroup);
                   if (!yearGroup) return null;
 
+                  // Auto-expand all areas when a year group is selected
+                  React.useEffect(() => {
+                    if (yearGroup) {
+                      const allAreaIds = new Set(yearGroup.areas.map(area => area.id));
+                      setExpandedAreas(allAreaIds);
+                    }
+                  }, [yearGroup.id]);
+
                   return (
                     <div>
                       <div className="mb-6">
@@ -710,7 +718,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                     type="text"
                     value={cloneData.targetName}
                     onChange={(e) => setCloneData(prev => ({ ...prev, targetName: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500"
                   />
                 </div>
                 <div>
@@ -779,7 +787,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                         ...prev,
                         year_group: { ...prev.year_group, name: e.target.value }
                       }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500"
                       placeholder="e.g., Communication and Language, Mathematics"
                     />
                   </div>
@@ -809,7 +817,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                       ...prev,
                       year_group: { ...prev.year_group, description: e.target.value }
                     }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500"
                     rows={2}
                     placeholder="Brief description of this subject area (e.g., age group, context)"
                   />
@@ -854,7 +862,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                                   i === areaIndex ? { ...a, section: e.target.value } : a
                                 )
                               }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500"
                               placeholder="e.g., Communication and Language, Physical Development"
                             />
                             <p className="text-xs text-gray-500 mt-1">
@@ -875,7 +883,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                                   i === areaIndex ? { ...a, name: e.target.value } : a
                                 )
                               }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500"
                               placeholder="e.g., Listening, Attention and Understanding"
                             />
                             <p className="text-xs text-gray-500 mt-1">
@@ -900,7 +908,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                                 autoResizeTextarea(e.target);
                                 handleObjectiveTextChange(areaIndex, 0, e.target.value);
                               }}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none overflow-hidden"
+                              className="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500 resize-none overflow-hidden"
                               rows={Math.max(3, area.objectives.length)}
                               placeholder="Enter objectives here. Press Enter after each objective to separate them:&#10;&#10;Objective 1 text&#10;Objective 2 text&#10;Objective 3 text&#10;&#10;Or use # to separate:&#10;Objective 1 # Objective 2 # Objective 3"
                               style={{ minHeight: '5rem' }}

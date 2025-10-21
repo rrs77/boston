@@ -62,6 +62,14 @@ export function ActivityLibrary({
   const { getCategoryColor, categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [localSelectedCategory, setLocalSelectedCategory] = useState(selectedCategory);
+  
+  // DEBUG: Log activities at render time
+  console.log('🎨 ActivityLibrary Component Render:', {
+    allActivitiesCount: allActivities.length,
+    dataLoading,
+    className: className,
+    sampleActivity: allActivities[0]
+  });
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'time' | 'level'>('category');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -120,7 +128,26 @@ export function ActivityLibrary({
 
   // Filter and sort activities and stacks
   const { filteredAndSortedActivities, filteredAndSortedStacks } = useMemo(() => {
-    // Filter activities - show all activities but allow category filtering
+    console.log('🔍 ActivityLibrary Filter Debug:', {
+      totalActivities: allActivities.length,
+      currentYearGroup: className,
+      searchQuery,
+      localSelectedCategory,
+      selectedLevel,
+      sampleActivities: allActivities.slice(0, 5).map(a => ({
+        name: a.activity,
+        level: a.level,
+        yearGroups: a.yearGroups,
+        category: a.category,
+        matchesYearGroup: (
+          a.level === className || 
+          mapActivityLevelToYearGroup(a.level) === className ||
+          (a.yearGroups && a.yearGroups.includes(className))
+        )
+      }))
+    });
+    
+    // Filter activities - filter by year group AND allow category/level filtering
     let filteredActivities = allActivities.filter(activity => {
       const matchesSearch = activity.activity.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            activity.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -131,8 +158,44 @@ export function ActivityLibrary({
       // Filter by level if one is selected
       const matchesLevel = selectedLevel === 'all' || activity.level === selectedLevel;
       
-      return matchesSearch && matchesCategory && matchesLevel;
+      // Filter by current year group (className prop contains the sheet/year group)
+      // TEMPORARILY DISABLED: Show all activities regardless of year group for debugging
+      const hasYearGroupInfo = activity.level || (activity.yearGroups && activity.yearGroups.length > 0);
+      const matchesYearGroup = true; // TEMP: Always true to show all activities
+      /*
+      const matchesYearGroup = !hasYearGroupInfo || // Show activities without year group data
+        activity.level === className || 
+        mapActivityLevelToYearGroup(activity.level) === className ||
+        (activity.yearGroups && activity.yearGroups.includes(className));
+      */
+      
+      return matchesSearch && matchesCategory && matchesLevel && matchesYearGroup;
     });
+    
+    // Debug: Count how many activities match each filter
+    const filterStats = {
+      total: allActivities.length,
+      matchSearch: allActivities.filter(a => 
+        a.activity.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.description.toLowerCase().includes(searchQuery.toLowerCase())
+      ).length,
+      matchCategory: allActivities.filter(a => 
+        localSelectedCategory === 'all' || a.category === localSelectedCategory
+      ).length,
+      matchLevel: allActivities.filter(a => 
+        selectedLevel === 'all' || a.level === selectedLevel
+      ).length,
+      matchYearGroup: allActivities.filter(a => {
+        const hasYearGroupInfo = a.level || (a.yearGroups && a.yearGroups.length > 0);
+        return !hasYearGroupInfo || 
+          a.level === className || 
+          mapActivityLevelToYearGroup(a.level) === className ||
+          (a.yearGroups && a.yearGroups.includes(className));
+      }).length,
+      final: filteredActivities.length
+    };
+    
+    console.log('✅ Filtered Activities:', filterStats);
 
     // Filter stacks - only show stacks with activities for the current year group
     let filteredStacks = activityStacks.filter(stack => {
@@ -213,7 +276,7 @@ export function ActivityLibrary({
     });
 
     return { filteredAndSortedActivities: filteredActivities, filteredAndSortedStacks: filteredStacks };
-  }, [allActivities, activityStacks, searchQuery, localSelectedCategory, selectedLevel, sortBy, sortOrder, categories, mapActivityLevelToYearGroup]);
+  }, [allActivities, activityStacks, searchQuery, localSelectedCategory, selectedLevel, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup]);
 
   const toggleSort = (field: 'name' | 'category' | 'time' | 'level') => {
     if (sortBy === field) {

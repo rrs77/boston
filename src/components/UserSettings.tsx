@@ -61,13 +61,18 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
 
   // Immediate update for categories to ensure group assignments are saved
   React.useEffect(() => {
+    // Skip immediate update if a category is being edited (to prevent losing focus on each keystroke)
+    if (editingCategory) {
+      return;
+    }
+    
     // Only update if tempCategories is different from current categories
     // This prevents infinite loops but ensures immediate saves
     if (tempCategories !== categories) {
       console.log('🔄 Immediate update of categories from tempCategories changes');
       updateCategories(tempCategories);
     }
-  }, [tempCategories]);
+  }, [tempCategories, editingCategory]);
 
   // Note: Removed automatic refresh when modal opens to prevent race conditions
   // Data should already be up-to-date from the initial load
@@ -480,13 +485,13 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
         </div>
 
         {/* Tabs */}
-        <div className="flex">
+        <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('yeargroups')}
-            className={`px-6 py-3 font-medium text-sm transition-colors duration-200 ${
+            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
               activeTab === 'yeargroups' 
-                ? 'text-teal-600 bg-teal-50' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'text-teal-600 border-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -494,10 +499,10 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           </button>
           <button
             onClick={() => setActiveTab('categories')}
-            className={`px-6 py-3 font-medium text-sm transition-colors duration-200 ${
+            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
               activeTab === 'categories' 
-                ? 'text-teal-600 bg-teal-50' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'text-teal-600 border-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -506,10 +511,10 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           {isAdmin && (
             <button
               onClick={() => setActiveTab('data')}
-              className={`px-6 py-3 font-medium text-sm transition-colors duration-200 ${
+              className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
                 activeTab === 'data' 
-                ? 'text-teal-600 bg-teal-50' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'text-teal-600 border-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
               }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
@@ -518,10 +523,10 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           )}
                           <button
             onClick={() => setActiveTab('admin')}
-            className={`px-6 py-3 font-medium text-sm transition-colors duration-200 ${
+            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
               activeTab === 'admin' 
-                ? 'text-teal-600 bg-teal-50' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'text-teal-600 border-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -529,10 +534,10 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                           </button>
                           <button
             onClick={() => setActiveTab('backup')}
-              className={`px-6 py-3 font-medium text-sm transition-colors duration-200 ${
+              className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
               activeTab === 'backup' 
-                  ? 'text-teal-600 bg-teal-50' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'text-teal-600 border-teal-600' 
+                  : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
               }`}
               style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
@@ -587,7 +592,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                         value={newYearGroupId}
                         onChange={(e) => setNewYearGroupId(e.target.value)}
                         placeholder="e.g., Year1"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-sm"
                         style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
                         dir="ltr"
                       />
@@ -603,7 +608,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                         value={newYearGroupName}
                         onChange={(e) => setNewYearGroupName(e.target.value)}
                         placeholder="e.g., Year 1"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-sm"
                         style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
                       />
                     </div>
@@ -823,7 +828,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                         value={newCategoryName}
                         onChange={(e) => setNewCategoryName(e.target.value)}
                         placeholder="Category name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none"
                         dir="ltr"
                       />
                     </div>
@@ -988,7 +993,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                     </div>
 
                     {/* Groups List */}
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
                       {categoryGroups.groups.map((groupName, index) => (
                         <div
                           key={`${groupName}-${index}`}
@@ -1002,7 +1007,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                 type="text"
                                 value={editingGroupName}
                                 onChange={(e) => setEditingGroupName(e.target.value)}
-                                className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                className="flex-1 px-2 py-1 border-2 border-gray-300 rounded focus:border-teal-500 focus:outline-none"
                                 onKeyPress={(e) => e.key === 'Enter' && handleSaveGroupEdit()}
                                 autoFocus
                               />
@@ -1109,7 +1114,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                     setTempCategories(categories);
                                   }
                                 }}
-                                className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                className="flex-1 px-2 py-1 border-2 border-gray-300 rounded text-sm focus:border-teal-500 focus:outline-none"
                                 dir="ltr"
                               />
                               <div className="relative">
@@ -1536,44 +1541,6 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                       <div className="ml-8">- Y1D-C-01: Develop simple narratives</div>
                       <div className="ml-8">- Y1D-C-02: Work collaboratively in groups</div>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Usage Instructions */}
-              <div className="border border-teal-200 bg-teal-50 rounded-lg p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <GraduationCap className="h-6 w-6 text-teal-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">How to Use Custom Objectives</h3>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="bg-white rounded-lg p-4 border border-teal-200">
-                    <h4 className="font-medium text-gray-900 mb-2">1. Create Year Groups</h4>
-                    <p className="text-sm text-gray-600">
-                      Start by creating year groups for your additional curriculum areas (Y1 Drama, Y2 Music, etc.)
-                    </p>
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-4 border border-teal-200">
-                    <h4 className="font-medium text-gray-900 mb-2">2. Define Areas of Learning</h4>
-                    <p className="text-sm text-gray-600">
-                      Within each year group, create areas like "Performance Skills", "Technical Skills", "Creative Expression"
-                    </p>
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-4 border border-teal-200">
-                    <h4 className="font-medium text-gray-900 mb-2">3. Add Specific Objectives</h4>
-                    <p className="text-sm text-gray-600">
-                      For each area, create specific objectives with codes (like Y1D-P-01) and descriptions
-                    </p>
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-4 border border-teal-200">
-                    <h4 className="font-medium text-gray-900 mb-2">4. Use in Activities</h4>
-                    <p className="text-sm text-gray-600">
-                      When creating activities, select "Custom Objectives" and choose the relevant year group and objectives
-                    </p>
                   </div>
                 </div>
               </div>

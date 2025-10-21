@@ -658,7 +658,7 @@ style={{ backgroundColor: '#10A293' }}>
               placeholder="Search lessons..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none"
+              className="w-full pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none"
               dir="ltr"
             />
           </div>
@@ -666,7 +666,7 @@ style={{ backgroundColor: '#10A293' }}>
           <select
             value={selectedHalfTerm}
             onChange={(e) => setSelectedHalfTerm(e.target.value)}
-            className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none"
+            className="px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none"
             dir="ltr"
           >
             <option value="all" className="text-gray-900">All Half-Terms</option>
@@ -879,7 +879,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                     placeholder="Search activities..."
                     value={activitySearchQuery}
                     onChange={(e) => setActivitySearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none"
+                    className="w-full pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none"
                   />
                 </div>
                 <div className="relative" style={{ minWidth: '250px' }}>
@@ -887,7 +887,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                     selectedCategory={selectedCategory === 'all' ? '' : selectedCategory}
                     onCategoryChange={(category) => setSelectedCategory(category || 'all')}
                     placeholder="All Categories"
-                    className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none"
+                    className="px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none"
                   />
                 </div>
               </div>

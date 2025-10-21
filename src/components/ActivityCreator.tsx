@@ -167,14 +167,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
     }
 
     // Custom objectives validation
-    if (activity.curriculum_type === 'CUSTOM') {
-      if (!activity.custom_objective_year_group_id) {
-        newErrors.custom_objective_year_group_id = 'Custom objectives year group is required';
-      }
-      if (activity.custom_objective_ids.length === 0) {
-        newErrors.custom_objective_ids = 'At least one custom objective is required';
-      }
-    }
+    // Custom objectives validation removed - now optional with unified selector
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -241,48 +234,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                 )}
               </div>
 
-              {/* Curriculum Type */}
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Curriculum Type <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => handleCurriculumTypeChange('EYFS')}
-                    className={`p-3 border-2 rounded-lg text-center transition-colors duration-200 ${
-                      activity.curriculum_type === 'EYFS'
-                        ? 'text-gray-700'
-                        : 'border-gray-300 hover:border-gray-400 text-gray-700'
-                    }`}
-                    style={{
-                      borderColor: activity.curriculum_type === 'EYFS' ? '#0BA596' : undefined,
-                      backgroundColor: activity.curriculum_type === 'EYFS' ? '#E6F7F5' : undefined,
-                      color: activity.curriculum_type === 'EYFS' ? '#0BA596' : undefined
-                    }}
-                  >
-                    <div className="font-medium">EYFS Objectives</div>
-                    <div className="text-xs mt-1">Early Years Foundation Stage</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCurriculumTypeChange('CUSTOM')}
-                    className={`p-3 border-2 rounded-lg text-center transition-colors duration-200 ${
-                      activity.curriculum_type === 'CUSTOM'
-                        ? 'text-gray-700'
-                        : 'border-gray-300 hover:border-gray-400 text-gray-700'
-                    }`}
-                    style={{
-                      borderColor: activity.curriculum_type === 'CUSTOM' ? '#0BA596' : undefined,
-                      backgroundColor: activity.curriculum_type === 'CUSTOM' ? '#E6F7F5' : undefined,
-                      color: activity.curriculum_type === 'CUSTOM' ? '#0BA596' : undefined
-                    }}
-                  >
-                    <div className="font-medium">Custom Objectives</div>
-                    <div className="text-xs mt-1">Year 1+ Curriculum</div>
-                  </button>
-                </div>
-              </div>
+              {/* Curriculum Type - REMOVED: Now all objectives are shown together */}
 
               {/* Category */}
               <div>
@@ -354,48 +306,19 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                 )}
               </div>
 
-              {/* Custom Objectives Year Group Selector */}
-              {activity.curriculum_type === 'CUSTOM' && (
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Custom Objectives Year Group <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={activity.custom_objective_year_group_id}
-                    onChange={(e) => handleCustomObjectiveYearGroupChange(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                    style={{ '--tw-ring-color': '#0BA596' } as React.CSSProperties}
-                    onFocus={(e) => e.target.style.borderColor = '#0BA596'}
-                    onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
-                    disabled={loadingCustomYearGroups}
-                  >
-                    <option value="">
-                      {loadingCustomYearGroups ? 'Loading...' : 'Select Custom Objectives Year Group'}
-                    </option>
-                    {customObjectiveYearGroups.map(yearGroup => (
-                      <option key={yearGroup.id} value={yearGroup.id}>
-                        {yearGroup.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.custom_objective_year_group_id && (
-                    <p className="mt-1 text-sm text-red-500">{errors.custom_objective_year_group_id}</p>
-                  )}
-                  {activity.custom_objective_year_group_id && (
-                    <div className="mt-3">
-                      <CustomObjectivesSelector
-                        yearGroupId={activity.custom_objective_year_group_id}
-                        selectedObjectiveIds={activity.custom_objective_ids}
-                        onObjectivesChange={handleCustomObjectivesChange}
-                        className="w-full"
-                      />
-                      {errors.custom_objective_ids && (
-                        <p className="mt-1 text-sm text-red-500">{errors.custom_objective_ids}</p>
-                      )}
-                    </div>
-                  )}
+              {/* Objectives Selector - Now shows all objectives (EYFS + Custom) together */}
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Objectives
+                </label>
+                <p className="text-sm text-gray-500 mb-3">
+                  Choose from EYFS objectives or custom year group objectives below
+                </p>
+                {/* TODO: Create a unified objectives selector that shows EYFS + all custom objectives */}
+                <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center text-gray-500">
+                  Unified objectives selector coming soon
                 </div>
-              )}
+              </div>
 
               {/* Time */}
               <div>

@@ -74,17 +74,26 @@ export function NestedStandardsBrowser({ lessonNumber, className = '' }: NestedS
   const handleToggleObjective = async (objectiveId: string) => {
     if (!lessonData) {
       console.error('Cannot toggle objective: lesson data not found for', lessonNumber);
+      alert('Error: Lesson data not found. Please refresh the page.');
       return;
     }
     
     const currentObjectives = (lessonData.customObjectives || []) as string[];
     
-    if (currentObjectives.includes(objectiveId)) {
-      // Remove the objective
-      await removeCustomObjectiveFromLesson(lessonNumber, objectiveId);
-    } else {
-      // Add the objective
-      await addCustomObjectiveToLesson(lessonNumber, objectiveId);
+    try {
+      if (currentObjectives.includes(objectiveId)) {
+        // Remove the objective
+        await removeCustomObjectiveFromLesson(lessonNumber, objectiveId);
+        console.log('✅ Objective removed successfully');
+      } else {
+        // Add the objective
+        await addCustomObjectiveToLesson(lessonNumber, objectiveId);
+        console.log('✅ Objective added successfully');
+      }
+    } catch (error) {
+      console.error('❌ Failed to toggle objective:', error);
+      alert(`Failed to save objective: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Note: Changes are saved locally even if Supabase fails
     }
   };
 
