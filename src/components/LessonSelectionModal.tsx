@@ -52,6 +52,12 @@ export function LessonSelectionModal({
   const [selectedLessonForDetails, setSelectedLessonForDetails] = useState<string | null>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [selectedStackForModal, setSelectedStackForModal] = useState<string | null>(null);
+
+  // Update local state when selectedLessons prop changes (e.g., after lesson deletion)
+  useEffect(() => {
+    setLocalSelectedLessons(selectedLessons);
+    setOrderedLessons(selectedLessons);
+  }, [selectedLessons]);
   
   // Get theme colors for current class
   const theme = getThemeForClass(currentSheetInfo.sheet);
@@ -112,17 +118,10 @@ export function LessonSelectionModal({
 
   if (!isOpen) return null;
 
-  // FIXED: Only show lessons already assigned to THIS half-term
+  // Show all available lessons that can be assigned to this half-term
   const filteredLessons = lessonNumbers.filter(lessonNum => {
     const lessonData = allLessonsData[lessonNum];
     if (!lessonData) return false;
-    
-    // Check if this lesson is assigned to THIS specific half-term
-    const thisHalfTerm = halfTerms.find(term => term.id === halfTermId);
-    const isAssignedToThisTerm = thisHalfTerm && thisHalfTerm.lessons.includes(lessonNum);
-    
-    // Only show lessons that are already assigned to this half-term
-    if (!isAssignedToThisTerm) return false;
     
     // Apply search filtering
     if (searchQuery) {
@@ -141,6 +140,17 @@ export function LessonSelectionModal({
     }
     
     return true;
+  });
+
+  // DEBUG: Log lesson filtering
+  console.log('🔍 LESSON SELECTION MODAL - Lesson filtering:', {
+    halfTermId,
+    totalLessons: lessonNumbers.length,
+    filteredLessons: filteredLessons.length,
+    selectedLessons: selectedLessons,
+    localSelectedLessons: localSelectedLessons,
+    searchQuery,
+    halfTermData: halfTerms.find(term => term.id === halfTermId)
   });
 
   // Handle lesson selection
