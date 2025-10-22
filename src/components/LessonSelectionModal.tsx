@@ -55,6 +55,12 @@ export function LessonSelectionModal({
 
   // Update local state when selectedLessons prop changes (e.g., after lesson deletion)
   useEffect(() => {
+    console.log('🔄 LESSON SELECTION MODAL - selectedLessons prop changed:', {
+      selectedLessons,
+      localSelectedLessons,
+      halfTermId,
+      areEqual: JSON.stringify(selectedLessons) === JSON.stringify(localSelectedLessons)
+    });
     setLocalSelectedLessons(selectedLessons);
     setOrderedLessons(selectedLessons);
   }, [selectedLessons]);

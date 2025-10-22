@@ -803,28 +803,37 @@ export function UnitViewer() {
         )}
 
         {/* Lesson Selection Modal */}
-        {showLessonSelectionModal && selectedHalfTerm && (
-          <LessonSelectionModal
-            isOpen={showLessonSelectionModal}
-            onClose={() => {
-              setShowLessonSelectionModal(false);
-              setSelectedHalfTerm(null);
-            }}
-            halfTermId={selectedHalfTerm}
-            halfTermName={HALF_TERMS.find(term => term.id === selectedHalfTerm)?.name || ''}
-            halfTermMonths={HALF_TERMS.find(term => term.id === selectedHalfTerm)?.months || ''}
-            halfTermColor={TERM_COLORS[selectedHalfTerm]}
-            selectedLessons={getLessonsForHalfTerm(selectedHalfTerm)}
-            onSave={(lessons, isComplete) => {
-              // Preserve existing stacks when updating half-term
-              const existingHalfTerm = halfTerms.find(term => term.id === selectedHalfTerm);
-              const existingStacks = existingHalfTerm?.stacks || [];
-              updateHalfTerm(selectedHalfTerm, lessons, isComplete, existingStacks);
-              setShowLessonSelectionModal(false);
-              setSelectedHalfTerm(null);
-            }}
-          />
-        )}
+        {showLessonSelectionModal && selectedHalfTerm && (() => {
+          const lessonsForHalfTerm = getLessonsForHalfTerm(selectedHalfTerm);
+          console.log('🎯 UNIT VIEWER - Opening LessonSelectionModal:', {
+            selectedHalfTerm,
+            lessonsForHalfTerm,
+            lessonsCount: lessonsForHalfTerm.length,
+            halfTerms: halfTerms.map(ht => ({ id: ht.id, name: ht.name, lessons: ht.lessons }))
+          });
+          return (
+            <LessonSelectionModal
+              isOpen={showLessonSelectionModal}
+              onClose={() => {
+                setShowLessonSelectionModal(false);
+                setSelectedHalfTerm(null);
+              }}
+              halfTermId={selectedHalfTerm}
+              halfTermName={HALF_TERMS.find(term => term.id === selectedHalfTerm)?.name || ''}
+              halfTermMonths={HALF_TERMS.find(term => term.id === selectedHalfTerm)?.months || ''}
+              halfTermColor={TERM_COLORS[selectedHalfTerm]}
+              selectedLessons={lessonsForHalfTerm}
+              onSave={(lessons, isComplete) => {
+                // Preserve existing stacks when updating half-term
+                const existingHalfTerm = halfTerms.find(term => term.id === selectedHalfTerm);
+                const existingStacks = existingHalfTerm?.stacks || [];
+                updateHalfTerm(selectedHalfTerm, lessons, isComplete, existingStacks);
+                setShowLessonSelectionModal(false);
+                setSelectedHalfTerm(null);
+              }}
+            />
+          );
+        })()}
 
         {/* Lesson Details Modal */}
         {selectedLessonForDetails && (
