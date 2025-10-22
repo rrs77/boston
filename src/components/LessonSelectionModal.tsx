@@ -124,8 +124,33 @@ export function LessonSelectionModal({
 
   if (!isOpen) return null;
 
-  // Show all available lessons that can be assigned to this half-term
-  const filteredLessons = lessonNumbers.filter(lessonNum => {
+  // Get all available lessons for this half-term
+  // Combine lessons from stacks and direct assignments
+  const getLessonsForHalfTerm = () => {
+    const halfTermData = halfTerms.find(term => term.id === halfTermId);
+    if (!halfTermData) return [];
+    
+    // Get direct lessons
+    const directLessons = halfTermData.lessons || [];
+    
+    // Get lessons from stacks
+    const stackLessons = (halfTermData.stacks || []).reduce((acc, stackId) => {
+      const stack = stacks.find(s => s.id === stackId);
+      if (stack && stack.lessons) {
+        acc.push(...stack.lessons);
+      }
+      return acc;
+    }, [] as string[]);
+    
+    // Combine and deduplicate
+    const allLessons = [...new Set([...directLessons, ...stackLessons])];
+    
+    return allLessons;
+  };
+  
+  const lessonsToShow = getLessonsForHalfTerm();
+  
+  const filteredLessons = lessonsToShow.filter(lessonNum => {
     const lessonData = allLessonsData[lessonNum];
     if (!lessonData) return false;
     
@@ -152,11 +177,20 @@ export function LessonSelectionModal({
   console.log('🔍 LESSON SELECTION MODAL - Lesson filtering:', {
     halfTermId,
     totalLessons: lessonNumbers.length,
+    lessonNumbers: lessonNumbers,
+    lessonsToShow: lessonsToShow,
+    lessonsToShowLength: lessonsToShow.length,
     filteredLessons: filteredLessons.length,
     selectedLessons: selectedLessons,
     localSelectedLessons: localSelectedLessons,
     searchQuery,
-    halfTermData: halfTerms.find(term => term.id === halfTermId)
+    halfTermData: halfTerms.find(term => term.id === halfTermId),
+    allLessonsDataKeys: Object.keys(allLessonsData).length,
+    directLessons: halfTerms.find(term => term.id === halfTermId)?.lessons || [],
+    stackLessons: (halfTerms.find(term => term.id === halfTermId)?.stacks || []).map(stackId => {
+      const stack = stacks.find(s => s.id === stackId);
+      return stack ? stack.lessons : [];
+    }).flat()
   });
 
   // Handle lesson selection

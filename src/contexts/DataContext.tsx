@@ -374,12 +374,12 @@ const generateDefaultLessonTitle = (lessonData: LessonData): string => {
 
 // Define half-term periods
 const DEFAULT_HALF_TERMS = [
-  { id: 'A1', name: 'Autumn 1', months: 'Sep-Oct', lessons: [], isComplete: false },
-  { id: 'A2', name: 'Autumn 2', months: 'Nov-Dec', lessons: [], isComplete: false },
-  { id: 'SP1', name: 'Spring 1', months: 'Jan-Feb', lessons: [], isComplete: false },
-  { id: 'SP2', name: 'Spring 2', months: 'Mar-Apr', lessons: [], isComplete: false },
-  { id: 'SM1', name: 'Summer 1', months: 'Apr-May', lessons: [], isComplete: false },
-  { id: 'SM2', name: 'Summer 2', months: 'Jun-Jul', lessons: [], isComplete: false },
+  { id: 'A1', name: 'Autumn 1', months: 'Sep-Oct', lessons: [], stacks: [], isComplete: false },
+  { id: 'A2', name: 'Autumn 2', months: 'Nov-Dec', lessons: [], stacks: [], isComplete: false },
+  { id: 'SP1', name: 'Spring 1', months: 'Jan-Feb', lessons: [], stacks: [], isComplete: false },
+  { id: 'SP2', name: 'Spring 2', months: 'Mar-Apr', lessons: [], stacks: [], isComplete: false },
+  { id: 'SM1', name: 'Summer 1', months: 'Apr-May', lessons: [], stacks: [], isComplete: false },
+  { id: 'SM2', name: 'Summer 2', months: 'Jun-Jul', lessons: [], stacks: [], isComplete: false },
 ];
 
 export function DataProvider({ children }: DataProviderProps) {
@@ -1017,12 +1017,19 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
         try {
           const parsedHalfTerms = JSON.parse(savedHalfTerms);
           console.log('🔍 Parsed half-terms from localStorage:', parsedHalfTerms);
-          console.log('🔍 Setting half-terms state with data:', parsedHalfTerms.map(ht => ({ id: ht.id, name: ht.name, lessonsCount: ht.lessons?.length || 0 })));
-          setHalfTerms(parsedHalfTerms);
+          
+          // Ensure all half-terms have the stacks field
+          const formattedHalfTerms = parsedHalfTerms.map((term: any) => ({
+            ...term,
+            stacks: term.stacks || [] // Ensure stacks field exists
+          }));
+          
+          console.log('🔍 Setting half-terms state with data:', formattedHalfTerms.map(ht => ({ id: ht.id, name: ht.name, lessonsCount: ht.lessons?.length || 0, stacksCount: ht.stacks?.length || 0 })));
+          setHalfTerms(formattedHalfTerms);
           // Also update the year-specific state
           setHalfTermsByYear(prev => ({
             ...prev,
-            [currentAcademicYear]: parsedHalfTerms
+            [currentAcademicYear]: formattedHalfTerms
           }));
         } catch (error) {
           console.error('Error parsing saved half-terms:', error);
@@ -1069,6 +1076,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
           name: term.name,
           months: (term as any).months || 'Unknown',
           lessons: term.lessons || [],
+          stacks: term.stacks || [], // CRITICAL: Add missing stacks field
           isComplete: term.isComplete || false
         }));
         setHalfTerms(formattedHalfTerms);

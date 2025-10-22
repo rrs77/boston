@@ -98,10 +98,9 @@ export function TabsTrigger({ value, children, className, style }: TabsTriggerPr
         borderBottom: 'none',
         borderTop: 'none',
         borderLeft: 'none',
-        transition: 'all 0.2s ease',
-                borderRight: 'none',
-                cursor: 'pointer',
-                transition: 'all 200ms ease',
+        borderRight: 'none',
+        cursor: 'pointer',
+        transition: 'all 200ms ease',
                 minHeight: '56px',
                 borderRadius: '0',
                 boxShadow: isActive ? '0 2px 8px rgba(20, 184, 166, 0.3)' : 'none',
@@ -111,14 +110,22 @@ export function TabsTrigger({ value, children, className, style }: TabsTriggerPr
               }}
       onMouseEnter={(e) => {
         if (!isActive) {
-          e.currentTarget.style.color = '#111827';
-          e.currentTarget.style.backgroundColor = '#F9FAFB';
+          // Inactive tab hover: lighter teal
+          e.currentTarget.style.color = '#FFFFFF';
+          e.currentTarget.style.backgroundColor = '#5EEAD4'; // Lighter teal (#5EEAD4)
+        } else {
+          // Active tab hover: even lighter teal
+          e.currentTarget.style.backgroundColor = '#6DD5C7'; // Even lighter teal (#6DD5C7)
         }
       }}
       onMouseLeave={(e) => {
         if (!isActive) {
+          // Return inactive tab to normal state
           e.currentTarget.style.color = '#6B7280';
           e.currentTarget.style.backgroundColor = 'transparent';
+        } else {
+          // Return active tab to normal teal
+          e.currentTarget.style.backgroundColor = '#14B8A6'; // Original teal (#14B8A6)
         }
       }}
     >
