@@ -1665,31 +1665,50 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
       
       // Then try to save to Supabase if connected
       if (isSupabaseConfigured()) {
-        // Convert plans to the format expected by Supabase
-        const supabasePlans = plans.map(plan => ({
-          id: plan.id,
-          date: plan.date.toISOString(),
-          week: plan.week,
-          class_name: plan.className,
-          activities: plan.activities,
-          duration: plan.duration,
-          notes: plan.notes,
-          status: plan.status,
-          unit_id: plan.unitId,
-          unit_name: plan.unitName,
-          lesson_number: plan.lessonNumber,
-          title: plan.title,
-          term: plan.term,
-          time: plan.time
-        }));
-        
-        // Use upsert to handle both inserts and updates
-        const { error } = await supabase
-          .from(TABLES.LESSON_PLANS)
-          .upsert(supabasePlans, { onConflict: 'id' });
-        
-        if (error) {
-          console.warn('Failed to save lesson plans to Supabase:', error);
+        try {
+          // Refresh session first to ensure valid auth
+          const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
+          
+          if (sessionError) {
+            console.warn('Session refresh failed:', sessionError);
+            return; // Skip Supabase save if auth fails
+          }
+          
+          if (!session) {
+            console.warn('No valid session after refresh');
+            return; // Skip Supabase save if no session
+          }
+          
+          // Convert plans to the format expected by Supabase
+          const supabasePlans = plans.map(plan => ({
+            id: plan.id,
+            date: plan.date.toISOString(),
+            week: plan.week,
+            class_name: plan.className,
+            activities: plan.activities,
+            duration: plan.duration,
+            notes: plan.notes,
+            status: plan.status,
+            unit_id: plan.unitId,
+            unit_name: plan.unitName,
+            lesson_number: plan.lessonNumber,
+            title: plan.title,
+            term: plan.term,
+            time: plan.time
+          }));
+          
+          // Use upsert to handle both inserts and updates
+          const { error } = await supabase
+            .from(TABLES.LESSON_PLANS)
+            .upsert(supabasePlans, { onConflict: 'id' });
+          
+          if (error) {
+            console.warn('Failed to save lesson plans to Supabase:', error);
+          } else {
+            console.log('Successfully saved lesson plans to Supabase');
+          }
+        } catch (supabaseError) {
+          console.warn('Supabase save failed:', supabaseError);
         }
       }
     } catch (error) {
@@ -2149,7 +2168,7 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
         ? lessonNumbers 
         : [...lessonNumbers, plan.lessonNumber!].sort((a, b) => parseInt(a) - parseInt(b)),
       teachingUnits,
-      eyfsStatements
+      lessonStandards
     };
     
     localStorage.setItem(`lesson-data-${currentSheetInfo.sheet}`, JSON.stringify(dataToSave));
@@ -2783,7 +2802,7 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
     setAllLessonsData(prev => {
       const updatedLessonsData = { ...prev };
       if (updatedLessonsData[lessonNumber]) {
-        const currentStatements = updatedLessonsData[lessonNumber].eyfsStatements || [];
+        const currentStatements = updatedLessonsData[lessonNumber].lessonStandards || [];
         if (!currentStatements.includes(eyfsStatement)) {
           updatedLessonsData[lessonNumber] = {
             ...updatedLessonsData[lessonNumber],
@@ -2828,10 +2847,10 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
 
     setAllLessonsData(prev => {
       const updatedLessonsData = { ...prev };
-      if (updatedLessonsData[lessonNumber] && updatedLessonsData[lessonNumber].eyfsStatements) {
+      if (updatedLessonsData[lessonNumber] && updatedLessonsData[lessonNumber].lessonStandards) {
         updatedLessonsData[lessonNumber] = {
           ...updatedLessonsData[lessonNumber],
-          lessonStandards: updatedLessonsData[lessonNumber].eyfsStatements!.filter(
+          lessonStandards: updatedLessonsData[lessonNumber].lessonStandards!.filter(
             statement => statement !== eyfsStatement
           )
         };

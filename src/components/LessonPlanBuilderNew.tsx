@@ -717,7 +717,7 @@ export function LessonPlanBuilderNew({
           )}
 
           {/* ACTIVITIES LIST */}
-          <div style={{ padding: '16px', backgroundColor: '#F9FAFB' }}>
+          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', marginTop: '8px' }}>
             <div className="space-y-3">
               {filteredActivities.map((activity, index) => {
                 const activityId = activity._id || activity.id || '';
@@ -841,7 +841,7 @@ export function LessonPlanBuilderNew({
             
             {/* Add Selected Activities Button */}
             {selectedActivities.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="mt-4 pt-4 pb-6 border-t border-gray-200">
                 <button
                   onClick={handleAddSelectedActivities}
                   style={{

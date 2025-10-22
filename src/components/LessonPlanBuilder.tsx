@@ -630,7 +630,7 @@ export function LessonPlanBuilder({
                   
                   {/* Add Selected Button */}
                   {selectedActivities.length > 0 && (
-                    <div className="mt-3 mb-6">
+                    <div className="mt-3 mb-8">
                       <button
                         onClick={addSelectedActivities}
                         className="w-full px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
@@ -696,7 +696,7 @@ export function LessonPlanBuilder({
                 )}
 
                 {/* Activity List */}
-                <div className="p-3 flex-1 overflow-y-auto min-h-0">
+                <div className="p-3 pt-6 flex-1 overflow-y-auto min-h-0">
                   {filteredAndSortedActivities.length === 0 ? (
                     <div className="text-center py-8">
                       <p className="text-gray-500">No matching activities found</p>
