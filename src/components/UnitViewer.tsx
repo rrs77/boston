@@ -761,7 +761,10 @@ export function UnitViewer() {
                 lessonsList: lessons,
                 stackLessons: stackLessons,
                 totalLessonCount: totalLessonCount,
-                loading: loading
+                loading: loading,
+                halfTermData: halfTermData,
+                stackIds: stackIds,
+                allHalfTerms: halfTerms.map(ht => ({ id: ht.id, name: ht.name, lessons: ht.lessons, stacks: ht.stacks }))
               });
               
               return (

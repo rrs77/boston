@@ -469,9 +469,21 @@ export function DataProvider({ children }: DataProviderProps) {
       console.log('🔄 DATACONTEXT - Syncing legacy halfTerms with year-specific data:', {
         currentAcademicYear,
         yearDataExists: !!halfTermsByYear[currentAcademicYear],
-        yearDataLength: halfTermsByYear[currentAcademicYear]?.length || 0
+        yearDataLength: halfTermsByYear[currentAcademicYear]?.length || 0,
+        yearData: halfTermsByYear[currentAcademicYear].map(ht => ({ 
+          id: ht.id, 
+          name: ht.name, 
+          lessonsCount: ht.lessons?.length || 0,
+          stacksCount: ht.stacks?.length || 0
+        }))
       });
       setHalfTerms(halfTermsByYear[currentAcademicYear]);
+    } else {
+      console.log('⚠️ DATACONTEXT - No year-specific data found for:', {
+        currentAcademicYear,
+        availableYears: Object.keys(halfTermsByYear),
+        halfTermsByYear
+      });
     }
   }, [currentAcademicYear, halfTermsByYear]);
 
@@ -983,6 +995,11 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
       if (dataWasCleared) {
         console.log('🔍 Data was cleared, setting default half-terms');
         setHalfTerms(DEFAULT_HALF_TERMS);
+        // Also update the year-specific state with defaults
+        setHalfTermsByYear(prev => ({
+          ...prev,
+          [currentAcademicYear]: DEFAULT_HALF_TERMS
+        }));
         return;
       }
       
@@ -1002,19 +1019,39 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
           console.log('🔍 Parsed half-terms from localStorage:', parsedHalfTerms);
           console.log('🔍 Setting half-terms state with data:', parsedHalfTerms.map(ht => ({ id: ht.id, name: ht.name, lessonsCount: ht.lessons?.length || 0 })));
           setHalfTerms(parsedHalfTerms);
+          // Also update the year-specific state
+          setHalfTermsByYear(prev => ({
+            ...prev,
+            [currentAcademicYear]: parsedHalfTerms
+          }));
         } catch (error) {
           console.error('Error parsing saved half-terms:', error);
           setHalfTerms(DEFAULT_HALF_TERMS);
+          // Also update the year-specific state with defaults
+          setHalfTermsByYear(prev => ({
+            ...prev,
+            [currentAcademicYear]: DEFAULT_HALF_TERMS
+          }));
         }
       } else {
         // Initialize with default half-terms
         console.log('🔍 No saved half-terms for this academic year, initializing with defaults');
         setHalfTerms(DEFAULT_HALF_TERMS);
+        // Also update the year-specific state with defaults
+        setHalfTermsByYear(prev => ({
+          ...prev,
+          [currentAcademicYear]: DEFAULT_HALF_TERMS
+        }));
         localStorage.setItem(localStorageKey, JSON.stringify(DEFAULT_HALF_TERMS));
       }
     } catch (error) {
       console.error('Failed to load half-terms:', error);
       setHalfTerms(DEFAULT_HALF_TERMS);
+      // Also update the year-specific state with defaults
+      setHalfTermsByYear(prev => ({
+        ...prev,
+        [currentAcademicYear]: DEFAULT_HALF_TERMS
+      }));
     }
   };
 
@@ -1035,6 +1072,11 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
           isComplete: term.isComplete || false
         }));
         setHalfTerms(formattedHalfTerms);
+        // Also update the year-specific state
+        setHalfTermsByYear(prev => ({
+          ...prev,
+          [currentAcademicYear]: formattedHalfTerms
+        }));
         
         // Also save to localStorage for offline access with academic year in key
         localStorage.setItem(`half-terms-${currentSheetInfo.sheet}-${currentAcademicYear}`, JSON.stringify(formattedHalfTerms));
