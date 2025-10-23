@@ -755,6 +755,9 @@ export function UnitViewer() {
               // Total lesson count includes both individual lessons and lessons from stacks
               const totalLessonCount = lessons.length + stackLessons;
               
+              // CRITICAL FIX: Only render half-terms that actually exist in the data
+              const halfTermExists = halfTermData !== undefined;
+              
               // DEBUG: Log lesson count calculation
               console.log(`📊 HalfTerm ${halfTerm.id} (${halfTerm.name}):`, {
                 lessons: lessons.length,
@@ -763,9 +766,16 @@ export function UnitViewer() {
                 totalLessonCount: totalLessonCount,
                 loading: loading,
                 halfTermData: halfTermData,
+                halfTermExists: halfTermExists,
                 stackIds: stackIds,
                 allHalfTerms: halfTerms.map(ht => ({ id: ht.id, name: ht.name, lessons: ht.lessons, stacks: ht.stacks }))
               });
+              
+              // Only render if half-term exists in data
+              if (!halfTermExists) {
+                console.log(`⚠️ Skipping ${halfTerm.id} - not found in halfTerms data`);
+                return null;
+              }
               
               return (
                 <HalfTermCard
@@ -780,7 +790,7 @@ export function UnitViewer() {
                   isComplete={isComplete}
                 />
               );
-              })}
+              }).filter(Boolean)}
             </div>
           )}
 
