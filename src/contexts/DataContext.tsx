@@ -484,8 +484,17 @@ export function DataProvider({ children }: DataProviderProps) {
         availableYears: Object.keys(halfTermsByYear),
         halfTermsByYear
       });
+      
+      // CRITICAL FIX: If no year-specific data exists, initialize it with current halfTerms
+      if (halfTerms.length > 0) {
+        console.log('🔄 DATACONTEXT - Initializing year-specific data with current halfTerms');
+        setHalfTermsByYear(prev => ({
+          ...prev,
+          [currentAcademicYear]: halfTerms
+        }));
+      }
     }
-  }, [currentAcademicYear, halfTermsByYear]);
+  }, [currentAcademicYear, halfTermsByYear, halfTerms]);
 
   // ADD: Debug function to help diagnose database issues
   const debugSubjectSetup = async () => {
@@ -1314,12 +1323,32 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
     const halfTerm = halfTerms.find(term => term.id === halfTermId);
     const lessons = halfTerm ? halfTerm.lessons : [];
     
-    // DEBUG: Log lesson retrieval
+    // DEBUG: Log lesson retrieval with more detail
     console.log(`🔍 getLessonsForHalfTerm(${halfTermId}):`, {
       halfTermFound: !!halfTerm,
       lessons: lessons,
       lessonsLength: lessons.length,
-      allHalfTerms: halfTerms.map(ht => ({ id: ht.id, name: ht.name, lessonsCount: ht.lessons?.length || 0 }))
+      halfTermData: halfTerm ? {
+        id: halfTerm.id,
+        name: halfTerm.name,
+        lessons: halfTerm.lessons,
+        lessonsLength: halfTerm.lessons?.length || 0,
+        stacks: halfTerm.stacks,
+        stacksLength: halfTerm.stacks?.length || 0
+      } : null,
+      allHalfTerms: halfTerms.map(ht => ({ 
+        id: ht.id, 
+        name: ht.name, 
+        lessonsCount: ht.lessons?.length || 0,
+        stacksCount: ht.stacks?.length || 0
+      })),
+      currentAcademicYear,
+      halfTermsByYearKeys: Object.keys(halfTermsByYear),
+      halfTermsByYearCurrent: halfTermsByYear[currentAcademicYear]?.map(ht => ({
+        id: ht.id,
+        name: ht.name,
+        lessonsCount: ht.lessons?.length || 0
+      }))
     });
     
     return lessons;
