@@ -216,8 +216,11 @@ export function LessonPlanBuilderNew({
 
   // Handle adding selected activities
   const handleAddSelectedActivities = () => {
+    console.log('🔍 handleAddSelectedActivities called with:', selectedActivities);
+    
     selectedActivities.forEach(activityId => {
       const activity = allActivities.find(act => (act._id || act.id) === activityId);
+      console.log('🔍 Processing activity:', { activityId, activity });
       if (activity) {
         handleActivityAdd(activity);
       }
@@ -225,6 +228,7 @@ export function LessonPlanBuilderNew({
     
     // Clear selections after adding
     setSelectedActivities([]);
+    console.log('🔍 Cleared selectedActivities');
   };
 
   // Handle saving lesson plan
@@ -841,16 +845,28 @@ export function LessonPlanBuilderNew({
             
             {/* Add Selected Activities Button - Fixed positioning */}
             {selectedActivities.length > 0 && (
-              <div className="sticky top-0 z-20 bg-white p-4 rounded-lg mb-6 shadow-md border-b-2 border-gray-200">
+              <div 
+                className="sticky top-0 z-30 bg-white p-4 rounded-lg mb-6 shadow-md border-b-2 border-gray-200" 
+                style={{ pointerEvents: 'auto', userSelect: 'none' }}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
-                  onClick={handleAddSelectedActivities}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔍 Button clicked, selectedActivities:', selectedActivities);
+                    handleAddSelectedActivities();
+                  }}
                   className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
                   style={{
                     backgroundColor: '#14B8A6',
                     border: 'none',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    fontWeight: 600
+                    fontWeight: 600,
+                    pointerEvents: 'auto',
+                    position: 'relative',
+                    zIndex: 31
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.backgroundColor = '#0D9488';

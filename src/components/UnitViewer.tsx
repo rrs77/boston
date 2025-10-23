@@ -738,14 +738,7 @@ export function UnitViewer() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {(() => {
-                console.log('🔍 HALF_TERMS before filter:', HALF_TERMS);
-                console.log('🔍 halfTerms state:', halfTerms);
-                console.log('🔍 allLessonsData:', allLessonsData);
-                console.log('🔍 allLessonsData keys:', Object.keys(allLessonsData));
-                console.log('🔍 allLessonsData count:', Object.keys(allLessonsData).length);
-                return HALF_TERMS;
-              })()
+              {HALF_TERMS
                 .filter(halfTerm => {
                   const lessons = getLessonsForHalfTerm(halfTerm.id);
                   const halfTermData = halfTerms.find(term => term.id === halfTerm.id);
@@ -766,9 +759,8 @@ export function UnitViewer() {
                   
                   console.log(`🔍 Filtering ${halfTerm.id}: ${lessons.length} lessons + ${stackLessons} stack lessons = ${totalLessonCount} total, hasLessons: ${hasLessons}, exists: ${halfTermExists}`);
                   
-                  // TEMPORARY: Show all half-terms for debugging
-                  console.log(`🔍 DEBUG: Showing ${halfTerm.id} for debugging purposes`);
-                  return true; // Temporarily show all half-terms
+                  // Only show half-terms that have lessons AND exist in data
+                  return hasLessons && halfTermExists;
                 })
                 .map((halfTerm) => {
                   const lessons = getLessonsForHalfTerm(halfTerm.id);
