@@ -1323,33 +1323,36 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
     const halfTerm = halfTerms.find(term => term.id === halfTermId);
     const lessons = halfTerm ? halfTerm.lessons : [];
     
-    // DEBUG: Log lesson retrieval with more detail
-    console.log(`🔍 getLessonsForHalfTerm(${halfTermId}):`, {
-      halfTermFound: !!halfTerm,
-      lessons: lessons,
-      lessonsLength: lessons.length,
-      halfTermData: halfTerm ? {
-        id: halfTerm.id,
-        name: halfTerm.name,
-        lessons: halfTerm.lessons,
-        lessonsLength: halfTerm.lessons?.length || 0,
-        stacks: halfTerm.stacks,
-        stacksLength: halfTerm.stacks?.length || 0
-      } : null,
-      allHalfTerms: halfTerms.map(ht => ({ 
-        id: ht.id, 
-        name: ht.name, 
-        lessonsCount: ht.lessons?.length || 0,
-        stacksCount: ht.stacks?.length || 0
-      })),
-      currentAcademicYear,
-      halfTermsByYearKeys: Object.keys(halfTermsByYear),
-      halfTermsByYearCurrent: halfTermsByYear[currentAcademicYear]?.map(ht => ({
-        id: ht.id,
-        name: ht.name,
-        lessonsCount: ht.lessons?.length || 0
-      }))
-    });
+  // DEBUG: Log lesson retrieval with more detail
+  console.log(`🔍 getLessonsForHalfTerm(${halfTermId}):`, {
+    halfTermFound: !!halfTerm,
+    lessons: lessons,
+    lessonsLength: lessons.length,
+    halfTermData: halfTerm ? {
+      id: halfTerm.id,
+      name: halfTerm.name,
+      lessons: halfTerm.lessons,
+      lessonsLength: halfTerm.lessons?.length || 0,
+      stacks: halfTerm.stacks,
+      stacksLength: halfTerm.stacks?.length || 0
+    } : null,
+    allHalfTerms: halfTerms.map(ht => ({ 
+      id: ht.id, 
+      name: ht.name, 
+      lessonsCount: ht.lessons?.length || 0,
+      stacksCount: ht.stacks?.length || 0
+    })),
+    currentAcademicYear,
+    halfTermsByYearKeys: Object.keys(halfTermsByYear),
+    halfTermsByYearCurrent: halfTermsByYear[currentAcademicYear]?.map(ht => ({
+      id: ht.id,
+      name: ht.name,
+      lessonsCount: ht.lessons?.length || 0
+    })),
+    allLessonsDataKeys: Object.keys(allLessonsData),
+    allLessonsDataCount: Object.keys(allLessonsData).length,
+    loading: loading
+  });
     
     return lessons;
   };
