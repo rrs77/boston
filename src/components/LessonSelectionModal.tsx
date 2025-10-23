@@ -64,6 +64,25 @@ export function LessonSelectionModal({
     setLocalSelectedLessons(selectedLessons);
     setOrderedLessons(selectedLessons);
   }, [selectedLessons]);
+
+  // CRITICAL FIX: Update local state when lessonsToShow changes to ensure consistency
+  useEffect(() => {
+    const lessonsToShow = getLessonsForHalfTerm();
+    console.log('🔄 LESSON SELECTION MODAL - lessonsToShow changed:', {
+      lessonsToShow,
+      localSelectedLessons,
+      selectedLessons,
+      halfTermId,
+      needsSync: JSON.stringify(lessonsToShow.sort()) !== JSON.stringify(localSelectedLessons.sort())
+    });
+    
+    // If lessonsToShow is different from localSelectedLessons, sync them
+    if (JSON.stringify(lessonsToShow.sort()) !== JSON.stringify(localSelectedLessons.sort())) {
+      console.log('🔄 LESSON SELECTION MODAL - Syncing localSelectedLessons with lessonsToShow');
+      setLocalSelectedLessons(lessonsToShow);
+      setOrderedLessons(lessonsToShow);
+    }
+  }, [halfTerms, stacks, halfTermId]);
   
   // Get theme colors for current class
   const theme = getThemeForClass(currentSheetInfo.sheet);
@@ -181,6 +200,7 @@ export function LessonSelectionModal({
     lessonsToShow: lessonsToShow,
     lessonsToShowLength: lessonsToShow.length,
     filteredLessons: filteredLessons.length,
+    filteredLessonsList: filteredLessons,
     selectedLessons: selectedLessons,
     localSelectedLessons: localSelectedLessons,
     searchQuery,
@@ -190,7 +210,10 @@ export function LessonSelectionModal({
     stackLessons: (halfTerms.find(term => term.id === halfTermId)?.stacks || []).map(stackId => {
       const stack = stacks.find(s => s.id === stackId);
       return stack ? stack.lessons : [];
-    }).flat()
+    }).flat(),
+    assignedStacks: assignedStacks.map(s => ({ id: s.id, name: s.name, lessons: s.lessons })),
+    footerCount: Math.max(localSelectedLessons.length, filteredLessons.length),
+    showEmptyState: filteredLessons.length === 0 && assignedStacks.length === 0
   });
 
   // Handle lesson selection
@@ -583,7 +606,7 @@ export function LessonSelectionModal({
             <span className="text-sm text-gray-600">
               {showHalfTermView 
                 ? `${orderedLessons.length} lessons in order` 
-                : `${localSelectedLessons.length} lessons will remain assigned`}
+                : `${Math.max(localSelectedLessons.length, filteredLessons.length)} lessons will remain assigned`}
             </span>
           </div>
           <div className="flex space-x-3">
