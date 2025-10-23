@@ -738,59 +738,72 @@ export function UnitViewer() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {HALF_TERMS.map((halfTerm) => {
-              const lessons = getLessonsForHalfTerm(halfTerm.id);
-              const isComplete = isHalfTermComplete(halfTerm.id);
-              
-              // Get stacks for this half-term
-              const halfTermData = halfTerms.find(term => term.id === halfTerm.id);
-              const stackIds = halfTermData?.stacks || [];
-              
-              // Count lessons from stacks
-              const stackLessons = stackIds.reduce((total, stackId) => {
-                const stack = stacks.find(s => s.id === stackId);
-                return total + (stack ? stack.lessons.length : 0);
-              }, 0);
-              
-              // Total lesson count includes both individual lessons and lessons from stacks
-              const totalLessonCount = lessons.length + stackLessons;
-              
-              // CRITICAL FIX: Only render half-terms that actually exist in the data
-              const halfTermExists = halfTermData !== undefined;
-              
-              // DEBUG: Log lesson count calculation
-              console.log(`📊 HalfTerm ${halfTerm.id} (${halfTerm.name}):`, {
-                lessons: lessons.length,
-                lessonsList: lessons,
-                stackLessons: stackLessons,
-                totalLessonCount: totalLessonCount,
-                loading: loading,
-                halfTermData: halfTermData,
-                halfTermExists: halfTermExists,
-                stackIds: stackIds,
-                allHalfTerms: halfTerms.map(ht => ({ id: ht.id, name: ht.name, lessons: ht.lessons, stacks: ht.stacks }))
-              });
-              
-              // Only render if half-term exists in data
-              if (!halfTermExists) {
-                console.log(`⚠️ Skipping ${halfTerm.id} - not found in halfTerms data`);
-                return null;
-              }
-              
-              return (
-                <HalfTermCard
-                  key={halfTerm.id}
-                  id={halfTerm.id}
-                  name={halfTerm.name}
-                  months={halfTerm.months}
-                  color={TERM_COLORS[halfTerm.id]}
-                  lessonCount={totalLessonCount}
-                  stackCount={stackIds.length}
-                  onClick={() => handleHalfTermClick(halfTerm.id)}
-                  isComplete={isComplete}
-                />
-              );
-              }).filter(Boolean)}
+              {HALF_TERMS
+                .filter(halfTerm => {
+                  const lessons = getLessonsForHalfTerm(halfTerm.id);
+                  const halfTermData = halfTerms.find(term => term.id === halfTerm.id);
+                  const stackIds = halfTermData?.stacks || [];
+                  
+                  // Count lessons from stacks
+                  const stackLessons = stackIds.reduce((total, stackId) => {
+                    const stack = stacks.find(s => s.id === stackId);
+                    return total + (stack ? stack.lessons.length : 0);
+                  }, 0);
+                  
+                  // Total lesson count includes both individual lessons and lessons from stacks
+                  const totalLessonCount = lessons.length + stackLessons;
+                  
+                  // Only show half-terms that have lessons OR exist in data
+                  const hasLessons = totalLessonCount > 0;
+                  const halfTermExists = halfTermData !== undefined;
+                  
+                  console.log(`🔍 Filtering ${halfTerm.id}: ${lessons.length} lessons + ${stackLessons} stack lessons = ${totalLessonCount} total, hasLessons: ${hasLessons}, exists: ${halfTermExists}`);
+                  
+                  return hasLessons && halfTermExists;
+                })
+                .map((halfTerm) => {
+                  const lessons = getLessonsForHalfTerm(halfTerm.id);
+                  const isComplete = isHalfTermComplete(halfTerm.id);
+                  
+                  // Get stacks for this half-term
+                  const halfTermData = halfTerms.find(term => term.id === halfTerm.id);
+                  const stackIds = halfTermData?.stacks || [];
+                  
+                  // Count lessons from stacks
+                  const stackLessons = stackIds.reduce((total, stackId) => {
+                    const stack = stacks.find(s => s.id === stackId);
+                    return total + (stack ? stack.lessons.length : 0);
+                  }, 0);
+                  
+                  // Total lesson count includes both individual lessons and lessons from stacks
+                  const totalLessonCount = lessons.length + stackLessons;
+                  
+                  // DEBUG: Log lesson count calculation
+                  console.log(`📊 HalfTerm ${halfTerm.id} (${halfTerm.name}):`, {
+                    lessons: lessons.length,
+                    lessonsList: lessons,
+                    stackLessons: stackLessons,
+                    totalLessonCount: totalLessonCount,
+                    loading: loading,
+                    halfTermData: halfTermData,
+                    stackIds: stackIds,
+                    allHalfTerms: halfTerms.map(ht => ({ id: ht.id, name: ht.name, lessons: ht.lessons, stacks: ht.stacks }))
+                  });
+                  
+                  return (
+                    <HalfTermCard
+                      key={halfTerm.id}
+                      id={halfTerm.id}
+                      name={halfTerm.name}
+                      months={halfTerm.months}
+                      color={TERM_COLORS[halfTerm.id]}
+                      lessonCount={totalLessonCount}
+                      stackCount={stackIds.length}
+                      onClick={() => handleHalfTermClick(halfTerm.id)}
+                      isComplete={isComplete}
+                    />
+                  );
+                })}
             </div>
           )}
 
