@@ -717,7 +717,7 @@ export function LessonPlanBuilderNew({
           )}
 
           {/* ACTIVITIES LIST */}
-          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', marginTop: '8px' }}>
+          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', marginTop: '16px' }}>
             <div className="space-y-3">
               {filteredActivities.map((activity, index) => {
                 const activityId = activity._id || activity.id || '';
@@ -839,26 +839,18 @@ export function LessonPlanBuilderNew({
               })}
             </div>
             
-            {/* Add Selected Activities Button */}
+            {/* Add Selected Activities Button - Fixed positioning */}
             {selectedActivities.length > 0 && (
-              <div className="mt-4 pt-4 pb-6 border-t border-gray-200">
+              <div className="sticky top-0 z-20 bg-white p-4 rounded-lg mb-6 shadow-md border-b-2 border-gray-200">
                 <button
                   onClick={handleAddSelectedActivities}
+                  className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
                   style={{
-                    width: '100%',
                     backgroundColor: '#14B8A6',
-                    color: 'white',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: 500,
                     border: 'none',
                     cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    transition: 'all 200ms'
+                    fontSize: '14px',
+                    fontWeight: 600
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.backgroundColor = '#0D9488';

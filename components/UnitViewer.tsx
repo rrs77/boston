@@ -23,7 +23,7 @@ import { UnitCard } from './UnitCard';
 import { LessonLibraryCard } from './LessonLibraryCard';
 import { ActivityDetails } from './ActivityDetails';
 import { useData } from '../contexts/DataContext';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSettings } from '../contexts/SettingsContextNew';
 import { LessonExporter } from './LessonExporter';
 import { HalfTermCard } from './HalfTermCard';
 import { LessonSelectionModal } from './LessonSelectionModal';
@@ -94,7 +94,11 @@ export function UnitViewer() {
   const [printUnitName, setPrintUnitName] = useState<string | null>(null);
   
   // Get theme colors for current class
-  const theme = getThemeForClass(currentSheetInfo.sheet);
+  const baseTheme = getThemeForClass(currentSheetInfo.sheet);
+  const theme = {
+    ...baseTheme,
+    gradient: (baseTheme as any).gradient || `${baseTheme.primary} to ${baseTheme.secondary}`
+  };
 
   // FIXED: Function to check if a lesson is assigned to any half-term
   const isLessonAssignedToHalfTerm = (lessonNumber: string): boolean => {
@@ -360,6 +364,7 @@ export function UnitViewer() {
                       viewMode="grid"
                       onClick={() => handleViewLessonDetails(lessonNumber)}
                       theme={theme}
+                      displayNumber={parseInt(lessonNumber) || 0}
                     />
                     
                     {/* Overlay buttons that appear on hover */}
@@ -556,7 +561,7 @@ export function UnitViewer() {
             halfTermColor={TERM_COLORS[selectedHalfTerm]}
             selectedLessons={getLessonsForHalfTerm(selectedHalfTerm)}
             onSave={(lessons, isComplete) => {
-              updateHalfTerm(selectedHalfTerm, lessons, isComplete);
+              updateHalfTerm(selectedHalfTerm, lessons, isComplete || false);
               setShowLessonSelectionModal(false);
               setSelectedHalfTerm(null);
             }}
