@@ -499,23 +499,30 @@ export function UnitViewer() {
 
           {/* Half-Term Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {HALF_TERMS.map((halfTerm) => {
-              const lessons = getLessonsForHalfTerm(halfTerm.id);
-              const isComplete = isHalfTermComplete(halfTerm.id);
-              
-              return (
-                <HalfTermCard
-                  key={halfTerm.id}
-                  id={halfTerm.id}
-                  name={halfTerm.name}
-                  months={halfTerm.months}
-                  color={TERM_COLORS[halfTerm.id]}
-                  lessonCount={lessons.length}
-                  onClick={() => handleHalfTermClick(halfTerm.id)}
-                  isComplete={isComplete}
-                />
-              );
-            })}
+            {HALF_TERMS
+              .filter(halfTerm => {
+                const lessons = getLessonsForHalfTerm(halfTerm.id);
+                const hasLessons = lessons.length > 0;
+                console.log(`🔍 Filtering ${halfTerm.id}: ${lessons.length} lessons, hasLessons: ${hasLessons}`);
+                return hasLessons;
+              })
+              .map((halfTerm) => {
+                const lessons = getLessonsForHalfTerm(halfTerm.id);
+                const isComplete = isHalfTermComplete(halfTerm.id);
+                
+                return (
+                  <HalfTermCard
+                    key={halfTerm.id}
+                    id={halfTerm.id}
+                    name={halfTerm.name}
+                    months={halfTerm.months}
+                    color={TERM_COLORS[halfTerm.id]}
+                    lessonCount={lessons.length}
+                    onClick={() => handleHalfTermClick(halfTerm.id)}
+                    isComplete={isComplete}
+                  />
+                );
+              })}
           </div>
         </div>
 
