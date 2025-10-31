@@ -47,7 +47,11 @@ export function useLessonStacks() {
   const createStack = async (stackData: Omit<StackedLesson, 'id' | 'created_at'>) => {
     try {
       const newStack = await lessonStacksApi.create(stackData);
-      setStacks(prev => [...prev, newStack]);
+      setStacks(prev => {
+        const updated = [...prev, newStack];
+        localStorage.setItem('lesson-stacks', JSON.stringify(updated));
+        return updated;
+      });
       return newStack;
     } catch (error) {
       console.error('Failed to create stack:', error);
@@ -57,8 +61,11 @@ export function useLessonStacks() {
         id: `stack-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         created_at: new Date().toISOString()
       };
-      setStacks(prev => [...prev, newStack]);
-      localStorage.setItem('lesson-stacks', JSON.stringify([...stacks, newStack]));
+      setStacks(prev => {
+        const updated = [...prev, newStack];
+        localStorage.setItem('lesson-stacks', JSON.stringify(updated));
+        return updated;
+      });
       return newStack;
     }
   };
@@ -66,38 +73,45 @@ export function useLessonStacks() {
   const updateStack = async (id: string, updates: Partial<Omit<StackedLesson, 'id' | 'created_at'>>) => {
     try {
       const updatedStack = await lessonStacksApi.update(id, updates);
-      setStacks(prev => 
-        prev.map(stack => 
+      setStacks(prev => {
+        const updated = prev.map(stack => 
           stack.id === id ? updatedStack : stack
-        )
-      );
+        );
+        localStorage.setItem('lesson-stacks', JSON.stringify(updated));
+        return updated;
+      });
       return updatedStack;
     } catch (error) {
       console.error('Failed to update stack:', error);
       // Fallback to localStorage
-      setStacks(prev => 
-        prev.map(stack => 
+      setStacks(prev => {
+        const updated = prev.map(stack => 
           stack.id === id 
             ? { ...stack, ...updates }
             : stack
-        )
-      );
-      localStorage.setItem('lesson-stacks', JSON.stringify(stacks.map(stack => 
-        stack.id === id ? { ...stack, ...updates } : stack
-      )));
+        );
+        localStorage.setItem('lesson-stacks', JSON.stringify(updated));
+        return updated;
+      });
     }
   };
 
   const deleteStack = async (id: string) => {
     try {
       await lessonStacksApi.delete(id);
-      setStacks(prev => prev.filter(stack => stack.id !== id));
+      setStacks(prev => {
+        const updated = prev.filter(stack => stack.id !== id);
+        localStorage.setItem('lesson-stacks', JSON.stringify(updated));
+        return updated;
+      });
     } catch (error) {
       console.error('Failed to delete stack:', error);
       // Fallback to localStorage
-      const updatedStacks = stacks.filter(stack => stack.id !== id);
-      setStacks(updatedStacks);
-      localStorage.setItem('lesson-stacks', JSON.stringify(updatedStacks));
+      setStacks(prev => {
+        const updated = prev.filter(stack => stack.id !== id);
+        localStorage.setItem('lesson-stacks', JSON.stringify(updated));
+        return updated;
+      });
     }
   };
 
