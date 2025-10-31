@@ -64,25 +64,6 @@ export function LessonSelectionModal({
     setLocalSelectedLessons(selectedLessons);
     setOrderedLessons(selectedLessons);
   }, [selectedLessons]);
-
-  // CRITICAL FIX: Update local state when lessonsToShow changes to ensure consistency
-  useEffect(() => {
-    const lessonsToShow = getLessonsForHalfTerm();
-    console.log('🔄 LESSON SELECTION MODAL - lessonsToShow changed:', {
-      lessonsToShow,
-      localSelectedLessons,
-      selectedLessons,
-      halfTermId,
-      needsSync: JSON.stringify(lessonsToShow.sort()) !== JSON.stringify(localSelectedLessons.sort())
-    });
-    
-    // If lessonsToShow is different from localSelectedLessons, sync them
-    if (JSON.stringify(lessonsToShow.sort()) !== JSON.stringify(localSelectedLessons.sort())) {
-      console.log('🔄 LESSON SELECTION MODAL - Syncing localSelectedLessons with lessonsToShow');
-      setLocalSelectedLessons(lessonsToShow);
-      setOrderedLessons(lessonsToShow);
-    }
-  }, [halfTerms, stacks, halfTermId]);
   
   // Get theme colors for current class
   const theme = getThemeForClass(currentSheetInfo.sheet);
@@ -449,7 +430,7 @@ export function LessonSelectionModal({
                         <p className="text-sm text-gray-600 mb-2">{lessonData.title || `Lesson ${index + 1}`}</p>
                         <div className="flex items-center space-x-2 text-xs text-gray-500 mb-2">
                           <Clock className="h-3 w-3" />
-                          <span>{lessonData.duration || '30'} min</span>
+                          <span>{lessonData.totalTime || '30'} min</span>
                           <Tag className="h-3 w-3" />
                           <span>{Object.keys(lessonData.grouped || {}).length} activities</span>
                         </div>

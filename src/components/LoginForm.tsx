@@ -30,28 +30,8 @@ export function LoginForm() {
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'rgb(17,140,126)' }}>
       <div className="w-full max-w-md">
         {/* Header with Logo */}
-        <div className="mb-4 w-full" style={{ height: '264px', overflow: 'hidden' }}>
-          <img 
-            src="/cre-logo.png?v=9" 
-            alt="Creative Curriculum Designer Logo" 
-            style={{ 
-              width: '100%',
-              height: 'auto',
-              objectFit: 'cover',
-              display: 'block',
-              objectPosition: 'center 20%',
-              marginTop: '0'
-            }}
-            onError={(e) => {
-              console.error('Login logo failed to load:', e);
-              e.currentTarget.style.display = 'none';
-            }}
-            onLoad={(e) => {
-              console.log('Login logo loaded successfully');
-              console.log('Logo dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
-              console.log('Logo displayed at:', e.currentTarget.width, 'x', e.currentTarget.height);
-            }}
-          />
+        <div className="mb-6 w-full flex items-center justify-center">
+          <LogoSVG size="lg" showText={true} className="justify-center" />
         </div>
 
         {/* Login Form */}

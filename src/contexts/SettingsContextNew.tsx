@@ -201,7 +201,7 @@ const FIXED_CATEGORIES: Category[] = [
 // Default settings
 const DEFAULT_SETTINGS: UserSettings = {
   schoolName: 'Curriculum Designer',
-  schoolLogo: '/RLOGO copy copy.png',
+  schoolLogo: '/cd-logo.svg',
   primaryColor: '#3B82F6',
   secondaryColor: '#2563EB',
   accentColor: '#60A5FA',

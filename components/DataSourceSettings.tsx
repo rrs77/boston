@@ -135,6 +135,9 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
       localStorage.removeItem('lesson-plans');
       localStorage.removeItem('library-activities');
       localStorage.removeItem('units');
+      localStorage.removeItem('units-LKG');
+      localStorage.removeItem('units-UKG');
+      localStorage.removeItem('units-Reception');
       localStorage.removeItem('eyfs-standards-LKG');
       localStorage.removeItem('eyfs-standards-UKG');
       localStorage.removeItem('eyfs-standards-Reception');
@@ -147,6 +150,17 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
       localStorage.removeItem('admin-editable-content');
       localStorage.removeItem('admin-google-sheets-config');
       localStorage.removeItem('has-visited-before');
+      
+      // Clear half-terms for all classes and academic years
+      localStorage.removeItem('half-terms-LKG');
+      localStorage.removeItem('half-terms-UKG');
+      localStorage.removeItem('half-terms-Reception');
+      localStorage.removeItem('half-terms-LKG-2025-2026');
+      localStorage.removeItem('half-terms-UKG-2025-2026');
+      localStorage.removeItem('half-terms-Reception-2025-2026');
+      
+      // Clear lesson stacks
+      localStorage.removeItem('lesson-stacks');
       
       // Keep the auth token so the user stays logged in
       // localStorage.removeItem('rhythmstix_auth_token');

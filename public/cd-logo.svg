@@ -1,0 +1,33 @@
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="fill: none;">
+  <defs>
+    <linearGradient id="tealGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14B8A6" />
+      <stop offset="50%" stop-color="#0D9488" />
+      <stop offset="100%" stop-color="#008272" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Circular background with teal gradient -->
+  <circle
+    cx="40"
+    cy="40"
+    r="38"
+    fill="url(#tealGradient)"
+  />
+  
+  <!-- CD Text -->
+  <text
+    x="40"
+    y="40"
+    text-anchor="middle"
+    dominant-baseline="central"
+    fill="white"
+    font-size="32"
+    font-weight="700"
+    font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+    letter-spacing="-1"
+  >
+    CD
+  </text>
+</svg>
+

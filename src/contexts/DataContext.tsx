@@ -182,7 +182,7 @@ interface DataContextType {
   copyTermToYear: (sourceYear: string, sourceTerm: string, targetYear: string, targetTerm: string) => Promise<void>;
   deleteUnit: (unitId: string) => void; // Delete a unit
   halfTerms: HalfTerm[]; // Half-terms for the current class
-  updateHalfTerm: (halfTermId: string, lessons: string[], isComplete: boolean) => void; // Update a half-term
+  updateHalfTerm: (halfTermId: string, lessons: string[], isComplete: boolean, stacks?: string[]) => void; // Update a half-term
   getLessonsForHalfTerm: (halfTermId: string) => string[]; // ADDED: Get lessons for a half-term
   syncHalfTermsToSupabase: () => Promise<void>;
   loadHalfTermsFromSupabase: () => Promise<void>;
