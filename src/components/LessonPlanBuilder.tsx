@@ -630,16 +630,19 @@ export function LessonPlanBuilder({
                   
                   {/* Add Selected Button */}
                   {selectedActivities.length > 0 && (
-                    <div className="mt-3 mb-8">
+                    <div className="mt-3 mb-8" style={{ position: 'relative', zIndex: 30 }}>
                       <button
+                        type="button"
                         onClick={addSelectedActivities}
-                        className="w-full px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                        className="w-full py-3 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 shadow-md"
                         style={{
-                          backgroundColor: '#007366',
-                          border: 'none'
+                          backgroundColor: '#065F5B',
+                          border: 'none',
+                          cursor: 'pointer',
+                          pointerEvents: 'auto'
                         }}
-                        onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#004C45'}
-                        onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#007366'}
+                        onMouseEnter={(e) => (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#0D9488'}
+                        onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#065F5B'}
                       >
                         <Plus className="h-4 w-4" />
                         <span>Add {selectedActivities.length} Selected {selectedActivities.length === 1 ? 'Activity' : 'Activities'}</span>

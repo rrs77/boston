@@ -7,7 +7,7 @@ import { HalfTermView } from './HalfTermView';
 import { LessonPrintModal } from './LessonPrintModal';
 import { StackCard } from './StackCard';
 import { StackModal } from './StackModal';
-import { useLessonStacks } from '../hooks/useLessonStacks';
+import { useLessonStacks, type StackedLesson } from '../hooks/useLessonStacks';
 
 interface LessonSelectionModalProps {
   isOpen: boolean;
@@ -31,7 +31,7 @@ export function LessonSelectionModal({
   onSave
 }: LessonSelectionModalProps) {
   // FIXED: Added halfTerms to the destructuring to check lesson assignments
-  const { lessonNumbers, allLessonsData, currentSheetInfo, halfTerms, getTermSpecificLessonNumber } = useData();
+  const { lessonNumbers, allLessonsData, currentSheetInfo, halfTerms, getTermSpecificLessonNumber, updateHalfTerm } = useData();
   const { getThemeForClass } = useSettings();
   const { stacks } = useLessonStacks();
   
@@ -149,6 +149,8 @@ export function LessonSelectionModal({
   };
   
   const lessonsToShow = getLessonsForHalfTerm();
+  // Track lessons that are assigned but currently missing lesson data (kept internal only)
+  const missingLessons = lessonsToShow.filter(lessonNum => !allLessonsData[lessonNum]);
   
   const filteredLessons = lessonsToShow.filter(lessonNum => {
     const lessonData = allLessonsData[lessonNum];
@@ -173,6 +175,9 @@ export function LessonSelectionModal({
     return true;
   });
 
+  // Only count/display lessons that have data available
+  const orderedVisibleLessons = orderedLessons.filter(lessonNum => !!allLessonsData[lessonNum]);
+
   // DEBUG: Log lesson filtering
   console.log('🔍 LESSON SELECTION MODAL - Lesson filtering:', {
     halfTermId,
@@ -194,7 +199,8 @@ export function LessonSelectionModal({
     }).flat(),
     assignedStacks: assignedStacks.map(s => ({ id: s.id, name: s.name, lessons: s.lessons })),
     footerCount: Math.max(localSelectedLessons.length, filteredLessons.length),
-    showEmptyState: filteredLessons.length === 0 && assignedStacks.length === 0
+    showEmptyState: filteredLessons.length === 0 && assignedStacks.length === 0,
+    missingLessons: missingLessons
   });
 
   // Handle lesson selection
@@ -212,7 +218,10 @@ export function LessonSelectionModal({
 
   // Handle save
   const handleSave = () => {
-    onSave(showHalfTermView ? orderedLessons : localSelectedLessons, isComplete);
+    // Sanitize to avoid persisting orphaned IDs
+    const toSaveRaw = showHalfTermView ? orderedLessons : localSelectedLessons;
+    const toSave = Array.from(new Set(toSaveRaw.filter(lessonId => !!allLessonsData[lessonId])));
+    onSave(toSave, isComplete);
     onClose();
   };
 
@@ -248,6 +257,25 @@ export function LessonSelectionModal({
     setLocalSelectedLessons(prev => prev.filter(num => num !== lessonNumber));
   };
 
+  // Handle remove stack from half-term
+  const handleRemoveStack = async (stack: StackedLesson) => {
+    const halfTermData = halfTerms.find(term => term.id === halfTermId);
+    if (!halfTermData) return;
+    
+    const currentStacks = halfTermData.stacks || [];
+    const newStacks = currentStacks.filter(stackId => stackId !== stack.id);
+    
+    console.log('🔄 Removing stack from half-term:', {
+      stackId: stack.id,
+      stackName: stack.name,
+      halfTermId,
+      oldStacks: currentStacks,
+      newStacks
+    });
+    
+    await updateHalfTerm(halfTermId, halfTermData.lessons, halfTermData.isComplete, newStacks);
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -263,7 +291,7 @@ export function LessonSelectionModal({
               <h2 className="text-2xl font-bold mb-1">{halfTermName} - {halfTermMonths}</h2>
               <p className="text-white text-opacity-90">
                 {showHalfTermView 
-                  ? `${orderedLessons.length} lessons in this half-term` 
+                  ? `${orderedVisibleLessons.length} lessons in this half-term` 
                   : 'Manage lessons assigned to this half-term'}
               </p>
             </div>
@@ -377,10 +405,8 @@ export function LessonSelectionModal({
                         key={stack.id}
                         stack={stack}
                         onClick={() => setSelectedStackForModal(stack.id)}
-                        onPrint={(stack) => {
-                          // Print functionality is handled by the parent (UnitViewer)
-                          // This modal doesn't need print functionality
-                        }}
+                        onDelete={handleRemoveStack}
+                        showDelete={true}
                       />
                     ))}
                   </div>
@@ -391,10 +417,10 @@ export function LessonSelectionModal({
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold text-gray-900 flex items-center">
                   <Clock className="h-5 w-5 mr-2" style={{ color: '#0BA596' }} />
-                  Individual Lessons ({orderedLessons.length})
+                  Individual Lessons ({orderedVisibleLessons.length})
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {orderedLessons.map((lessonNum, index) => {
+                  {orderedVisibleLessons.map((lessonNum, index) => {
                     const lessonData = allLessonsData[lessonNum];
                     if (!lessonData) return null;
                     
@@ -414,7 +440,7 @@ export function LessonSelectionModal({
                         }}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-gray-900">Lesson {getTermSpecificLessonNumber(lessonNum, halfTermId)}</h4>
+                          <h4 className="font-semibold text-gray-900">Lesson {index + 1}</h4>
                           <div className="flex items-center">
                             <button
                               onClick={(e) => {
@@ -530,7 +556,7 @@ export function LessonSelectionModal({
                               onClick={() => handleLessonSelection(lessonNum)}
                             >
                               <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-semibold text-gray-900">Lesson {getTermSpecificLessonNumber(lessonNum, halfTermId)}</h4>
+                              <h4 className="font-semibold text-gray-900">Lesson {index + 1}</h4>
                                 <div className="flex items-center">
                                   {isSelected && (
                                     <CheckCircle className="h-5 w-5 text-blue-600" />
@@ -586,8 +612,8 @@ export function LessonSelectionModal({
           <div>
             <span className="text-sm text-gray-600">
               {showHalfTermView 
-                ? `${orderedLessons.length} lessons in order` 
-                : `${Math.max(localSelectedLessons.length, filteredLessons.length)} lessons will remain assigned`}
+                ? `${orderedVisibleLessons.length} lessons in order` 
+                : `${filteredLessons.length} lessons will remain assigned`}
             </span>
           </div>
           <div className="flex space-x-3">

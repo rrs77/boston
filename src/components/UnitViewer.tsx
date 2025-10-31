@@ -672,17 +672,60 @@ export function UnitViewer() {
                   <button
                     onClick={() => setShowTermCopyModal(true)}
                     className="px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2 focus:outline-none focus:ring-0"
-                    style={{ backgroundColor: '#14B8A6', height: '36px' }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#0D9488'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#14B8A6'}
+                    style={{ 
+                      backgroundColor: '#14B8A6', 
+                      height: '36px',
+                      fontWeight: 500,
+                      userSelect: 'none',
+                      WebkitUserSelect: 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0D9488';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#14B8A6';
+                    }}
                   >
                     <Calendar className="h-4 w-4" />
-                    <span>Copy Term</span>
+                    <span style={{ fontWeight: 500, userSelect: 'none' }}>Copy Term</span>
                   </button>
                   
                   {/* Search field */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: '#9CA3AF' }} />
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ width: '16px', height: '16px' }}>
+                      <svg 
+                        viewBox="0 0 80 80" 
+                        className="w-full h-full"
+                        style={{ fill: 'none' }}
+                      >
+                        <defs>
+                          <linearGradient id="searchBarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#14B8A6" />
+                            <stop offset="50%" stopColor="#0D9488" />
+                            <stop offset="100%" stopColor="#008272" />
+                          </linearGradient>
+                        </defs>
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="38"
+                          fill="url(#searchBarGradient)"
+                        />
+                        <text
+                          x="40"
+                          y="40"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fill="white"
+                          fontSize="32"
+                          fontWeight="700"
+                          fontFamily="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+                          letterSpacing="-1"
+                        >
+                          CD
+                        </text>
+                      </svg>
+                    </div>
                     <input
                       type="text"
                       placeholder="Search units..."
@@ -739,29 +782,6 @@ export function UnitViewer() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {HALF_TERMS
-                .filter(halfTerm => {
-                  const lessons = getLessonsForHalfTerm(halfTerm.id);
-                  const halfTermData = halfTerms.find(term => term.id === halfTerm.id);
-                  const stackIds = halfTermData?.stacks || [];
-                  
-                  // Count lessons from stacks
-                  const stackLessons = stackIds.reduce((total, stackId) => {
-                    const stack = stacks.find(s => s.id === stackId);
-                    return total + (stack ? stack.lessons.length : 0);
-                  }, 0);
-                  
-                  // Total lesson count includes both individual lessons and lessons from stacks
-                  const totalLessonCount = lessons.length + stackLessons;
-                  
-                  // Only show half-terms that have lessons OR exist in data
-                  const hasLessons = totalLessonCount > 0;
-                  const halfTermExists = halfTermData !== undefined;
-                  
-                  console.log(`🔍 Filtering ${halfTerm.id}: ${lessons.length} lessons + ${stackLessons} stack lessons = ${totalLessonCount} total, hasLessons: ${hasLessons}, exists: ${halfTermExists}`);
-                  
-                  // Only show half-terms that have lessons AND exist in data
-                  return hasLessons && halfTermExists;
-                })
                 .map((halfTerm) => {
                   const lessons = getLessonsForHalfTerm(halfTerm.id);
                   const isComplete = isHalfTermComplete(halfTerm.id);
@@ -770,21 +790,30 @@ export function UnitViewer() {
                   const halfTermData = halfTerms.find(term => term.id === halfTerm.id);
                   const stackIds = halfTermData?.stacks || [];
                   
-                  // Count lessons from stacks
-                  const stackLessons = stackIds.reduce((total, stackId) => {
+                  // Count only valid lessons that exist in allLessonsData
+                  const validLessons = lessons.filter(lessonNum => allLessonsData[lessonNum]);
+                  
+                  // Count only valid stacks that exist in stacks array
+                  const validStacks = stackIds.filter(stackId => stacks.find(s => s.id === stackId));
+                  
+                  // Count lessons from valid stacks only and only those that exist in allLessonsData
+                  const stackLessons = validStacks.reduce((total, stackId) => {
                     const stack = stacks.find(s => s.id === stackId);
-                    return total + (stack ? stack.lessons.length : 0);
+                    if (!stack) return total;
+                    const validStackLessonCount = (stack.lessons || []).filter(l => !!allLessonsData[l]).length;
+                    return total + validStackLessonCount;
                   }, 0);
                   
                   // Total lesson count includes both individual lessons and lessons from stacks
-                  const totalLessonCount = lessons.length + stackLessons;
+                  const totalLessonCount = validLessons.length + stackLessons;
                   
                   // DEBUG: Log lesson count calculation
                   console.log(`📊 HalfTerm ${halfTerm.id} (${halfTerm.name}):`, {
-                    lessons: lessons.length,
-                    lessonsList: lessons,
+                    lessons: validLessons.length,
+                    lessonsList: validLessons,
                     stackLessons: stackLessons,
                     totalLessonCount: totalLessonCount,
+                    validStacksCount: validStacks.length,
                     loading: loading,
                     halfTermData: halfTermData,
                     stackIds: stackIds,
@@ -799,7 +828,7 @@ export function UnitViewer() {
                       months={halfTerm.months}
                       color={TERM_COLORS[halfTerm.id]}
                       lessonCount={totalLessonCount}
-                      stackCount={stackIds.length}
+                      stackCount={validStacks.length}
                       onClick={() => handleHalfTermClick(halfTerm.id)}
                       isComplete={isComplete}
                     />

@@ -91,7 +91,24 @@ export function LessonPlanBuilderNew({
   const [selectedLevel, setSelectedLevel] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showStacks, setShowStacks] = useState(true);
-  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
+  // Persist selected activities so they survive tab switches/unmounts
+  const selectionStorageKey = `lesson-builder-selection-${currentSheetInfo.sheet}-${editingLessonNumber || 'new'}`;
+  const [selectedActivities, setSelectedActivities] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(selectionStorageKey);
+      if (!raw) return [];
+      const ids = JSON.parse(raw);
+      if (!Array.isArray(ids)) return [];
+      return ids.filter((id: string) => allActivities.some(act => (act._id || act.id) === id));
+    } catch {
+      return [];
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(selectionStorageKey, JSON.stringify(selectedActivities));
+    } catch {}
+  }, [selectedActivities, selectionStorageKey]);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [draggedActivity, setDraggedActivity] = useState<Activity | null>(null);
   const [draggedStack, setDraggedStack] = useState<ActivityStack | null>(null);
@@ -843,40 +860,47 @@ export function LessonPlanBuilderNew({
               })}
             </div>
             
-            {/* Add Selected Activities Button - Fixed positioning */}
+            {/* Add Selected Activities Bar - whole bar clickable */}
             {selectedActivities.length > 0 && (
-              <div 
-                className="sticky top-0 z-30 bg-white p-4 rounded-lg mb-6 shadow-md border-b-2 border-gray-200" 
+              <div
+                className="sticky top-2 z-50 mb-4"
                 style={{ pointerEvents: 'auto', userSelect: 'none' }}
-                onClick={(e) => e.stopPropagation()}
               >
                 <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('🔍 Button clicked, selectedActivities:', selectedActivities);
+                  type="button"
+                  onClick={() => {
+                    console.log('🔍 Add bar clicked, selectedActivities:', selectedActivities);
                     handleAddSelectedActivities();
                   }}
-                  className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                  aria-label={`Add ${selectedActivities.length} selected activities`}
+                  className="w-full py-3 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-3 shadow-md focus:outline-none"
                   style={{
-                    backgroundColor: '#14B8A6',
+                    backgroundColor: '#065F5B',
                     border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    pointerEvents: 'auto',
-                    position: 'relative',
-                    zIndex: 31
+                    cursor: 'pointer'
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#0D9488';
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#0D9488';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = '#14B8A6';
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#065F5B';
+                  }}
+                  onFocus={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 3px rgba(13,148,136,0.35)';
+                  }}
+                  onBlur={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
                   }}
                 >
                   <Plus style={{ width: '16px', height: '16px' }} />
-                  <span>Add {selectedActivities.length} Selected Activities</span>
+                  <span>Add</span>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-white"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}
+                  >
+                    {selectedActivities.length}
+                  </span>
+                  <span>Selected Activities</span>
                 </button>
               </div>
             )}

@@ -1148,6 +1148,9 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
       currentAcademicYear 
     });
     
+    // Sanitize incoming lessons: remove orphaned IDs and duplicates
+    const sanitizedLessons = Array.from(new Set((lessons || []).filter(l => !!allLessonsData[l])));
+
     // Update year-specific data
     setHalfTermsByYear(prev => {
       const currentYearData = prev[currentAcademicYear] || createEmptyYearStructure();
@@ -1164,7 +1167,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
         // Update existing term
         const updatedTerm = { 
           ...existingTerm, 
-          lessons, 
+          lessons: sanitizedLessons, 
           isComplete, 
           stacks: stacks !== undefined ? stacks : existingTerm.stacks, 
           updatedAt: new Date() 
@@ -1198,7 +1201,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
           months: halfTermId.startsWith('A') ? (halfTermId === 'A1' ? 'Sep-Oct' : 'Nov-Dec') :
                   halfTermId.startsWith('SP') ? (halfTermId === 'SP1' ? 'Jan-Feb' : 'Mar-Apr') :
                   (halfTermId === 'SM1' ? 'Apr-May' : 'Jun-Jul'),
-          lessons,
+          lessons: sanitizedLessons,
           isComplete,
           stacks: stacks || [],
           createdAt: new Date(),
@@ -1270,7 +1273,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
           months: halfTermId.startsWith('A') ? (halfTermId === 'A1' ? 'Sep-Oct' : 'Nov-Dec') :
                   halfTermId.startsWith('SP') ? (halfTermId === 'SP1' ? 'Jan-Feb' : 'Mar-Apr') :
                   (halfTermId === 'SM1' ? 'Apr-May' : 'Jun-Jul'),
-          lessons,
+          lessons: sanitizedLessons,
           stacks: stacks || [], // ADDED: Include stacks in new term!
           isComplete,
           createdAt: new Date(),
@@ -1298,7 +1301,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
       const result = await halfTermsApi.updateHalfTerm(
         currentSheetInfo.sheet, 
         halfTermId, 
-        lessons, 
+        lessons: sanitizedLessons, 
         isComplete, 
         currentAcademicYear,
         stacks || currentHalfTerm?.stacks // Include stacks parameter
@@ -1321,7 +1324,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
     // Use the legacy halfTerms state for now to maintain compatibility
     // TODO: Migrate to use halfTermsByYear when the year-specific system is fully implemented
     const halfTerm = halfTerms.find(term => term.id === halfTermId);
-    const lessons = halfTerm ? halfTerm.lessons : [];
+    const lessons = (halfTerm ? halfTerm.lessons : []).filter(lessonId => !!allLessonsData[lessonId]);
     
   // DEBUG: Log lesson retrieval with more detail
   console.log(`🔍 getLessonsForHalfTerm(${halfTermId}):`, {

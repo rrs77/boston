@@ -1,19 +1,28 @@
 import React from 'react';
-import { BookOpen, Clock, Users, ChevronRight, Target, Printer } from 'lucide-react';
+import { BookOpen, Clock, Users, ChevronRight, Target, Printer, X } from 'lucide-react';
 import type { StackedLesson } from '../hooks/useLessonStacks';
 
 interface StackCardProps {
   stack: StackedLesson;
   onClick: () => void;
   onPrint?: (stack: StackedLesson) => void;
+  onDelete?: (stack: StackedLesson) => void;
+  showDelete?: boolean;
 }
 
-export function StackCard({ stack, onClick, onPrint }: StackCardProps) {
+export function StackCard({ stack, onClick, onPrint, onDelete, showDelete }: StackCardProps) {
   
   const handlePrint = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening the stack modal
     if (onPrint) {
       onPrint(stack);
+    }
+  };
+  
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the stack modal
+    if (onDelete && confirm(`Are you sure you want to remove "${stack.name}" from this half-term?`)) {
+      onDelete(stack);
     }
   };
   return (
@@ -57,6 +66,15 @@ export function StackCard({ stack, onClick, onPrint }: StackCardProps) {
                   title="Print Stack"
                 >
                   <Printer className="h-4 w-4" />
+                </button>
+              )}
+              {showDelete && onDelete && (
+                <button
+                  onClick={handleDelete}
+                  className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                  title="Remove from Half-Term"
+                >
+                  <X className="h-4 w-4" />
                 </button>
               )}
               <span className="px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs font-medium">
