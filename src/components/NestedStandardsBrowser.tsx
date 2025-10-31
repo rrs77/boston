@@ -5,13 +5,27 @@ import { customObjectivesApi } from '../config/customObjectivesApi';
 import type { CustomObjectiveYearGroup, CustomObjectiveArea, CustomObjective } from '../types/customObjectives';
 
 interface NestedStandardsBrowserProps {
-  lessonNumber: string;
+  lessonNumber?: string;
   className?: string;
+  // Standalone mode props
+  isOpen?: boolean;
+  onClose?: () => void;
+  selectedObjectives?: string[];
+  onAddObjective?: (objectiveId: string) => void;
+  onRemoveObjective?: (objectiveId: string) => void;
 }
 
-export function NestedStandardsBrowser({ lessonNumber, className = '' }: NestedStandardsBrowserProps) {
+export function NestedStandardsBrowser({ 
+  lessonNumber, 
+  className = '',
+  isOpen: controlledIsOpen,
+  onClose,
+  selectedObjectives: controlledSelectedObjectives,
+  onAddObjective,
+  onRemoveObjective
+}: NestedStandardsBrowserProps) {
   const { allLessonsData, addCustomObjectiveToLesson, removeCustomObjectiveFromLesson } = useData();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [expandedYearGroups, setExpandedYearGroups] = useState<string[]>([]);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [expandedAreas, setExpandedAreas] = useState<string[]>([]);
@@ -21,6 +35,11 @@ export function NestedStandardsBrowser({ lessonNumber, className = '' }: NestedS
   const [customAreas, setCustomAreas] = useState<CustomObjectiveArea[]>([]);
   const [customObjectives, setCustomObjectives] = useState<CustomObjective[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Determine if we're in controlled mode (standalone) or uncontrolled mode (lesson-bound)
+  const isControlledMode = controlledIsOpen !== undefined;
+  const isOpen = isControlledMode ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = isControlledMode ? onClose || (() => {}) : setInternalIsOpen;
 
   // Load custom objectives
   useEffect(() => {
@@ -43,9 +62,11 @@ export function NestedStandardsBrowser({ lessonNumber, className = '' }: NestedS
     loadCustomObjectives();
   }, []);
 
-  // Get selected objectives for this lesson
-  const lessonData = allLessonsData?.[lessonNumber];
-  const selectedObjectiveIds = (lessonData?.customObjectives || []) as string[];
+  // Get selected objectives - either from controlled props or from lesson data
+  const lessonData = lessonNumber ? allLessonsData?.[lessonNumber] : null;
+  const selectedObjectiveIds = isControlledMode 
+    ? (controlledSelectedObjectives || [])
+    : ((lessonData?.customObjectives || []) as string[]);
 
   const toggleYearGroup = (yearGroupId: string) => {
     setExpandedYearGroups(prev => 
@@ -72,6 +93,18 @@ export function NestedStandardsBrowser({ lessonNumber, className = '' }: NestedS
   };
 
   const handleToggleObjective = async (objectiveId: string) => {
+    // If in controlled mode (standalone), use callback functions
+    if (isControlledMode) {
+      const isCurrentlySelected = selectedObjectiveIds.includes(objectiveId);
+      if (isCurrentlySelected && onRemoveObjective) {
+        onRemoveObjective(objectiveId);
+      } else if (!isCurrentlySelected && onAddObjective) {
+        onAddObjective(objectiveId);
+      }
+      return;
+    }
+    
+    // Otherwise, use lesson-bound mode
     if (!lessonData) {
       console.error('Cannot toggle objective: lesson data not found for', lessonNumber);
       alert('Error: Lesson data not found. Please refresh the page.');
@@ -83,11 +116,11 @@ export function NestedStandardsBrowser({ lessonNumber, className = '' }: NestedS
     try {
       if (currentObjectives.includes(objectiveId)) {
         // Remove the objective
-        await removeCustomObjectiveFromLesson(lessonNumber, objectiveId);
+        await removeCustomObjectiveFromLesson(lessonNumber!, objectiveId);
         console.log('✅ Objective removed successfully');
       } else {
         // Add the objective
-        await addCustomObjectiveToLesson(lessonNumber, objectiveId);
+        await addCustomObjectiveToLesson(lessonNumber!, objectiveId);
         console.log('✅ Objective added successfully');
       }
     } catch (error) {
@@ -125,25 +158,28 @@ export function NestedStandardsBrowser({ lessonNumber, className = '' }: NestedS
 
   return (
     <div className={`relative ${className}`}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-50 to-blue-50 border-2 border-teal-200 rounded-lg hover:from-teal-100 hover:to-blue-100 transition-all duration-200 shadow-sm"
-      >
-        <div className="flex items-center space-x-2">
-          <Tag className="h-5 w-5 text-teal-600" />
-          <span className="text-sm font-semibold text-teal-800">
-            {getStandardsLabel()}
-          </span>
-        </div>
-        {isOpen ? (
-          <ChevronUp className="h-5 w-5 text-teal-600" />
-        ) : (
-          <ChevronDown className="h-5 w-5 text-teal-600" />
-        )}
-      </button>
+      {/* Only show toggle button in uncontrolled mode */}
+      {!isControlledMode && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-50 to-blue-50 border-2 border-teal-200 rounded-lg hover:from-teal-100 hover:to-blue-100 transition-all duration-200 shadow-sm"
+        >
+          <div className="flex items-center space-x-2">
+            <Tag className="h-5 w-5 text-teal-600" />
+            <span className="text-sm font-semibold text-teal-800">
+              {getStandardsLabel()}
+            </span>
+          </div>
+          {isOpen ? (
+            <ChevronUp className="h-5 w-5 text-teal-600" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-teal-600" />
+          )}
+        </button>
+      )}
 
       {isOpen && (
-        <div className="absolute z-[60] mt-2 w-full bg-white rounded-xl shadow-2xl border-2 border-teal-200 overflow-hidden">
+        <div className={`${isControlledMode ? '' : 'absolute'} z-[60] ${isControlledMode ? '' : 'mt-2'} w-full bg-white rounded-xl shadow-2xl border-2 border-teal-200 overflow-hidden`}>
           {/* Header */}
           <div className="p-4 border-b-2 border-teal-100 bg-gradient-to-r from-teal-600 to-teal-700">
             <div className="flex items-center justify-center">
@@ -303,8 +339,8 @@ export function NestedStandardsBrowser({ lessonNumber, className = '' }: NestedS
         </div>
       )}
 
-      {/* Selected Standards Preview */}
-      {selectedObjectiveIds.length > 0 && !isOpen && (
+      {/* Selected Standards Preview - only in uncontrolled mode */}
+      {!isControlledMode && selectedObjectiveIds.length > 0 && !isOpen && (
         <div className="mt-3 p-3 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg border-2 border-teal-100">
           <div className="flex flex-wrap gap-2">
             {selectedObjectiveIds.map((objectiveId) => {

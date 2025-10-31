@@ -549,13 +549,17 @@ export function LessonStackBuilder({
 
       {/* Objectives Browser Modal */}
       {showObjectivesBrowser && (
-        <NestedStandardsBrowser
-          isOpen={showObjectivesBrowser}
-          onClose={() => setShowObjectivesBrowser(false)}
-          selectedObjectives={customObjectives}
-          onAddObjective={handleAddObjective}
-          onRemoveObjective={handleRemoveObjective}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <NestedStandardsBrowser
+              isOpen={showObjectivesBrowser}
+              onClose={() => setShowObjectivesBrowser(false)}
+              selectedObjectives={customObjectives}
+              onAddObjective={handleAddObjective}
+              onRemoveObjective={handleRemoveObjective}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
