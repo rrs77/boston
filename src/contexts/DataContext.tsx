@@ -1301,7 +1301,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
       const result = await halfTermsApi.updateHalfTerm(
         currentSheetInfo.sheet, 
         halfTermId, 
-        lessons: sanitizedLessons, 
+        sanitizedLessons, 
         isComplete, 
         currentAcademicYear,
         stacks || currentHalfTerm?.stacks // Include stacks parameter
