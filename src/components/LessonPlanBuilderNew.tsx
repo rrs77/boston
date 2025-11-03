@@ -17,7 +17,7 @@ import {
 import { ActivityCard } from './ActivityCard';
 import { ActivityStackCard } from './ActivityStackCard';
 import { LessonDropZone } from './LessonDropZone';
-import { ActivityDetails } from './ActivityDetails';
+import { ActivityDetailsModal } from './ActivityDetailsModal';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
@@ -34,7 +34,7 @@ export function LessonPlanBuilderNew({
   onEditComplete,
   onUnsavedChangesChange 
 }: LessonPlanBuilderProps = {}) {
-  const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks, updateActivity, deleteActivity } = useData();
+  const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks } = useData();
   const { categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   
   // Initialize currentLessonPlan with a default value instead of null
@@ -908,19 +908,14 @@ export function LessonPlanBuilderNew({
         </div>
       </div>
 
-      {/* Activity Details Modal - Unified view matching Activity Library */}
+      {/* Activity Details Modal - Simple view matching Activity Library */}
       {selectedActivity && (
-        <ActivityDetails
-          activity={selectedActivity}
+        <ActivityDetailsModal
+          isOpen={true}
           onClose={() => setSelectedActivity(null)}
-          isEditing={false}
-          onUpdate={(updatedActivity) => {
-            // Update activity in the global context
-            updateActivity(updatedActivity);
-          }}
-          onDelete={(activityId) => {
-            // Handle activity deletion
-            deleteActivity(activityId);
+          activity={selectedActivity}
+          onEdit={(activity) => {
+            // Close modal when edit is requested
             setSelectedActivity(null);
           }}
         />

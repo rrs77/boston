@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { ActivityCard } from './ActivityCard';
 import { ActivityDetails } from './ActivityDetails';
+import { ActivityDetailsModal } from './ActivityDetailsModal';
 import { ActivityImporter } from './ActivityImporter';
 import { ActivityCreator } from './ActivityCreator';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
@@ -67,6 +68,8 @@ export function ActivityLibrary({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [selectedActivityDetails, setSelectedActivityDetails] = useState<Activity | null>(null);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [selectedActivityForModal, setSelectedActivityForModal] = useState<Activity | null>(null);
   const [initialResource, setInitialResource] = useState<{url: string, title: string, type: string} | null>(null);
   const [showImporter, setShowImporter] = useState(false);
   const [showCreator, setShowCreator] = useState(false);
@@ -296,8 +299,8 @@ export function ActivityLibrary({
       activity.level = "UKG";
     }
     
-    // Open the full ActivityDetails modal instead of the simple one
-    handleViewActivityDetails(activity);
+    setSelectedActivityForModal(activity);
+    setShowActivityModal(true);
   };
 
   const handleResourceClick = (url: string, title: string, type: string) => {
@@ -741,7 +744,20 @@ export function ActivityLibrary({
         </div>
       )}
 
-      {/* Activity Details Modal - REMOVED: Now using unified ActivityDetails modal above */}
+      {/* Activity Details Modal - Simple view for clicking activities */}
+      <ActivityDetailsModal
+        isOpen={showActivityModal}
+        onClose={() => {
+          setShowActivityModal(false);
+          setSelectedActivityForModal(null);
+        }}
+        activity={selectedActivityForModal}
+        onEdit={(activity) => {
+          handleEditActivity(activity);
+          setShowActivityModal(false);
+          setSelectedActivityForModal(null);
+        }}
+      />
 
     </div>
   );

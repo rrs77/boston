@@ -25,7 +25,7 @@ import {
 import { ActivityCard } from './ActivityCard';
 import { ActivityStackCard } from './ActivityStackCard';
 import { LessonDropZone } from './LessonDropZone';
-import { ActivityDetails } from './ActivityDetails';
+import { ActivityDetailsModal } from './ActivityDetailsModal';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
@@ -52,7 +52,7 @@ export function LessonPlanBuilder({
   onEditComplete,
   onUnsavedChangesChange 
 }: LessonPlanBuilderProps = {}) {
-  const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks, updateActivity, deleteActivity } = useData();
+  const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks } = useData();
   const { categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   
   // Initialize currentLessonPlan with a default value instead of null
@@ -802,47 +802,30 @@ export function LessonPlanBuilder({
         </div>
       </div>
 
-      {/* Activity Details Modal - Unified view matching Activity Library */}
+      {/* Activity Details Modal - Simple view matching Activity Library */}
       {selectedActivity && (
-        <ActivityDetails
-          activity={selectedActivity}
+        <ActivityDetailsModal
+          isOpen={true}
           onClose={() => setSelectedActivity(null)}
-          onAddToLesson={() => {
-            handleActivityAdd(selectedActivity);
-            setSelectedActivity(null);
-          }}
-          isEditing={false}
-          onUpdate={(updatedActivity) => {
-            // Update activity in the global context
-            updateActivity(updatedActivity);
-          }}
-          onDelete={(activityId) => {
-            // Handle activity deletion
-            deleteActivity(activityId);
+          activity={selectedActivity}
+          onEdit={(activity) => {
+            // Open activity for editing in Activity Library
             setSelectedActivity(null);
           }}
         />
       )}
 
-      {/* Activity Preview Modal - Unified view matching Activity Library */}
+      {/* Activity Preview Modal - Simple view matching Activity Library */}
       {showActivityPreview && activityToView && (
-        <ActivityDetails
-          activity={activityToView}
+        <ActivityDetailsModal
+          isOpen={true}
           onClose={() => {
             setShowActivityPreview(false);
             setActivityToView(null);
           }}
-          onAddActivityToLesson={(activity, isModified) => handleAddActivityFromPreview(activity, isModified)}
-          isLessonBuilderContext={true}
-          initialEditMode={false}
-          isEditing={false}
-          onUpdate={(updatedActivity) => {
-            // Update activity in the global context
-            updateActivity(updatedActivity);
-          }}
-          onDelete={(activityId) => {
-            // Handle activity deletion
-            deleteActivity(activityId);
+          activity={activityToView}
+          onEdit={(activity) => {
+            // Open activity for editing
             setShowActivityPreview(false);
             setActivityToView(null);
           }}

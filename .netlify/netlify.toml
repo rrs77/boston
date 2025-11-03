@@ -7,7 +7,7 @@ plugins = []
 [functions."*"]
 
 [build]
-publish = "/Users/robreich-storer/Desktop/Cursor New/cursorchanges/dist"
+publish = "/Users/robreich-storer/Library/Mobile Documents/com~apple~CloudDocs/CC Designer/boston/dist"
 publishOrigin = "config"
 commandOrigin = "config"
 command = "npm run build"
