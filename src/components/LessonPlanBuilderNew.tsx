@@ -18,6 +18,7 @@ import { ActivityCard } from './ActivityCard';
 import { ActivityStackCard } from './ActivityStackCard';
 import { LessonDropZone } from './LessonDropZone';
 import { ActivityDetailsModal } from './ActivityDetailsModal';
+import { ActivityDetails } from './ActivityDetails';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
@@ -110,6 +111,7 @@ export function LessonPlanBuilderNew({
     } catch {}
   }, [selectedActivities, selectionStorageKey]);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [draggedActivity, setDraggedActivity] = useState<Activity | null>(null);
   const [draggedStack, setDraggedStack] = useState<ActivityStack | null>(null);
   
@@ -908,14 +910,31 @@ export function LessonPlanBuilderNew({
         </div>
       </div>
 
-      {/* Activity Details Modal - Simple view matching Activity Library */}
-      {selectedActivity && (
+      {/* Activity Details Modal - Simple view for quick preview */}
+      {selectedActivity && !editingActivity && (
         <ActivityDetailsModal
           isOpen={true}
           onClose={() => setSelectedActivity(null)}
           activity={selectedActivity}
           onEdit={(activity) => {
-            // Close modal when edit is requested
+            // Open full editing modal
+            setEditingActivity(activity);
+          }}
+        />
+      )}
+
+      {/* Activity Editing Modal - Full featured editing */}
+      {editingActivity && (
+        <ActivityDetails
+          activity={editingActivity}
+          onClose={() => {
+            setEditingActivity(null);
+            setSelectedActivity(null);
+          }}
+          isEditing={true}
+          onUpdate={(updatedActivity) => {
+            // Activity is updated in global context by ActivityDetails
+            setEditingActivity(null);
             setSelectedActivity(null);
           }}
         />

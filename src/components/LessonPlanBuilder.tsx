@@ -26,6 +26,7 @@ import { ActivityCard } from './ActivityCard';
 import { ActivityStackCard } from './ActivityStackCard';
 import { LessonDropZone } from './LessonDropZone';
 import { ActivityDetailsModal } from './ActivityDetailsModal';
+import { ActivityDetails } from './ActivityDetails';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
@@ -118,6 +119,7 @@ export function LessonPlanBuilder({
   // Activity preview and edit states
   const [activityToView, setActivityToView] = useState<Activity | null>(null);
   const [showActivityPreview, setShowActivityPreview] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   
   // Stack-related state
   const [expandedStacks, setExpandedStacks] = useState<Set<string>>(new Set());
@@ -802,21 +804,21 @@ export function LessonPlanBuilder({
         </div>
       </div>
 
-      {/* Activity Details Modal - Simple view matching Activity Library */}
-      {selectedActivity && (
+      {/* Activity Details Modal - Simple view for quick preview */}
+      {selectedActivity && !editingActivity && (
         <ActivityDetailsModal
           isOpen={true}
           onClose={() => setSelectedActivity(null)}
           activity={selectedActivity}
           onEdit={(activity) => {
-            // Open activity for editing in Activity Library
-            setSelectedActivity(null);
+            // Open full editing modal
+            setEditingActivity(activity);
           }}
         />
       )}
 
-      {/* Activity Preview Modal - Simple view matching Activity Library */}
-      {showActivityPreview && activityToView && (
+      {/* Activity Preview Modal - Simple view for quick preview */}
+      {showActivityPreview && activityToView && !editingActivity && (
         <ActivityDetailsModal
           isOpen={true}
           onClose={() => {
@@ -825,7 +827,27 @@ export function LessonPlanBuilder({
           }}
           activity={activityToView}
           onEdit={(activity) => {
-            // Open activity for editing
+            // Open full editing modal
+            setEditingActivity(activity);
+          }}
+        />
+      )}
+
+      {/* Activity Editing Modal - Full featured editing */}
+      {editingActivity && (
+        <ActivityDetails
+          activity={editingActivity}
+          onClose={() => {
+            setEditingActivity(null);
+            setSelectedActivity(null);
+            setShowActivityPreview(false);
+            setActivityToView(null);
+          }}
+          isEditing={true}
+          onUpdate={(updatedActivity) => {
+            // Activity is updated in global context by ActivityDetails
+            setEditingActivity(null);
+            setSelectedActivity(null);
             setShowActivityPreview(false);
             setActivityToView(null);
           }}
