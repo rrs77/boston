@@ -295,12 +295,20 @@ export function ActivityDetails({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]"
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onMouseUp={(e) => e.stopPropagation()}
+      >
         <div 
           ref={containerRef}
           className={`bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col modal-content modal-responsive ${
             isFullscreen ? 'fixed inset-0 rounded-none max-w-none max-h-none' : ''
           }`}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -342,13 +350,30 @@ export function ActivityDetails({
                 )}
                 {/* Edit year groups */}
                 {isEditMode && !isReadOnly && (
-                  <div className="space-y-2 max-h-32 overflow-y-auto border border-[#D4F1EF] bg-white rounded-xl p-3 shadow-sm">
+                  <div 
+                    className="space-y-2 max-h-32 overflow-y-auto border border-[#D4F1EF] bg-white rounded-xl p-3 shadow-sm"
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onMouseUp={(e) => e.stopPropagation()}
+                  >
                     {customYearGroups.map(group => (
-                      <label key={group.name} className="flex items-center space-x-3 cursor-pointer group">
+                      <label 
+                        key={group.name} 
+                        className="flex items-center space-x-3 cursor-pointer group"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onMouseUp={(e) => e.stopPropagation()}
+                      >
                         <input
                           type="checkbox"
                           checked={editedActivity.yearGroups?.includes(group.name) || false}
-                          onChange={(e) => handleYearGroupChange(group.name, e.target.checked)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleYearGroupChange(group.name, e.target.checked);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onMouseUp={(e) => e.stopPropagation()}
                           className="h-4 w-4 rounded-full border-2 border-gray-300 text-[#17A697] focus:ring-2 focus:ring-[#17A697] focus:ring-offset-0 cursor-pointer checked:bg-[#17A697] checked:border-[#17A697] transition-all duration-200"
                         />
                         <span className="text-sm text-[#2D3748] group-hover:text-[#17A697] transition-colors duration-200">{group.name}</span>
