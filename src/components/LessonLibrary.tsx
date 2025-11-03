@@ -153,10 +153,23 @@ export function LessonLibrary({
   const handleStartEditing = (lessonNumber: string) => {
     const lessonData = allLessonsData[lessonNumber];
     if (lessonData) {
-      const activities = Object.values(lessonData.grouped).flat().map((activity: any, index: number) => ({
-        ...activity,
-        _editId: `${lessonNumber}-${index}-${Date.now()}`
-      }));
+      // Use categoryOrder if available to preserve the order, otherwise fall back to Object.keys
+      const categoryOrder = lessonData.categoryOrder || Object.keys(lessonData.grouped);
+      const activities = categoryOrder
+        .filter(category => lessonData.grouped[category]) // Filter out any missing categories
+        .flatMap(category => lessonData.grouped[category] || [])
+        .map((activity: any, index: number) => ({
+          ...activity,
+          _editId: `${lessonNumber}-${index}-${Date.now()}`
+        }));
+      
+      console.log('📖 Loading lesson for editing:', {
+        lessonNumber,
+        categoryOrder,
+        activityCount: activities.length,
+        activitiesOrder: activities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`)
+      });
+      
       setEditingLessonActivities(activities);
       setEditingLessonNumber(lessonNumber);
       setShowEditModal(true);
@@ -164,27 +177,52 @@ export function LessonLibrary({
   };
 
   // Save edited lesson
-  const handleSaveEditing = () => {
+  const handleSaveEditing = async () => {
+    console.log('💾 SAVE BUTTON CLICKED - Current state:', {
+      lessonNumber: editingLessonNumber,
+      activitiesCount: editingLessonActivities.length,
+      currentOrder: editingLessonActivities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`)
+    });
+    
     if (editingLessonNumber && editingLessonActivities.length >= 0) {
-      // Group activities back by category
-      const grouped = editingLessonActivities.reduce((acc: any, activity: any) => {
+      // Clean activities by removing temporary edit IDs
+      const cleanedActivities = editingLessonActivities.map(activity => {
+        const { _editId, ...cleanActivity } = activity;
+        return cleanActivity;
+      });
+
+      // Group activities back by category while preserving order
+      const grouped: Record<string, any[]> = {};
+      const categoryOrder: string[] = [];
+      
+      cleanedActivities.forEach(activity => {
         const category = activity.category || 'Other';
-        if (!acc[category]) acc[category] = [];
-        acc[category].push(activity);
-        return acc;
-      }, {});
+        if (!grouped[category]) {
+          grouped[category] = [];
+          categoryOrder.push(category);
+        }
+        grouped[category].push(activity);
+      });
 
       // Update lesson data
       const updatedLessonData = {
         ...allLessonsData[editingLessonNumber],
         grouped,
-        categoryOrder: Object.keys(grouped),
-        totalTime: editingLessonActivities.reduce((sum: number, act: any) => sum + (act.time || 0), 0)
+        categoryOrder,
+        totalTime: cleanedActivities.reduce((sum: number, act: any) => sum + (act.time || 0), 0)
       };
 
-      // Update in context
+      console.log('💾 Saving lesson with order:', {
+        lessonNumber: editingLessonNumber,
+        categoryOrder,
+        activityCount: cleanedActivities.length,
+        categories: Object.keys(grouped).map(cat => `${cat}: ${grouped[cat].length} activities`)
+      });
+
+      // Update in context and wait for it to complete
       if (updateLessonData) {
-        updateLessonData(editingLessonNumber, updatedLessonData);
+        await updateLessonData(editingLessonNumber, updatedLessonData);
+        console.log('✅ Lesson save complete');
       }
       
       cancelEditing();
@@ -208,10 +246,12 @@ export function LessonLibrary({
 
   // Reorder activities
   const handleReorderActivity = (fromIndex: number, toIndex: number) => {
+    console.log(`🔄 Reordering activity: from index ${fromIndex} to ${toIndex}`);
     setEditingLessonActivities(prev => {
       const newActivities = [...prev];
       const [movedActivity] = newActivities.splice(fromIndex, 1);
       newActivities.splice(toIndex, 0, movedActivity);
+      console.log('📝 New activity order:', newActivities.map((a, i) => `${i + 1}. ${a.activity}`));
       return newActivities;
     });
   };

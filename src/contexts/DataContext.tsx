@@ -1786,23 +1786,31 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
     });
   };
 const updateLessonData = async (lessonNumber: string, updatedData: any) => {
-    // Update local state
-    setAllLessonsData(prev => ({
-      ...prev,
-      [lessonNumber]: updatedData
-    }));
+    // Use functional state update to avoid stale closure
+    let updatedAllLessonsData: Record<string, LessonData> = {};
+    
+    setAllLessonsData(prev => {
+      updatedAllLessonsData = {
+        ...prev,
+        [lessonNumber]: updatedData
+      };
+      return updatedAllLessonsData;
+    });
 
-    // Save to Supabase if connected
+    // Save to Supabase if connected - use a small delay to ensure state is updated
     if (isSupabaseConfigured()) {
+      // Wait for next tick to ensure state has updated
+      await new Promise(resolve => setTimeout(resolve, 0));
+      
       try {
         const dataToSave = {
-          allLessonsData: { ...allLessonsData, [lessonNumber]: updatedData },
+          allLessonsData: updatedAllLessonsData,
           lessonNumbers,
           teachingUnits,
           lessonStandards
         };
         await lessonsApi.updateSheet(currentSheetInfo.sheet, dataToSave, currentAcademicYear);
-        console.log(`✅ Lesson ${lessonNumber} saved to Supabase`);
+        console.log(`✅ Lesson ${lessonNumber} saved to Supabase with order preserved`);
       } catch (error) {
         console.warn(`Failed to save lesson ${lessonNumber} to Supabase:`, error);
       }
