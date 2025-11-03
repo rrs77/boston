@@ -153,19 +153,32 @@ export function LessonLibrary({
   const handleStartEditing = (lessonNumber: string) => {
     const lessonData = allLessonsData[lessonNumber];
     if (lessonData) {
-      // Use categoryOrder if available to preserve the order, otherwise fall back to Object.keys
-      const categoryOrder = lessonData.categoryOrder || Object.keys(lessonData.grouped);
-      const activities = categoryOrder
-        .filter(category => lessonData.grouped[category]) // Filter out any missing categories
-        .flatMap(category => lessonData.grouped[category] || [])
-        .map((activity: any, index: number) => ({
+      // NEW: Use orderedActivities if available (preserves exact order across categories)
+      // Otherwise fall back to categoryOrder method (for backward compatibility)
+      let activities: any[];
+      
+      if (lessonData.orderedActivities && Array.isArray(lessonData.orderedActivities)) {
+        // Use the flat ordered array - this preserves exact order including cross-category ordering
+        activities = lessonData.orderedActivities.map((activity: any, index: number) => ({
           ...activity,
           _editId: `${lessonNumber}-${index}-${Date.now()}`
         }));
+        console.log('📖 Loading lesson with orderedActivities (exact order preserved)');
+      } else {
+        // Fallback to old method using categoryOrder
+        const categoryOrder = lessonData.categoryOrder || Object.keys(lessonData.grouped);
+        activities = categoryOrder
+          .filter(category => lessonData.grouped[category])
+          .flatMap(category => lessonData.grouped[category] || [])
+          .map((activity: any, index: number) => ({
+            ...activity,
+            _editId: `${lessonNumber}-${index}-${Date.now()}`
+          }));
+        console.log('📖 Loading lesson with categoryOrder (legacy method)');
+      }
       
       console.log('📖 Loading lesson for editing:', {
         lessonNumber,
-        categoryOrder,
         activityCount: activities.length,
         activitiesOrder: activities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`)
       });
@@ -204,11 +217,12 @@ export function LessonLibrary({
         grouped[category].push(activity);
       });
 
-      // Update lesson data
+      // Update lesson data - IMPORTANT: Save orderedActivities to preserve exact order
       const updatedLessonData = {
         ...allLessonsData[editingLessonNumber],
         grouped,
         categoryOrder,
+        orderedActivities: cleanedActivities, // NEW: Store flat ordered array
         totalTime: cleanedActivities.reduce((sum: number, act: any) => sum + (act.time || 0), 0)
       };
 
@@ -216,7 +230,8 @@ export function LessonLibrary({
         lessonNumber: editingLessonNumber,
         categoryOrder,
         activityCount: cleanedActivities.length,
-        categories: Object.keys(grouped).map(cat => `${cat}: ${grouped[cat].length} activities`)
+        categories: Object.keys(grouped).map(cat => `${cat}: ${grouped[cat].length} activities`),
+        orderedActivities: cleanedActivities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`)
       });
 
       // Update in context and wait for it to complete
