@@ -52,7 +52,7 @@ export function LessonPlanBuilder({
   onEditComplete,
   onUnsavedChangesChange 
 }: LessonPlanBuilderProps = {}) {
-  const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks } = useData();
+  const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks, updateActivity, deleteActivity } = useData();
   const { categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   
   // Initialize currentLessonPlan with a default value instead of null
@@ -802,7 +802,7 @@ export function LessonPlanBuilder({
         </div>
       </div>
 
-      {/* Activity Details Modal - Original context (add to lesson) */}
+      {/* Activity Details Modal - Unified view matching Activity Library */}
       {selectedActivity && (
         <ActivityDetails
           activity={selectedActivity}
@@ -811,10 +811,20 @@ export function LessonPlanBuilder({
             handleActivityAdd(selectedActivity);
             setSelectedActivity(null);
           }}
+          isEditing={false}
+          onUpdate={(updatedActivity) => {
+            // Update activity in the global context
+            updateActivity(updatedActivity);
+          }}
+          onDelete={(activityId) => {
+            // Handle activity deletion
+            deleteActivity(activityId);
+            setSelectedActivity(null);
+          }}
         />
       )}
 
-      {/* Activity Preview Modal - Lesson Builder context */}
+      {/* Activity Preview Modal - Unified view matching Activity Library */}
       {showActivityPreview && activityToView && (
         <ActivityDetails
           activity={activityToView}
@@ -825,6 +835,17 @@ export function LessonPlanBuilder({
           onAddActivityToLesson={(activity, isModified) => handleAddActivityFromPreview(activity, isModified)}
           isLessonBuilderContext={true}
           initialEditMode={false}
+          isEditing={false}
+          onUpdate={(updatedActivity) => {
+            // Update activity in the global context
+            updateActivity(updatedActivity);
+          }}
+          onDelete={(activityId) => {
+            // Handle activity deletion
+            deleteActivity(activityId);
+            setShowActivityPreview(false);
+            setActivityToView(null);
+          }}
         />
       )}
 

@@ -34,7 +34,7 @@ export function LessonPlanBuilderNew({
   onEditComplete,
   onUnsavedChangesChange 
 }: LessonPlanBuilderProps = {}) {
-  const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks } = useData();
+  const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks, updateActivity, deleteActivity } = useData();
   const { categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   
   // Initialize currentLessonPlan with a default value instead of null
@@ -908,11 +908,21 @@ export function LessonPlanBuilderNew({
         </div>
       </div>
 
-      {/* Activity Details Modal */}
+      {/* Activity Details Modal - Unified view matching Activity Library */}
       {selectedActivity && (
         <ActivityDetails
           activity={selectedActivity}
           onClose={() => setSelectedActivity(null)}
+          isEditing={false}
+          onUpdate={(updatedActivity) => {
+            // Update activity in the global context
+            updateActivity(updatedActivity);
+          }}
+          onDelete={(activityId) => {
+            // Handle activity deletion
+            deleteActivity(activityId);
+            setSelectedActivity(null);
+          }}
         />
       )}
 
