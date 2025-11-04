@@ -35,6 +35,7 @@ import { LessonExporter } from './LessonExporter';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { LessonDetailsModal } from './LessonDetailsModal';
 import { AssignToHalfTermModal } from './AssignToHalfTermModal';
+import { ClassCopyModal } from './ClassCopyModal';
 
 // Helper function to safely render HTML content
 const renderHtmlContent = (htmlContent) => {
@@ -87,9 +88,10 @@ export function LessonLibrary({
     addOrUpdateUserLessonPlan,
     allActivities,
     loading,
-    updateHalfTerm
+    updateHalfTerm,
+    copyLessonsToClass
   } = useData();
-  const { getThemeForClass, categories } = useSettings();
+  const { getThemeForClass, categories, customYearGroups } = useSettings();
   const {
     stacks,
     createStack,
@@ -134,6 +136,9 @@ export function LessonLibrary({
   const [expandedStacks, setExpandedStacks] = useState<Set<string>>(new Set());
   const [showAssignToTermModal, setShowAssignToTermModal] = useState(false);
   const [selectedStackForAssignment, setSelectedStackForAssignment] = useState<StackedLesson | null>(null);
+  
+  // Class Copy State
+  const [showClassCopyModal, setShowClassCopyModal] = useState(false);
   
   // Lesson stacks section starts collapsed by default - user can expand it manually
   
@@ -447,6 +452,18 @@ export function LessonLibrary({
       }
       return newSet;
     });
+  };
+
+  // Copy lessons to another class
+  const handleCopyLessonsToClass = async (lessonNumbers: string[], targetClassId: string) => {
+    try {
+      await copyLessonsToClass(lessonNumbers, targetClassId);
+      const targetClassName = customYearGroups.find(g => g.id === targetClassId)?.name || targetClassId;
+      alert(`✅ Successfully copied ${lessonNumbers.length} ${lessonNumbers.length === 1 ? 'lesson' : 'lessons'} to ${targetClassName}!`);
+    } catch (error) {
+      console.error('Failed to copy lessons:', error);
+      alert(`❌ Failed to copy lessons: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   // Duplicate lesson functionality
@@ -796,6 +813,14 @@ style={{ backgroundColor: '#10A293' }}>
                 >
                   <Plus className="h-4 w-4" />
                   <span>Create Stack</span>
+                </button>
+                <button
+                  onClick={() => setShowClassCopyModal(true)}
+                  className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-md text-sm transition-colors flex items-center space-x-1"
+                  title="Copy lessons to another class"
+                >
+                  <Users className="h-4 w-4" />
+                  <span>Copy to Class</span>
                 </button>
                 <button
                   onClick={() => setShowStacksSection(!showStacksSection)}
@@ -1189,6 +1214,16 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
           onAssign={handleStackAssignment}
         />
       )}
+
+      {/* Class Copy Modal */}
+      <ClassCopyModal
+        isOpen={showClassCopyModal}
+        onClose={() => setShowClassCopyModal(false)}
+        onCopy={handleCopyLessonsToClass}
+        availableClasses={customYearGroups}
+        currentClass={currentSheetInfo.sheet}
+        allLessonsData={allLessonsData}
+      />
 
     </div>
   );
