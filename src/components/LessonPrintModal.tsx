@@ -233,6 +233,14 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       const lessonData = allLessonsData[lessonNum];
       if (!lessonData) return;
 
+      // Debug custom header/footer
+      console.log(`📄 Print - Lesson ${lessonNum} Header/Footer:`, {
+        customHeader: lessonData.customHeader,
+        customFooter: lessonData.customFooter,
+        hasCustomHeader: !!lessonData.customHeader,
+        hasCustomFooter: !!lessonData.customFooter
+      });
+
       // Use custom footer if available, otherwise use default
       const footerText = lessonData.customFooter || 
         ['Creative Curriculum Designer', `Lesson ${lessonNum}`, currentSheetInfo.display, halfTermName || unitName, '© Rhythmstix 2025']

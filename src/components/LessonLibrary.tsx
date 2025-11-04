@@ -241,7 +241,9 @@ export function LessonLibrary({
         categoryOrder,
         activityCount: cleanedActivities.length,
         categories: Object.keys(grouped).map(cat => `${cat}: ${grouped[cat].length} activities`),
-        orderedActivities: cleanedActivities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`)
+        orderedActivities: cleanedActivities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`),
+        customHeader: customHeader || '(using default)',
+        customFooter: customFooter || '(using default)'
       });
 
       // Update in context and wait for it to complete
