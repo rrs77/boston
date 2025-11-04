@@ -54,6 +54,9 @@ export interface LessonData {
   customObjectives?: string[];
   curriculumType?: 'EYFS' | 'CUSTOM';
   academicYear?: string; // Academic year this lesson belongs to
+  customHeader?: string; // Custom header for print
+  customFooter?: string; // Custom footer for print
+  orderedActivities?: Activity[]; // Flat array of activities in exact order
 }
 
 interface SheetInfo {

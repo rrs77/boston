@@ -118,6 +118,9 @@ export function LessonLibrary({
   const [editingLessonNumber, setEditingLessonNumber] = useState<string | null>(null);
   const [editingLessonActivities, setEditingLessonActivities] = useState<any[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showHeaderFooterEdit, setShowHeaderFooterEdit] = useState(false);
+  const [customHeader, setCustomHeader] = useState<string>('');
+  const [customFooter, setCustomFooter] = useState<string>('');
   
   // Add Activity Modal State
   const [showActivityPicker, setShowActivityPicker] = useState(false);
@@ -183,6 +186,11 @@ export function LessonLibrary({
         activitiesOrder: activities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`)
       });
       
+      // Load custom header and footer if they exist
+      setCustomHeader(lessonData.customHeader || '');
+      setCustomFooter(lessonData.customFooter || '');
+      setShowHeaderFooterEdit(!!(lessonData.customHeader || lessonData.customFooter));
+      
       setEditingLessonActivities(activities);
       setEditingLessonNumber(lessonNumber);
       setShowEditModal(true);
@@ -223,7 +231,9 @@ export function LessonLibrary({
         grouped,
         categoryOrder,
         orderedActivities: cleanedActivities, // NEW: Store flat ordered array
-        totalTime: cleanedActivities.reduce((sum: number, act: any) => sum + (act.time || 0), 0)
+        totalTime: cleanedActivities.reduce((sum: number, act: any) => sum + (act.time || 0), 0),
+        customHeader: customHeader || undefined, // Only save if not empty
+        customFooter: customFooter || undefined  // Only save if not empty
       };
 
       console.log('💾 Saving lesson with order:', {
@@ -252,6 +262,9 @@ export function LessonLibrary({
     setShowActivityPicker(false);
     setActivitySearchQuery('');
     setSelectedCategory('all');
+    setShowHeaderFooterEdit(false);
+    setCustomHeader('');
+    setCustomFooter('');
   };
 
   // Delete activity
@@ -1023,9 +1036,65 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
               </div>
             </div>
 
+            {/* Header/Footer Toggle */}
+            <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showHeaderFooterEdit}
+                  onChange={(e) => setShowHeaderFooterEdit(e.target.checked)}
+                  className="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Edit header and footer text
+                </span>
+              </label>
+            </div>
+
+            {/* Header/Footer Edit Section - Collapsible */}
+            {showHeaderFooterEdit && (
+              <div className="border-b border-gray-200 bg-blue-50 px-6 py-4">
+                <div className="space-y-4">
+                  {/* Header Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Custom Header
+                    </label>
+                    <input
+                      type="text"
+                      value={customHeader}
+                      onChange={(e) => setCustomHeader(e.target.value)}
+                      placeholder={`Leave blank for default: "Lesson ${editingLessonNumber}"`}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Default: Lesson {editingLessonNumber}
+                    </p>
+                  </div>
+
+                  {/* Footer Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Custom Footer
+                    </label>
+                    <input
+                      type="text"
+                      value={customFooter}
+                      onChange={(e) => setCustomFooter(e.target.value)}
+                      placeholder="Leave blank for default footer"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Default: Creative Curriculum Designer • Lesson {editingLessonNumber} • {currentSheetInfo.display} • © Rhythmstix 2025
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Activities List - Editable with Drag & Drop */}
             <div className="flex-1 overflow-hidden">
-              <div className="p-6 max-h-[70vh] overflow-y-auto">
+              <div className="p-6 max-h-[55vh] overflow-y-auto">
                 <DndProvider backend={HTML5Backend}>
                   <div className="space-y-3">
                     {editingLessonActivities.map((activity: any, activityIndex: number) => (

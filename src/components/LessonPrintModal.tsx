@@ -233,13 +233,15 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       const lessonData = allLessonsData[lessonNum];
       if (!lessonData) return;
 
-      // Adjust styles for footer if needed
+      // Use custom footer if available, otherwise use default
+      const footerText = lessonData.customFooter || 
+        ['Creative Curriculum Designer', `Lesson ${lessonNum}`, currentSheetInfo.display, halfTermName || unitName, '© Rhythmstix 2025']
+          .filter(Boolean)
+          .join(' • ');
+      
       footerContent = `<div
            style="width: 100%; text-align: center; font-size: 11px; color: #000000; font-weight: bold;">
-        <p>${['Creative Curriculum Designer', `Lesson ${lessonNum}`, currentSheetInfo.display, halfTermName || unitName, '© Rhythmstix 2025']
-          .filter(Boolean)
-          .join(' • ')}
-        </p>
+        <p>${footerText}</p>
       </div>`
 
       const lessonStandardsList = lessonStandards[lessonNum] || lessonStandards[lessonIndex + 1] || lessonStandards[(lessonIndex + 1).toString()] || [];
@@ -283,7 +285,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
             <!-- Lesson Title -->
             <div class="mb-3 border-b border-black pb-2">
               <h3 class="text-xl font-bold text-black">
-                Lesson ${halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonNum}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music
+                ${lessonData.customHeader || `Lesson ${halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonNum}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music`}
               </h3>
             </div>
       `;
