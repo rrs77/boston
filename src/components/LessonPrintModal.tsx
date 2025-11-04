@@ -399,9 +399,19 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       }
 
       // Add activities - use orderedActivities if available for correct order, otherwise fall back to categoryOrder
+      console.log(`🖨️ Print Debug for Lesson ${lessonNum}:`, {
+        hasOrderedActivities: !!(lessonData.orderedActivities && lessonData.orderedActivities.length > 0),
+        orderedActivitiesCount: lessonData.orderedActivities?.length || 0,
+        orderedActivities: lessonData.orderedActivities?.map((a: Activity) => a.activity) || [],
+        categoryOrderCount: lessonData.categoryOrder?.length || 0,
+        categoryOrder: lessonData.categoryOrder || []
+      });
+      
       const activitiesToPrint = lessonData.orderedActivities && lessonData.orderedActivities.length > 0
         ? lessonData.orderedActivities
         : lessonData.categoryOrder.flatMap(category => lessonData.grouped[category] || []);
+      
+      console.log(`🖨️ Activities to print (${activitiesToPrint.length}):`, activitiesToPrint.map((a: Activity) => a.activity));
 
       // Group activities by category for display
       const categoriesInOrder: string[] = [];
