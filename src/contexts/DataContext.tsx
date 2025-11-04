@@ -1797,6 +1797,14 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
       return updatedAllLessonsData;
     });
 
+    // Save to localStorage immediately
+    try {
+      localStorage.setItem(`${currentSheetInfo.sheet}-lessonsData`, JSON.stringify(updatedAllLessonsData));
+      console.log(`💾 Lesson ${lessonNumber} saved to localStorage with orderedActivities`);
+    } catch (error) {
+      console.warn('Failed to save to localStorage:', error);
+    }
+
     // Save to Supabase if connected - use a small delay to ensure state is updated
     if (isSupabaseConfigured()) {
       // Wait for next tick to ensure state has updated
