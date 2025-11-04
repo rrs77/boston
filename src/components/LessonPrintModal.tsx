@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Download, X, Check, Tag, ChevronDown } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import type { Activity } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { customObjectivesApi } from '../config/customObjectivesApi';
 import type { CustomObjective, CustomObjectiveArea, CustomObjectiveYearGroup } from '../types/customObjectives';
@@ -397,9 +398,26 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         htmlContent += `</div></div>`;
       }
 
-      // Add activities by category
-      lessonData.categoryOrder.forEach(category => {
-        const activities = lessonData.grouped[category] || [];
+      // Add activities - use orderedActivities if available for correct order, otherwise fall back to categoryOrder
+      const activitiesToPrint = lessonData.orderedActivities && lessonData.orderedActivities.length > 0
+        ? lessonData.orderedActivities
+        : lessonData.categoryOrder.flatMap(category => lessonData.grouped[category] || []);
+
+      // Group activities by category for display
+      const categoriesInOrder: string[] = [];
+      const activitiesByCategory: Record<string, Activity[]> = {};
+      
+      activitiesToPrint.forEach(activity => {
+        if (!activitiesByCategory[activity.category]) {
+          activitiesByCategory[activity.category] = [];
+          categoriesInOrder.push(activity.category);
+        }
+        activitiesByCategory[activity.category].push(activity);
+      });
+
+      // Display activities by category in the order they appear
+      categoriesInOrder.forEach(category => {
+        const activities = activitiesByCategory[category] || [];
         if (activities.length === 0) return;
 
         const categoryColor = getCategoryColor(category);
