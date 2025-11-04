@@ -833,7 +833,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         {/* Lesson Title */}
                         <div className="mb-3 border-b border-black pb-2">
                           <h3 className="text-xl font-bold text-black">
-                            {(() => {
+                            {lessonData.customHeader || (() => {
                               const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonIndex + 1;
                               return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music`;
                             })()}
@@ -1105,7 +1105,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
 
                       {/* Page Footer - Fixed at bottom */}
                       <div className="absolute bottom-0 left-0 right-0 bg-gray-50 px-6 py-3 text-center text-xs text-gray-500 rounded-b-lg">
-                        <p><strong>Creative Curriculum Designer • Lesson {lessonNum} • {currentSheetInfo.display} • {halfTermName || unitName || ''} • © Rhythmstix 2025</strong></p>
+                        <p><strong>{lessonData.customFooter || `Creative Curriculum Designer • Lesson ${lessonNum} • ${currentSheetInfo.display} • ${halfTermName || unitName || ''} • © Rhythmstix 2025`}</strong></p>
                       </div>
                     </div>
                 );
