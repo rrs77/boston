@@ -218,6 +218,9 @@ interface DataContextType {
   addActivitiesToStack: (stackId: string, activities: Activity[]) => void;
   removeActivityFromStack: (stackId: string, activityId: string) => void;
   unstackActivities: (stackId: string) => Activity[];
+  
+  // Class Copy
+  copyLessonsToClass: (lessonNumbers: string[], targetClassId: string) => Promise<void>;
 }
 
 interface DataProviderProps {
@@ -3347,6 +3350,84 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
     }
   };
 
+  // Copy lessons from current class to another class
+  const copyLessonsToClass = async (lessonNumbers: string[], targetClassId: string): Promise<void> => {
+    try {
+      console.log('🔄 Copying lessons to class:', { lessonNumbers, from: currentSheetInfo.sheet, to: targetClassId });
+      
+      // Get lessons to copy from current class
+      const lessonsToCopy: Record<string, LessonData> = {};
+      lessonNumbers.forEach(lessonNumber => {
+        if (allLessonsData[lessonNumber]) {
+          lessonsToCopy[lessonNumber] = allLessonsData[lessonNumber];
+        }
+      });
+      
+      if (Object.keys(lessonsToCopy).length === 0) {
+        throw new Error('No valid lessons to copy');
+      }
+      
+      // Load target class data
+      const targetLocalStorageKey = `${targetClassId}-lessonsData`;
+      const targetData = localStorage.getItem(targetLocalStorageKey);
+      let targetLessonsData: Record<string, LessonData> = {};
+      let targetLessonNumbers: string[] = [];
+      let targetTeachingUnits: TeachingUnit[] = [];
+      let targetLessonStandards: Record<string, string[]> = {};
+      
+      if (targetData) {
+        try {
+          const parsed = JSON.parse(targetData);
+          targetLessonsData = parsed.allLessonsData || {};
+          targetLessonNumbers = parsed.lessonNumbers || [];
+          targetTeachingUnits = parsed.teachingUnits || [];
+          targetLessonStandards = parsed.lessonStandards || {};
+        } catch (e) {
+          console.warn('Failed to parse target class data:', e);
+        }
+      }
+      
+      // Merge lessons into target class
+      targetLessonsData = { ...targetLessonsData, ...lessonsToCopy };
+      
+      // Add lesson numbers if they don't exist
+      lessonNumbers.forEach(num => {
+        if (!targetLessonNumbers.includes(num)) {
+          targetLessonNumbers.push(num);
+        }
+      });
+      
+      // Sort lesson numbers
+      targetLessonNumbers.sort((a, b) => parseInt(a) - parseInt(b));
+      
+      // Save to localStorage
+      const dataToSave = {
+        allLessonsData: targetLessonsData,
+        lessonNumbers: targetLessonNumbers,
+        teachingUnits: targetTeachingUnits,
+        lessonStandards: targetLessonStandards
+      };
+      
+      localStorage.setItem(targetLocalStorageKey, JSON.stringify(dataToSave));
+      console.log(`💾 Saved ${lessonNumbers.length} lessons to ${targetClassId} localStorage`);
+      
+      // Save to Supabase if configured
+      if (isSupabaseConfigured()) {
+        try {
+          await lessonsApi.updateSheet(targetClassId, dataToSave, currentAcademicYear);
+          console.log(`✅ Saved ${lessonNumbers.length} lessons to ${targetClassId} Supabase`);
+        } catch (error) {
+          console.warn('Failed to save to Supabase:', error);
+        }
+      }
+      
+      console.log('✅ Lessons copied successfully');
+    } catch (error) {
+      console.error('❌ Failed to copy lessons:', error);
+      throw error;
+    }
+  };
+
   // Activity Stack Management Functions
   const createActivityStack = (name: string, activities: Activity[], description?: string): ActivityStack => {
     const totalTime = activities.reduce((sum, activity) => sum + (activity.time || 0), 0);
@@ -3615,7 +3696,10 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
     deleteActivityStack,
     addActivitiesToStack,
     removeActivityFromStack,
-    unstackActivities
+    unstackActivities,
+    
+    // Class Copy
+    copyLessonsToClass
   };
 
   return (
