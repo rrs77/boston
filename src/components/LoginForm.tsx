@@ -27,7 +27,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'rgb(17,140,126)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'rgb(77, 181, 168)' }}>
       <div className="w-full max-w-md">
         {/* Header with Logo */}
         <div className="mb-6 w-full flex items-center justify-center">
@@ -128,7 +128,7 @@ export function LoginForm() {
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-white">
+          <p className="text-sm font-light tracking-wide" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
             Creative Curriculum Designer • From Rhythmstix
           </p>
         </div>
