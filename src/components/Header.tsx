@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, User, LogOut, BookOpen, RefreshCw, Settings, HelpCircle } from 'lucide-react';
+import { Menu, X, User, LogOut, BookOpen, RefreshCw, Settings, HelpCircle, Users } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
@@ -7,19 +7,33 @@ import { UserSettings } from './UserSettings';
 import { WalkthroughGuide } from './WalkthroughGuide';
 import { HelpGuide } from './HelpGuide';
 import { LogoSVG } from './Logo';
+import { ClassCopyModal } from './ClassCopyModal';
 
 export function Header() {
   const { user, logout } = useAuth();
-  const { currentSheetInfo, setCurrentSheetInfo, refreshData, loading } = useData();
+  const { currentSheetInfo, setCurrentSheetInfo, refreshData, loading, copyLessonsToClass, allLessonsData } = useData();
   const { settings, getThemeForClass, customYearGroups } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [helpGuideSection, setHelpGuideSection] = useState<'activity' | 'lesson' | 'unit' | 'assign' | undefined>(undefined);
+  const [showClassCopyModal, setShowClassCopyModal] = useState(false);
 
   // Get theme colors for current class
   const theme = getThemeForClass(currentSheetInfo.sheet);
+
+  // Handle copy lessons to class
+  const handleCopyLessonsToClass = async (lessonNumbers: string[], targetClassId: string) => {
+    try {
+      await copyLessonsToClass(lessonNumbers, targetClassId);
+      const targetClassName = customYearGroups.find(g => g.id === targetClassId)?.name || targetClassId;
+      alert(`✅ Successfully copied ${lessonNumbers.length} ${lessonNumbers.length === 1 ? 'lesson' : 'lessons'} to ${targetClassName}!`);
+    } catch (error) {
+      console.error('Failed to copy lessons:', error);
+      alert(`❌ Failed to copy lessons: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
 
   return (
     <>
@@ -70,6 +84,16 @@ export function Header() {
                   ))}
                 </select>
               </div>
+
+              {/* Copy to Class Button */}
+              <button
+                onClick={() => setShowClassCopyModal(true)}
+                className="flex items-center space-x-1 px-2 lg:px-3 py-1.5 lg:py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors duration-200 text-xs lg:text-sm font-medium flex-shrink-0"
+                title="Copy lessons to another class"
+              >
+                <Users className="h-3 w-3 lg:h-4 lg:w-4" />
+                <span className="hidden lg:inline">Copy</span>
+              </button>
 
               {/* Help Button */}
               <button
@@ -242,6 +266,16 @@ export function Header() {
         isOpen={showHelpGuide}
         onClose={() => setShowHelpGuide(false)}
         initialSection={helpGuideSection}
+      />
+
+      {/* Class Copy Modal */}
+      <ClassCopyModal
+        isOpen={showClassCopyModal}
+        onClose={() => setShowClassCopyModal(false)}
+        onCopy={handleCopyLessonsToClass}
+        availableClasses={customYearGroups}
+        currentClass={currentSheetInfo.sheet}
+        allLessonsData={allLessonsData}
       />
     </>
   );
