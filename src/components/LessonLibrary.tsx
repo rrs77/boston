@@ -21,8 +21,8 @@ import {
   ChevronDown,
   X,
   Check,
-  Users,
-  Layers
+  Layers,
+  Copy
 } from 'lucide-react';
 import { LessonLibraryCard } from './LessonLibraryCard';
 import { StackedLessonCard } from './StackedLessonCard';
@@ -789,6 +789,16 @@ style={{ backgroundColor: '#10A293' }}>
               <Tag className="h-4 w-4" />
               {sortBy === 'activities' && (sortOrder === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4" />)}
             </button>
+            
+            {/* Copy Lesson Button */}
+            <button
+              onClick={() => setShowClassCopyModal(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200"
+              title="Copy lessons to another class"
+            >
+              <Copy className="h-4 w-4" />
+              <span>Copy Lesson</span>
+            </button>
           </div>
         </div>
       </div>
@@ -808,32 +818,20 @@ style={{ backgroundColor: '#10A293' }}>
               <div className="flex items-center space-x-2">
                 <button
                   onClick={handleCreateStack}
-                  className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-md text-sm transition-colors flex items-center space-x-1"
+                  className="p-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors"
                   title="Create New Lesson Stack"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Create Stack</span>
-                </button>
-                <button
-                  onClick={() => setShowClassCopyModal(true)}
-                  className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-md text-sm transition-colors flex items-center space-x-1"
-                  title="Copy lessons to another class"
-                >
-                  <Users className="h-4 w-4" />
-                  <span>Copy to Class</span>
                 </button>
                 <button
                   onClick={() => setShowStacksSection(!showStacksSection)}
-                  className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-md text-sm transition-colors flex items-center space-x-1"
+                  className="p-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors"
+                  title={showStacksSection ? `Hide Stacks (${stacks.length})` : `Show Stacks (${stacks.length})`}
                 >
                   {showStacksSection ? (
-                    <>
-                      <span>Hide Stacks ({stacks.length})</span>
-                    </>
+                    <ChevronUp className="h-4 w-4" />
                   ) : (
-                    <>
-                      <span>Show Stacks ({stacks.length})</span>
-                    </>
+                    <ChevronDown className="h-4 w-4" />
                   )}
                 </button>
               </div>
