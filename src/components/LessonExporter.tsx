@@ -352,7 +352,7 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
                             
                             {/* Description */}
                             <div 
-                              className="text-base text-gray-700 leading-relaxed print:text-sm"
+                              className={`text-base text-gray-700 leading-relaxed print:text-sm ${activity.activityText ? 'pt-4 border-t-2 border-gray-200' : ''}`}
                               dangerouslySetInnerHTML={{ 
                                 __html: activity.description.includes('<') ? 
                                   activity.description : 

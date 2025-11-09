@@ -436,8 +436,7 @@ export function UnitViewer() {
                 console.log('🔍 UnitViewer - Rendering lesson:', {
                   lessonNumber,
                   hasData: !!lessonData,
-                  isAssigned: isLessonAssignedToHalfTerm(lessonNumber),
-                  halfTermsWithThisLesson: halfTerms.filter(ht => ht.lessons.includes(lessonNumber)).map(ht => ht.id)
+                  unitLessonIndex: index + 1
                 });
                 
                 // FIXED: Only show lessons that exist in allLessonsData
@@ -560,12 +559,12 @@ export function UnitViewer() {
                 ? (stacks.find(s => s.id === printStackId)?.lessons.filter(l => typeof l === 'string') as string[] || [])
                 : printUnitId 
                   ? (units.find(u => u.id === printUnitId)?.lessonNumbers.filter(lessonNumber => 
-                      allLessonsData[lessonNumber] && isLessonAssignedToHalfTerm(lessonNumber)
+                      allLessonsData[lessonNumber]
                     ) || [])
                   : printHalfTermId
                     ? getLessonsForHalfTerm(printHalfTermId)
                     : selectedUnit.lessonNumbers.filter(lessonNumber => 
-                        allLessonsData[lessonNumber] && isLessonAssignedToHalfTerm(lessonNumber)
+                        allLessonsData[lessonNumber]
                       )
             }
             onClose={() => {
@@ -919,7 +918,7 @@ export function UnitViewer() {
                 ? (stacks.find(s => s.id === printStackId)?.lessons.filter(l => typeof l === 'string') as string[] || [])
                 : printUnitId 
                   ? (units.find(u => u.id === printUnitId)?.lessonNumbers.filter(lessonNumber => 
-                      allLessonsData[lessonNumber] && isLessonAssignedToHalfTerm(lessonNumber)
+                      allLessonsData[lessonNumber]
                     ) || [])
                   : printHalfTermId 
                     ? getLessonsForHalfTerm(printHalfTermId)

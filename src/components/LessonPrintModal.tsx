@@ -995,7 +995,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
 
                                           {/* Description */}
                                           <div
-                                              className="text-xs text-black"
+                                              className={`text-xs text-black ${activity.activityText ? 'pt-1.5 border-t border-gray-300' : ''}`}
                                               dangerouslySetInnerHTML={{
                                                 __html: activity.description.includes('<') ?
                                                     activity.description :
