@@ -20,6 +20,7 @@ interface LessonDetailsModalProps {
     gradient: string;
   };
   onExport?: () => void;
+  onEdit?: () => void;
   unitId?: string;
   unitName?: string;
   halfTermId?: string;
@@ -32,6 +33,7 @@ export function LessonDetailsModal({
   onClose, 
   theme,
   onExport,
+  onEdit,
   unitId,
   unitName,
   halfTermId,
@@ -183,6 +185,19 @@ export function LessonDetailsModal({
               </p>
             </div>
             <div className="flex items-center space-x-2">
+              {onEdit && (
+                <button
+                  onClick={() => {
+                    onEdit();
+                    onClose();
+                  }}
+                  className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 group flex items-center space-x-2"
+                  title="Edit Lesson"
+                >
+                  <Edit3 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                  <span className="text-sm font-medium">Edit</span>
+                </button>
+              )}
               <button
                 onClick={handleDeleteLesson}
                 className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 group flex items-center space-x-2"
