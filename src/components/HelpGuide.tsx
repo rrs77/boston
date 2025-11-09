@@ -56,12 +56,13 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
           <p>Provide the essential information for your activity:</p>
           <ul className="list-disc pl-5 space-y-2">
             <li><strong>Activity Name:</strong> Choose a clear, descriptive name that helps identify the activity quickly</li>
-            <li><strong>Category:</strong> Select from predefined categories (e.g., Warm-up, Singing, Instruments, Movement) or create custom categories</li>
-            <li><strong>Level:</strong> Specify the year group(s) this activity is suitable for, or select "All" for multi-age activities</li>
+            <li><strong>Curriculum Objectives:</strong> Click to choose objectives from EYFS or custom year group curriculum standards</li>
+            <li><strong>Category:</strong> Select from predefined categories (e.g., Warm-up, Singing, Instruments, Movement) or create custom categories in Settings</li>
+            <li><strong>Year Groups:</strong> Select multiple year groups this activity is suitable for (checkboxes allow multi-selection)</li>
             <li><strong>Duration:</strong> Set the expected duration in minutes to help with lesson planning</li>
           </ul>
           <div className="bg-amber-50 border-l-4 border-amber-500 p-3 rounded mt-3">
-            <p className="text-sm text-amber-900"><strong>Note:</strong> Choosing the right category helps filter and organize activities when building lessons.</p>
+            <p className="text-sm text-amber-900"><strong>Note:</strong> Selecting curriculum objectives helps track standards coverage across your lessons and units.</p>
           </div>
         </div>
       )
@@ -70,11 +71,12 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
       title: "Add Activity Content",
       content: (
         <div className="space-y-3">
-          <p>Use the rich text editor to provide comprehensive instructions:</p>
+          <p>Use the rich text editor to provide comprehensive content:</p>
           <ul className="list-disc pl-5 space-y-2">
-            <li><strong>Activity Instructions:</strong> Write step-by-step instructions for delivering the activity</li>
-            <li><strong>Description:</strong> Add context, learning objectives, or differentiation strategies</li>
+            <li><strong>Introduction/Context:</strong> Provide background information, learning goals, or teaching notes that set up the activity</li>
+            <li><strong>Activity Instructions:</strong> Write detailed step-by-step instructions for delivering the activity in class</li>
             <li><strong>Formatting:</strong> Use the toolbar to add bold text, italic, bullet lists, and numbered lists for clarity</li>
+            <li><strong>Print Preview:</strong> A dividing line automatically separates these two sections in PDF exports</li>
           </ul>
           <div className="p-3 rounded mt-3" style={{backgroundColor: '#E6F7F5', borderLeft: '4px solid #0BA596'}}>
             <p className="text-sm" style={{color: '#0BA596'}}><strong>Best Practice:</strong> Include clear instructions so the activity can be easily delivered by you or a colleague.</p>
@@ -574,6 +576,62 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
           >
             <X className="h-6 w-6" />
           </button>
+        </div>
+
+        {/* Overview Section */}
+        <div className="p-6 bg-gradient-to-r from-teal-50 to-blue-50 border-b border-gray-200">
+          <div className="max-w-4xl mx-auto">
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              Welcome to Creative Curriculum Designer
+            </h3>
+            <p className="text-base text-gray-700 leading-relaxed mb-4">
+              Creative Curriculum Designer is a comprehensive planning platform designed to streamline your curriculum development from start to finish. Build reusable activities, organize them into structured lessons, group lessons into thematic units, and schedule everything across your academic year with ease. Whether you're planning for one class or multiple year groups, our tools help you create, organize, copy, and share your teaching resources efficiently.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-2 text-teal-600 mb-1">
+                  <Tag className="h-4 w-4" />
+                  <h4 className="font-semibold text-sm">Activity Library</h4>
+                </div>
+                <p className="text-xs text-gray-600">Create and manage reusable activities with curriculum objectives, resources, and detailed instructions</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-2 text-blue-600 mb-1">
+                  <Edit3 className="h-4 w-4" />
+                  <h4 className="font-semibold text-sm">Lesson Builder</h4>
+                </div>
+                <p className="text-xs text-gray-600">Drag-and-drop activities into lessons, reorder them, and add custom headers for print</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-2 text-indigo-600 mb-1">
+                  <FolderOpen className="h-4 w-4" />
+                  <h4 className="font-semibold text-sm">Unit Planner</h4>
+                </div>
+                <p className="text-xs text-gray-600">Group lessons into units by term and year group for organized curriculum coverage</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-2 text-purple-600 mb-1">
+                  <Calendar className="h-4 w-4" />
+                  <h4 className="font-semibold text-sm">Half-Term Scheduling</h4>
+                </div>
+                <p className="text-xs text-gray-600">Assign lessons to specific half-terms and view your entire year at a glance</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-2 text-green-600 mb-1">
+                  <Download className="h-4 w-4" />
+                  <h4 className="font-semibold text-sm">Print & Export</h4>
+                </div>
+                <p className="text-xs text-gray-600">Export lessons and units to PDF with customizable headers, footers, and formatting</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-2 text-orange-600 mb-1">
+                  <Users className="h-4 w-4" />
+                  <h4 className="font-semibold text-sm">Multi-Class Support</h4>
+                </div>
+                <p className="text-xs text-gray-600">Copy lessons between classes, manage multiple year groups, and create lesson stacks</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Section Tabs */}
