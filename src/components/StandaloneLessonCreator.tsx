@@ -411,27 +411,27 @@ export function StandaloneLessonCreator({ onClose, onSave }: StandaloneLessonCre
               {lesson.additionalLinks.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {lesson.additionalLinks.map((link, index) => (
-                    <div key={index} className="flex items-center space-x-2">
+                    <div key={index} className="grid grid-cols-[1fr_auto_auto] gap-2">
                       <input
                         type="url"
                         value={link.url}
                         onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-xs"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                         placeholder="https://..."
                       />
                       <input
                         type="text"
                         value={link.label}
                         onChange={(e) => handleLinkChange(index, 'label', e.target.value)}
-                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-xs"
-                        placeholder="Link label"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-40"
+                        placeholder="Label"
                       />
                       <button
                         type="button"
                         onClick={() => handleRemoveLink(index)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
+                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
@@ -441,9 +441,9 @@ export function StandaloneLessonCreator({ onClose, onSave }: StandaloneLessonCre
               <button
                 type="button"
                 onClick={handleAddLink}
-                className="mt-2 flex items-center space-x-1 px-2 py-1 text-teal-600 hover:bg-teal-50 rounded text-xs font-medium transition-colors duration-200"
+                className="mt-3 flex items-center space-x-1 px-3 py-1.5 text-teal-600 hover:bg-teal-50 rounded-lg text-sm font-medium transition-colors duration-200"
               >
-                <Plus className="h-3 w-3" />
+                <Plus className="h-4 w-4" />
                 <span>Add Link</span>
               </button>
             </div>
