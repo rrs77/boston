@@ -819,7 +819,7 @@ style={{ backgroundColor: '#10A293' }}>
             {/* Create Lesson Button */}
             <button
               onClick={() => setShowStandaloneLessonCreator(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+              className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
               title="Create a standalone lesson plan"
             >
               <FileText className="h-4 w-4" />
@@ -829,7 +829,7 @@ style={{ backgroundColor: '#10A293' }}>
             {/* Copy Lesson Button */}
             <button
               onClick={() => setShowClassCopyModal(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200"
+              className="flex items-center space-x-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
               title="Copy lessons to another class"
             >
               <Copy className="h-4 w-4" />
