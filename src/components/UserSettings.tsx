@@ -1424,20 +1424,13 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
 
                   <div className="flex items-center space-x-3">
                     <a
-                      href="https://rhythmstiix.co.uk/product/drama-games-activity-pack/?add-to-cart=DRAMA_PACK"
+                      href="https://www.paypal.com/paypalme/robreichstorer/24.99GBP"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-teal-600 hover:to-teal-700 transition-all shadow-md hover:shadow-lg text-center"
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg text-center flex items-center justify-center space-x-2"
                     >
-                      🛒 Purchase Now via WooCommerce
-                    </a>
-                    <a
-                      href="https://www.paypal.com/checkoutnow?token=DRAMA_PACK&useraction=commit"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg text-center"
-                    >
-                      💳 PayPal
+                      <span>💳</span>
+                      <span>Purchase Now via PayPal</span>
                     </a>
                   </div>
                   
