@@ -20,9 +20,7 @@ import {
 import { useSettings } from '../contexts/SettingsContextNew';
 import { RichTextEditor } from './RichTextEditor';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
-import { customObjectivesApi } from '../config/customObjectivesApi';
-import { CustomObjectivesSelector } from './CustomObjectivesSelector';
-import type { CustomObjectiveYearGroup } from '../types/customObjectives';
+import { NestedStandardsBrowser } from './NestedStandardsBrowser';
 
 interface ActivityCreatorProps {
   onClose: () => void;
@@ -58,30 +56,25 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const imageInputRef = useRef<HTMLInputElement>(null);
-  
-  // Custom objectives state
-  const [customObjectiveYearGroups, setCustomObjectiveYearGroups] = useState<CustomObjectiveYearGroup[]>([]);
-  const [loadingCustomYearGroups, setLoadingCustomYearGroups] = useState(false);
-
-  // Load custom objective year groups
-  useEffect(() => {
-    loadCustomObjectiveYearGroups();
-  }, []);
-
-  const loadCustomObjectiveYearGroups = async () => {
-    setLoadingCustomYearGroups(true);
-    try {
-      const data = await customObjectivesApi.yearGroups.getAll();
-      setCustomObjectiveYearGroups(data);
-    } catch (error) {
-      console.error('Failed to load custom objective year groups:', error);
-    } finally {
-      setLoadingCustomYearGroups(false);
-    }
-  };
+  const [showObjectivesBrowser, setShowObjectivesBrowser] = useState(false);
 
   // Dynamic level options based on year groups
   const simplifiedLevels = ['All', ...customYearGroups.map(group => group.name)];
+
+  // Handlers for objectives browser
+  const handleAddObjective = (objectiveId: string) => {
+    setActivity(prev => ({
+      ...prev,
+      custom_objective_ids: [...prev.custom_objective_ids, objectiveId]
+    }));
+  };
+
+  const handleRemoveObjective = (objectiveId: string) => {
+    setActivity(prev => ({
+      ...prev,
+      custom_objective_ids: prev.custom_objective_ids.filter(id => id !== objectiveId)
+    }));
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -234,6 +227,35 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                 )}
               </div>
 
+              {/* Objectives Selector */}
+              <div className="col-span-2">
+                <button
+                  type="button"
+                  onClick={() => setShowObjectivesBrowser(true)}
+                  className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-teal-500 hover:bg-teal-50 transition-colors duration-200 flex items-center justify-center space-x-2 text-gray-600 hover:text-teal-700"
+                >
+                  <Tag className="h-5 w-5" />
+                  <span className="font-medium">
+                    {activity.custom_objective_ids.length > 0
+                      ? `${activity.custom_objective_ids.length} objective${activity.custom_objective_ids.length !== 1 ? 's' : ''} selected`
+                      : 'Click to choose curriculum objectives'}
+                  </span>
+                </button>
+                
+                {activity.custom_objective_ids.length > 0 && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    <button
+                      type="button"
+                      onClick={() => setActivity(prev => ({ ...prev, custom_objective_ids: [] }))}
+                      className="text-red-600 hover:text-red-800 flex items-center space-x-1"
+                    >
+                      <X className="h-3 w-3" />
+                      <span>Clear all objectives</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Curriculum Type - REMOVED: Now all objectives are shown together */}
 
               {/* Category */}
@@ -306,20 +328,6 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                 )}
               </div>
 
-              {/* Objectives Selector - Now shows all objectives (EYFS + Custom) together */}
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Objectives
-                </label>
-                <p className="text-sm text-gray-500 mb-3">
-                  Choose from EYFS objectives or custom year group objectives below
-                </p>
-                {/* TODO: Create a unified objectives selector that shows EYFS + all custom objectives */}
-                <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center text-gray-500">
-                  Unified objectives selector coming soon
-                </div>
-              </div>
-
               {/* Time */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -363,7 +371,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
             {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
+                Introduction/Context
               </label>
               <RichTextEditor
                 value={activity.description}
@@ -507,6 +515,21 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
           </div>
         </div>
       </div>
+
+      {/* Objectives Browser Modal */}
+      {showObjectivesBrowser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <NestedStandardsBrowser
+              isOpen={showObjectivesBrowser}
+              onClose={() => setShowObjectivesBrowser(false)}
+              selectedObjectives={activity.custom_objective_ids}
+              onAddObjective={handleAddObjective}
+              onRemoveObjective={handleRemoveObjective}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
