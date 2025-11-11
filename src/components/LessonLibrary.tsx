@@ -22,7 +22,8 @@ import {
   X,
   Check,
   Layers,
-  Copy
+  Copy,
+  FileText
 } from 'lucide-react';
 import { LessonLibraryCard } from './LessonLibraryCard';
 import { StackedLessonCard } from './StackedLessonCard';
@@ -36,6 +37,7 @@ import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { LessonDetailsModal } from './LessonDetailsModal';
 import { AssignToHalfTermModal } from './AssignToHalfTermModal';
 import { ClassCopyModal } from './ClassCopyModal';
+import { StandaloneLessonCreator } from './StandaloneLessonCreator';
 
 // Helper function to safely render HTML content
 const renderHtmlContent = (htmlContent) => {
@@ -139,6 +141,9 @@ export function LessonLibrary({
   
   // Class Copy State
   const [showClassCopyModal, setShowClassCopyModal] = useState(false);
+  
+  // Standalone Lesson Creator State
+  const [showStandaloneLessonCreator, setShowStandaloneLessonCreator] = useState(false);
   
   // Lesson stacks section starts collapsed by default - user can expand it manually
   
@@ -466,6 +471,27 @@ export function LessonLibrary({
     }
   };
 
+  // Save standalone lesson
+  const handleSaveStandaloneLesson = async (lessonData: any) => {
+    try {
+      // Generate next lesson number
+      const maxLessonNumber = Math.max(
+        0,
+        ...Object.keys(allLessonsData).map(num => parseInt(num.replace('lesson', '')) || 0)
+      );
+      const newLessonNumber = `lesson${maxLessonNumber + 1}`;
+      
+      // Save lesson to data context
+      await addOrUpdateUserLessonPlan(newLessonNumber, lessonData);
+      
+      alert(`✅ Lesson "${lessonData.lessonTitle}" created successfully!`);
+      setShowStandaloneLessonCreator(false);
+    } catch (error) {
+      console.error('Failed to create standalone lesson:', error);
+      alert(`❌ Failed to create lesson: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   // Duplicate lesson functionality
   const handleDuplicateLesson = (lessonNumber: string) => {
     console.log('🔄 handleDuplicateLesson called for:', lessonNumber);
@@ -790,6 +816,16 @@ style={{ backgroundColor: '#10A293' }}>
               {sortBy === 'activities' && (sortOrder === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4" />)}
             </button>
             
+            {/* Create Lesson Button */}
+            <button
+              onClick={() => setShowStandaloneLessonCreator(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+              title="Create a standalone lesson plan"
+            >
+              <FileText className="h-4 w-4" />
+              <span>Create Lesson</span>
+            </button>
+
             {/* Copy Lesson Button */}
             <button
               onClick={() => setShowClassCopyModal(true)}
@@ -1223,6 +1259,14 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
         currentClass={currentSheetInfo.sheet}
         allLessonsData={allLessonsData}
       />
+
+      {/* Standalone Lesson Creator Modal */}
+      {showStandaloneLessonCreator && (
+        <StandaloneLessonCreator
+          onClose={() => setShowStandaloneLessonCreator(false)}
+          onSave={handleSaveStandaloneLesson}
+        />
+      )}
 
     </div>
   );
