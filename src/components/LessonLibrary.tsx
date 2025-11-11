@@ -768,7 +768,7 @@ style={{ backgroundColor: '#10A293' }}>
               placeholder="Search lessons..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none"
+              className="w-full h-10 pl-10 pr-4 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none"
               dir="ltr"
             />
           </div>
@@ -776,7 +776,7 @@ style={{ backgroundColor: '#10A293' }}>
           <select
             value={selectedHalfTerm}
             onChange={(e) => setSelectedHalfTerm(e.target.value)}
-            className="px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none w-48"
+            className="h-10 px-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none w-48"
             dir="ltr"
           >
             <option value="all" className="text-gray-900">All Half-Terms</option>
@@ -790,7 +790,7 @@ style={{ backgroundColor: '#10A293' }}>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => toggleSort('number')}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors duration-200 ${
+              className={`flex items-center justify-center space-x-1 h-10 px-3 rounded-lg transition-colors duration-200 ${
                 sortBy === 'number' ? 'bg-teal-600 text-white border-2 border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-transparent'
               }`}
             >
@@ -799,7 +799,7 @@ style={{ backgroundColor: '#10A293' }}>
             </button>
             <button
               onClick={() => toggleSort('time')}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors duration-200 ${
+              className={`flex items-center justify-center space-x-1 h-10 px-3 rounded-lg transition-colors duration-200 ${
                 sortBy === 'time' ? 'bg-teal-600 text-white border-2 border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-transparent'
               }`}
             >
@@ -808,7 +808,7 @@ style={{ backgroundColor: '#10A293' }}>
             </button>
             <button
               onClick={() => toggleSort('activities')}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors duration-200 ${
+              className={`flex items-center justify-center space-x-1 h-10 px-3 rounded-lg transition-colors duration-200 ${
                 sortBy === 'activities' ? 'bg-teal-600 text-white border-2 border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-transparent'
               }`}
             >
@@ -819,7 +819,7 @@ style={{ backgroundColor: '#10A293' }}>
             {/* Create Lesson Button */}
             <button
               onClick={() => setShowStandaloneLessonCreator(true)}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
+              className="flex items-center justify-center space-x-2 h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
               title="Create a standalone lesson plan"
             >
               <FileText className="h-4 w-4" />
@@ -829,7 +829,7 @@ style={{ backgroundColor: '#10A293' }}>
             {/* Copy Lesson Button */}
             <button
               onClick={() => setShowClassCopyModal(true)}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
+              className="flex items-center justify-center space-x-2 h-10 px-5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
               title="Copy lessons to another class"
             >
               <Copy className="h-4 w-4" />
