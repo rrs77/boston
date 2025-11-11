@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2, Eye, Music, BookOpen, Target, Link2 } from 'lucide-react';
-import RichTextEditor from './RichTextEditor';
+import { RichTextEditor } from './RichTextEditor';
 
 interface StandaloneLessonCreatorProps {
   onSave: (lessonData: any) => void;
   onClose: () => void;
 }
 
-const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = ({ onSave, onClose }) => {
+export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = ({ onSave, onClose }) => {
   const [activeTab, setActiveTab] = useState<'main' | 'extended'>('main');
   const [showPreview, setShowPreview] = useState(false);
   
@@ -542,5 +542,3 @@ const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = ({ onSav
     </div>
   );
 };
-
-export default StandaloneLessonCreator;
