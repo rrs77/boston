@@ -1349,3 +1349,144 @@ export const wordpressAPI = {
     return response.json();
   }
 };
+
+// Activity Packs API
+export interface ActivityPack {
+  id: string;
+  pack_id: string;
+  name: string;
+  description: string;
+  price: number;
+  icon: string;
+  category_ids: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserPurchase {
+  id: string;
+  user_email: string;
+  pack_id: string;
+  purchase_date: string;
+  paypal_transaction_id?: string;
+  amount: number;
+  status: string;
+}
+
+export const activityPacksApi = {
+  // Get all active packs
+  getAllPacks: async (): Promise<ActivityPack[]> => {
+    if (!isSupabaseConfigured()) return [];
+    
+    const { data, error } = await supabase
+      .from('activity_packs')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Get all packs (admin only)
+  getAllPacksAdmin: async (): Promise<ActivityPack[]> => {
+    if (!isSupabaseConfigured()) return [];
+    
+    const { data, error } = await supabase
+      .from('activity_packs')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Create or update a pack (admin only)
+  upsertPack: async (pack: Partial<ActivityPack>): Promise<ActivityPack> => {
+    if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
+    
+    const { data, error } = await supabase
+      .from('activity_packs')
+      .upsert({
+        ...pack,
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // Delete a pack (admin only)
+  deletePack: async (packId: string): Promise<void> => {
+    if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
+    
+    const { error } = await supabase
+      .from('activity_packs')
+      .delete()
+      .eq('pack_id', packId);
+    
+    if (error) throw error;
+  },
+
+  // Get user's purchased packs
+  getUserPurchases: async (userEmail: string): Promise<string[]> => {
+    if (!isSupabaseConfigured()) return [];
+    
+    const { data, error } = await supabase
+      .from('user_purchases')
+      .select('pack_id')
+      .eq('user_email', userEmail)
+      .eq('status', 'active');
+    
+    if (error) throw error;
+    return data?.map(p => p.pack_id) || [];
+  },
+
+  // Record a purchase
+  recordPurchase: async (purchase: Partial<UserPurchase>): Promise<UserPurchase> => {
+    if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
+    
+    const { data, error } = await supabase
+      .from('user_purchases')
+      .insert(purchase)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // Get all purchases (admin only)
+  getAllPurchases: async (): Promise<UserPurchase[]> => {
+    if (!isSupabaseConfigured()) return [];
+    
+    const { data, error } = await supabase
+      .from('user_purchases')
+      .select('*')
+      .order('purchase_date', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Check if user has a specific pack
+  userHasPack: async (userEmail: string, packId: string): Promise<boolean> => {
+    if (!isSupabaseConfigured()) return false;
+    
+    const { data, error } = await supabase
+      .rpc('user_has_pack', {
+        p_user_email: userEmail,
+        p_pack_id: packId
+      });
+    
+    if (error) {
+      console.error('Error checking pack ownership:', error);
+      return false;
+    }
+    
+    return data || false;
+  }
+};

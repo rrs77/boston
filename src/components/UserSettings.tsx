@@ -485,13 +485,13 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex bg-gray-50">
           <button
             onClick={() => setActiveTab('yeargroups')}
-            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
+            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'yeargroups' 
-                ? 'text-teal-600 border-teal-600' 
-                : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
+                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
+                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -499,10 +499,10 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           </button>
           <button
             onClick={() => setActiveTab('categories')}
-            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
+            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'categories' 
-                ? 'text-teal-600 border-teal-600' 
-                : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
+                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
+                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -510,10 +510,10 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           </button>
           <button
             onClick={() => setActiveTab('purchases')}
-            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
+            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'purchases' 
-                ? 'text-teal-600 border-teal-600' 
-                : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
+                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
+                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -522,39 +522,39 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           {isAdmin && (
             <button
               onClick={() => setActiveTab('data')}
-              className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
+              className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
                 activeTab === 'data' 
-                ? 'text-teal-600 border-teal-600' 
-                : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
+                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
+                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
               }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
               Data Management
             </button>
           )}
-                          <button
+          <button
             onClick={() => setActiveTab('admin')}
-            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
+            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'admin' 
-                ? 'text-teal-600 border-teal-600' 
-                : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
+                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
+                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
             Custom Objectives
-                          </button>
-                          <button
+          </button>
+          <button
             onClick={() => setActiveTab('backup')}
-              className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
+              className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'backup' 
-                  ? 'text-teal-600 border-teal-600' 
-                  : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
+                  ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
+                  : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
               }`}
               style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
             Backup
-                          </button>
-              </div>
+          </button>
+        </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
@@ -562,7 +562,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           {activeTab === 'yeargroups' && (
             <>
               {/* Class Management */}
-              <div className="bg-teal-50 border border-teal-200 rounded-xl p-6">
+              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
                     <Users className="h-6 w-6 text-teal-600" />
@@ -584,7 +584,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                 </div>
 
                 {/* Add New Year Group */}
-                <div className="bg-white rounded-lg border border-teal-200 p-4 mb-6">
+                <div className="bg-white rounded-lg p-4 mb-6 shadow-sm">
                   <h4 
                     className="font-medium text-gray-900 mb-3"
                     style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
