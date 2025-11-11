@@ -760,8 +760,8 @@ style={{ backgroundColor: '#10A293' }}>
 
       <div className="p-6">
         {/* Search and Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
+        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
@@ -776,7 +776,7 @@ style={{ backgroundColor: '#10A293' }}>
           <select
             value={selectedHalfTerm}
             onChange={(e) => setSelectedHalfTerm(e.target.value)}
-            className="px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none"
+            className="px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none w-48"
             dir="ltr"
           >
             <option value="all" className="text-gray-900">All Half-Terms</option>
@@ -787,7 +787,7 @@ style={{ backgroundColor: '#10A293' }}>
             ))}
           </select>
           
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => toggleSort('number')}
               className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors duration-200 ${
