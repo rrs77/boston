@@ -17,7 +17,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [tempSettings, setTempSettings] = useState(settings);
   const [tempCategories, setTempCategories] = useState(categories);
   const [tempYearGroups, setTempYearGroups] = useState(customYearGroups);
-  const [activeTab, setActiveTab] = useState<'yeargroups' | 'categories' | 'data' | 'backup' | 'admin'>('yeargroups');
+  const [activeTab, setActiveTab] = useState<'yeargroups' | 'categories' | 'purchases' | 'data' | 'backup' | 'admin'>('yeargroups');
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState('#6B7280');
@@ -507,6 +507,17 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
             Categories
+          </button>
+          <button
+            onClick={() => setActiveTab('purchases')}
+            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none border-b-2 ${
+              activeTab === 'purchases' 
+                ? 'text-teal-600 border-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 border-transparent hover:border-gray-300'
+            }`}
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+          >
+            🛒 Purchases
           </button>
           {isAdmin && (
             <button
@@ -1355,6 +1366,131 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
               </div>
 
             </>
+          )}
+
+          {activeTab === 'purchases' && (
+            <div className="space-y-6">
+              {/* Purchases Header */}
+              <div className="rounded-lg p-6 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <span className="text-3xl">🛒</span>
+                  <h3 className="text-xl font-bold text-gray-900">Purchase Activity Card Sets</h3>
+                </div>
+                <p className="text-sm text-gray-700 mb-2">
+                  Expand your curriculum with specialized activity card sets. Each set includes professionally designed activities tailored to specific subjects and age groups.
+                </p>
+                <p className="text-xs text-gray-600">
+                  Connected account: <span className="font-semibold">{user?.email || 'Not signed in'}</span>
+                </p>
+              </div>
+
+              {/* Available Card Sets */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900">Available Card Sets</h4>
+                
+                {/* Drama Games Card Set */}
+                <div className="rounded-lg border-2 border-teal-200 bg-white p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <span className="text-4xl">🎭</span>
+                        <div>
+                          <h5 className="text-xl font-bold text-gray-900">Drama Games Activity Pack</h5>
+                          <p className="text-sm text-teal-600 font-medium">Unlock 50+ Drama Activities</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 mb-4">
+                        <p className="text-sm text-gray-700">
+                          Transform your drama lessons with this comprehensive collection of engaging drama games and activities suitable for KS1 and KS2.
+                        </p>
+                        <ul className="text-sm text-gray-600 space-y-1 ml-4">
+                          <li>• 50+ Professional Drama Activities</li>
+                          <li>• Warm-up Games & Icebreakers</li>
+                          <li>• Improvisation Exercises</li>
+                          <li>• Character Development Activities</li>
+                          <li>• Group Performance Projects</li>
+                          <li>• Curriculum-Aligned Objectives</li>
+                        </ul>
+                      </div>
+
+                      <div className="flex items-center space-x-4 mb-4">
+                        <span className="text-3xl font-bold text-teal-600">£24.99</span>
+                        <span className="text-sm text-gray-500 line-through">£39.99</span>
+                        <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">SAVE 38%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <a
+                      href="https://rhythmstiix.co.uk/product/drama-games-activity-pack/?add-to-cart=DRAMA_PACK"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-teal-600 hover:to-teal-700 transition-all shadow-md hover:shadow-lg text-center"
+                    >
+                      🛒 Purchase Now via WooCommerce
+                    </a>
+                    <a
+                      href="https://www.paypal.com/checkoutnow?token=DRAMA_PACK&useraction=commit"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg text-center"
+                    >
+                      💳 PayPal
+                    </a>
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 mt-3 text-center">
+                    After purchase, the activities will automatically appear in your Activity Library within 24 hours.
+                  </p>
+                </div>
+
+                {/* Coming Soon - More Card Sets */}
+                <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-6 opacity-75">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <span className="text-4xl grayscale">🎵</span>
+                    <div>
+                      <h5 className="text-xl font-bold text-gray-700">Music Games Activity Pack</h5>
+                      <p className="text-sm text-gray-500 font-medium">Coming Soon</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    50+ Music activities covering rhythm, pitch, ensemble work, and creative composition.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-6 opacity-75">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <span className="text-4xl grayscale">⚽</span>
+                    <div>
+                      <h5 className="text-xl font-bold text-gray-700">PE Games Activity Pack</h5>
+                      <p className="text-sm text-gray-500 font-medium">Coming Soon</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    60+ Physical Education activities including team sports, fitness, and coordination exercises.
+                  </p>
+                </div>
+              </div>
+
+              {/* Support Section */}
+              <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 mt-6">
+                <div className="flex items-start space-x-3">
+                  <span className="text-2xl">ℹ️</span>
+                  <div className="flex-1">
+                    <h6 className="font-semibold text-gray-900 mb-1">Need Help?</h6>
+                    <p className="text-sm text-gray-700">
+                      If you've purchased a pack but it hasn't appeared in your library, please contact support at{' '}
+                      <a href="mailto:support@rhythmstiix.co.uk" className="text-teal-600 hover:text-teal-700 font-medium">
+                        support@rhythmstiix.co.uk
+                      </a>
+                      {' '}with your order number.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           {activeTab === 'data' && (
