@@ -76,17 +76,17 @@ export function Logo({ className = '', size = 'md', showText = true }: LogoProps
 
       {/* Text */}
       {showText && (
-        <h1 
+          <h1 
           className={`font-bold text-black leading-tight whitespace-nowrap`}
-          style={{ 
-            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+            style={{ 
+              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
             fontWeight: 700,
             fontSize: size === 'lg' ? '1.5rem' : size === 'md' ? '1.25rem' : '1.125rem'
-          }}
-        >
+            }}
+          >
           <span>Creative </span>
           <span className="font-normal">Curriculum Designer</span>
-        </h1>
+          </h1>
       )}
     </div>
   );

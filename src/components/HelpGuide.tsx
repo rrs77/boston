@@ -21,11 +21,14 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [tooltipArrowPosition, setTooltipArrowPosition] = useState('top');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isOverviewMinimized, setIsOverviewMinimized] = useState(false);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   // Trigger animation when modal opens
   useEffect(() => {
     if (isOpen) {
       setIsAnimating(true);
+      setIsOverviewMinimized(false); // Reset on open
       // Reset animation after it completes
       const timer = setTimeout(() => {
         setIsAnimating(false);
@@ -33,6 +36,20 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  // Handle scroll to minimize overview
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      setIsOverviewMinimized(scrollTop > 50);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Define guide steps for each section
   const activitySteps: GuideStep[] = [
@@ -579,56 +596,49 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
         </div>
 
         {/* Overview Section */}
-        <div className="p-6 bg-gradient-to-r from-teal-50 to-blue-50 border-b border-gray-200">
-          <div className="max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              Welcome to Creative Curriculum Designer
-            </h3>
-            <p className="text-base text-gray-700 leading-relaxed mb-4">
-              Creative Curriculum Designer is a comprehensive planning platform designed to streamline your curriculum development from start to finish. Build reusable activities, organize them into structured lessons, group lessons into thematic units, and schedule everything across your academic year with ease. Whether you're planning for one class or multiple year groups, our tools help you create, organize, copy, and share your teaching resources efficiently.
+        <div className={`transition-all duration-300 overflow-hidden bg-gradient-to-r from-teal-50 to-blue-50 border-b border-gray-200 ${
+          isOverviewMinimized ? 'max-h-0 opacity-0' : 'max-h-96'
+        }`}>
+          <div className="p-6 max-w-4xl mx-auto">
+            <p className="text-sm text-gray-700 leading-relaxed mb-4">
+              A comprehensive planning platform to streamline your curriculum development. Build reusable activities, organize them into structured lessons, group lessons into thematic units, and schedule everything across your academic year.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-                <div className="flex items-center space-x-2 text-teal-600 mb-1">
-                  <Tag className="h-4 w-4" />
-                  <h4 className="font-semibold text-sm">Activity Library</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-1.5 text-teal-600">
+                  <Tag className="h-3.5 w-3.5" />
+                  <h4 className="font-semibold text-xs">Activity Library</h4>
                 </div>
-                <p className="text-xs text-gray-600">Create and manage reusable activities with curriculum objectives, resources, and detailed instructions</p>
               </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-                <div className="flex items-center space-x-2 text-blue-600 mb-1">
-                  <Edit3 className="h-4 w-4" />
-                  <h4 className="font-semibold text-sm">Lesson Builder</h4>
+              <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-1.5 text-blue-600">
+                  <Edit3 className="h-3.5 w-3.5" />
+                  <h4 className="font-semibold text-xs">Lesson Builder</h4>
                 </div>
-                <p className="text-xs text-gray-600">Drag-and-drop activities into lessons, reorder them, and add custom headers for print</p>
               </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-                <div className="flex items-center space-x-2 text-indigo-600 mb-1">
-                  <FolderOpen className="h-4 w-4" />
-                  <h4 className="font-semibold text-sm">Unit Planner</h4>
+              <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-1.5 text-indigo-600">
+                  <FolderOpen className="h-3.5 w-3.5" />
+                  <h4 className="font-semibold text-xs">Unit Planner</h4>
                 </div>
-                <p className="text-xs text-gray-600">Group lessons into units by term and year group for organized curriculum coverage</p>
               </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-                <div className="flex items-center space-x-2 text-purple-600 mb-1">
-                  <Calendar className="h-4 w-4" />
-                  <h4 className="font-semibold text-sm">Half-Term Scheduling</h4>
+              <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-1.5 text-purple-600">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <h4 className="font-semibold text-xs">Half-Term Scheduling</h4>
                 </div>
-                <p className="text-xs text-gray-600">Assign lessons to specific half-terms and view your entire year at a glance</p>
               </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-                <div className="flex items-center space-x-2 text-green-600 mb-1">
-                  <Download className="h-4 w-4" />
-                  <h4 className="font-semibold text-sm">Print & Export</h4>
+              <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-1.5 text-green-600">
+                  <Download className="h-3.5 w-3.5" />
+                  <h4 className="font-semibold text-xs">Print & Export</h4>
                 </div>
-                <p className="text-xs text-gray-600">Export lessons and units to PDF with customizable headers, footers, and formatting</p>
               </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-                <div className="flex items-center space-x-2 text-orange-600 mb-1">
-                  <Users className="h-4 w-4" />
-                  <h4 className="font-semibold text-sm">Multi-Class Support</h4>
+              <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-1.5 text-orange-600">
+                  <Users className="h-3.5 w-3.5" />
+                  <h4 className="font-semibold text-xs">Multi-Class Support</h4>
                 </div>
-                <p className="text-xs text-gray-600">Copy lessons between classes, manage multiple year groups, and create lesson stacks</p>
               </div>
             </div>
           </div>
@@ -683,7 +693,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-6">
           <div className="max-w-3xl mx-auto">
             {/* Section Title */}
             <div className="flex items-center space-x-3 mb-6">
