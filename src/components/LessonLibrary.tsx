@@ -474,6 +474,8 @@ export function LessonLibrary({
   // Save standalone lesson
   const handleSaveStandaloneLesson = async (lessonData: any) => {
     try {
+      console.log('💾 Saving standalone lesson:', lessonData);
+      
       // Generate next lesson number
       const maxLessonNumber = Math.max(
         0,
@@ -481,13 +483,20 @@ export function LessonLibrary({
       );
       const newLessonNumber = `lesson${maxLessonNumber + 1}`;
       
-      // Save lesson to data context
+      console.log('📝 Generated lesson number:', newLessonNumber);
+      
+      // Save lesson to data context (this should handle Supabase automatically)
       await addOrUpdateUserLessonPlan(newLessonNumber, lessonData);
+      
+      console.log('✅ Lesson saved to data context');
+      
+      // Force a refresh of the lesson library
+      window.location.reload();
       
       alert(`✅ Lesson "${lessonData.lessonTitle}" created successfully!`);
       setShowStandaloneLessonCreator(false);
     } catch (error) {
-      console.error('Failed to create standalone lesson:', error);
+      console.error('❌ Failed to create standalone lesson:', error);
       alert(`❌ Failed to create lesson: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };

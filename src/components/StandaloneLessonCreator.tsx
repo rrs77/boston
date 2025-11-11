@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Plus, Trash2, Link as LinkIcon } from 'lucide-react';
+import { X, Plus, Trash2, Link as LinkIcon, Eye, Music, BookOpen, Target, Link2 } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 
 interface StandaloneLessonCreatorProps {
@@ -8,6 +8,9 @@ interface StandaloneLessonCreatorProps {
 }
 
 export function StandaloneLessonCreator({ onClose, onSave }: StandaloneLessonCreatorProps) {
+  const [activeTab, setActiveTab] = useState<'essentials' | 'support' | 'assessment' | 'links'>('essentials');
+  const [showPreview, setShowPreview] = useState(false);
+  
   const [lesson, setLesson] = useState({
     lessonTitle: '',
     lessonName: '',
@@ -143,10 +146,10 @@ export function StandaloneLessonCreator({ onClose, onSave }: StandaloneLessonCre
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-5">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex-1 overflow-y-auto">
+          {/* Sticky Basic Information */}
+          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 pt-6 pb-4 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Lesson Title (for card) <span className="text-red-500">*</span>
@@ -199,21 +202,22 @@ export function StandaloneLessonCreator({ onClose, onSave }: StandaloneLessonCre
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Learning Objectives */}
-            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-              <h3 className="text-base font-semibold text-gray-900 mb-3">Learning Objectives</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Scrollable Form Sections */}
+          <div className="px-6 pb-6 space-y-5 mt-4">
+            {/* Learning Objectives - Expanded with Rich Text */}
+            <div className="border border-teal-200 rounded-lg p-5 bg-teal-50">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">Learning Objectives</h3>
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Learning Outcome <span className="text-red-500">*</span>
                   </label>
-                  <textarea
+                  <RichTextEditor
                     value={lesson.learningOutcome}
-                    onChange={(e) => handleRichTextChange('learningOutcome', e.target.value)}
-                    className={`w-full px-3 py-2 border ${errors.learningOutcome ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm resize-none`}
-                    placeholder="What will students learn?"
-                    rows={2}
+                    onChange={(value) => handleRichTextChange('learningOutcome', value)}
+                    placeholder="What will students learn by the end of this lesson? Be specific about knowledge, skills, or understanding."
                   />
                   {errors.learningOutcome && (
                     <p className="mt-1 text-xs text-red-500">{errors.learningOutcome}</p>
@@ -221,15 +225,13 @@ export function StandaloneLessonCreator({ onClose, onSave }: StandaloneLessonCre
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Success Criteria
                   </label>
-                  <textarea
+                  <RichTextEditor
                     value={lesson.successCriteria}
-                    onChange={(e) => handleRichTextChange('successCriteria', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none"
-                    placeholder="How will you know they've achieved it?"
-                    rows={2}
+                    onChange={(value) => handleRichTextChange('successCriteria', value)}
+                    placeholder="How will you know students have achieved the learning outcome? List measurable criteria."
                   />
                 </div>
               </div>

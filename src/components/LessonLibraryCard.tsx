@@ -293,8 +293,7 @@ export function LessonLibraryCard({
   return (
     <div className="relative group">
       <div 
-        className="bg-white rounded-xl shadow-lg border transition-all duration-300 hover:shadow-xl cursor-pointer overflow-hidden hover:scale-[1.02] h-full flex flex-col"
-        style={{ borderColor: theme.primary, borderWidth: '1px' }}
+        className="bg-white rounded-xl shadow-lg border border-gray-300 transition-all duration-300 hover:shadow-xl cursor-pointer overflow-hidden hover:scale-[1.02] h-full flex flex-col"
         onClick={onClick}
       >
         {/* Header with blue color */}
