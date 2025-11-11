@@ -485,19 +485,31 @@ export function LessonLibrary({
       
       console.log('📝 Generated lesson number:', newLessonNumber);
       
-      // Save lesson to data context (this should handle Supabase automatically)
-      await addOrUpdateUserLessonPlan(newLessonNumber, lessonData);
+      // Use updateLessonData for proper Supabase and localStorage sync
+      if (updateLessonData) {
+        await updateLessonData(newLessonNumber, lessonData);
+        console.log('✅ Lesson saved via updateLessonData');
+      } else {
+        console.error('❌ updateLessonData is not available');
+        throw new Error('Save function not available');
+      }
       
-      console.log('✅ Lesson saved to data context');
+      // Close modal first
+      setShowStandaloneLessonCreator(false);
+      
+      console.log('⏳ Waiting for save to complete...');
+      
+      // Wait to ensure save fully completes
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      console.log('🔄 Reloading page to show new lesson');
       
       // Force a refresh of the lesson library
       window.location.reload();
-      
-      alert(`✅ Lesson "${lessonData.lessonTitle}" created successfully!`);
-      setShowStandaloneLessonCreator(false);
     } catch (error) {
       console.error('❌ Failed to create standalone lesson:', error);
       alert(`❌ Failed to create lesson: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setShowStandaloneLessonCreator(false);
     }
   };
 
