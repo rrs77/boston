@@ -33,6 +33,16 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Auto-resize textareas on mount and when values change
+  React.useEffect(() => {
+    const textareas = document.querySelectorAll('textarea[name]');
+    textareas.forEach((textarea) => {
+      const ta = textarea as HTMLTextAreaElement;
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    });
+  }, [lesson]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setLesson((prev) => ({ ...prev, [name]: name === 'duration' ? parseInt(value) || 0 : value }));
@@ -280,121 +290,178 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                 </div>
               </div>
 
-              {/* Main Activity Card */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-5">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Music className="h-5 w-5 text-green-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Main Activity</h3>
+              {/* Introduction Card */}
+              <div className={`bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg transition-all duration-300 ${lesson.introduction ? 'p-5' : 'p-4'}`}>
+                <div className="flex items-center space-x-2 mb-3">
+                  <BookOpen className="h-5 w-5 text-purple-600" />
+                  <h3 className="text-base font-semibold text-gray-900">Introduction/Context</h3>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-300">
-                  <RichTextEditor
-                    value={lesson.mainActivity}
-                    onChange={(value) => handleRichTextChange('mainActivity', value)}
-                    placeholder="Describe the main activity in detail. For music: Include instrumental work, singing, movement, listening activities, and performance elements."
-                  />
-                </div>
-              </div>
-
-              {/* Quick Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Introduction/Context
-                  </label>
+                {lesson.introduction || true ? (
                   <textarea
                     name="introduction"
                     value={lesson.introduction}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
-                    rows={3}
+                    style={{ height: lesson.introduction ? 'auto' : '60px', minHeight: '60px' }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = target.scrollHeight + 'px';
+                    }}
                     placeholder="Warm-up: Sing familiar song at normal tempo, then experiment with different speeds"
                   />
-                </div>
+                ) : null}
+              </div>
 
-                <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Plenary/Conclusion
-                  </label>
+              {/* Main Activity Card */}
+              <div className={`bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg transition-all duration-300 ${lesson.mainActivity ? 'p-5' : 'p-4'}`}>
+                <div className="flex items-center space-x-2 mb-3">
+                  <Music className="h-5 w-5 text-green-600" />
+                  <h3 className="text-base font-semibold text-gray-900">Main Activity</h3>
+                </div>
+                {lesson.mainActivity || true ? (
+                  <div className="bg-white rounded-lg border border-gray-300">
+                    <RichTextEditor
+                      value={lesson.mainActivity}
+                      onChange={(value) => handleRichTextChange('mainActivity', value)}
+                      placeholder="Describe the main activity in detail. For music: Include instrumental work, singing, movement, listening activities, and performance elements."
+                    />
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Plenary Card */}
+              <div className={`bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg transition-all duration-300 ${lesson.plenary ? 'p-5' : 'p-4'}`}>
+                <div className="flex items-center space-x-2 mb-3">
+                  <Target className="h-5 w-5 text-orange-600" />
+                  <h3 className="text-base font-semibold text-gray-900">Plenary/Conclusion</h3>
+                </div>
+                {lesson.plenary || true ? (
                   <textarea
                     name="plenary"
                     value={lesson.plenary}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
-                    rows={3}
+                    style={{ height: lesson.plenary ? 'auto' : '60px', minHeight: '60px' }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = target.scrollHeight + 'px';
+                    }}
                     placeholder="Performance: Groups perform their pieces at chosen tempos, class discusses effectiveness"
                   />
-                </div>
+                ) : null}
               </div>
             </div>
           ) : (
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-5">
               {/* Extended Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vocabulary
-                  </label>
-                  <textarea
-                    name="vocabulary"
-                    value={lesson.vocabulary}
-                    onChange={handleChange}
-                    className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
-                    placeholder="Tempo, Adagio, Andante, Allegro, Beat, Rhythm"
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {lesson.vocabulary || true ? (
+                  <div className={`bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300 ${lesson.vocabulary ? 'p-4' : 'p-3'}`}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Vocabulary
+                    </label>
+                    <textarea
+                      name="vocabulary"
+                      value={lesson.vocabulary}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
+                      style={{ height: lesson.vocabulary ? 'auto' : '60px', minHeight: '60px' }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = target.scrollHeight + 'px';
+                      }}
+                      placeholder="Tempo, Adagio, Andante, Allegro, Beat, Rhythm"
+                    />
+                  </div>
+                ) : null}
 
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Key Questions
-                  </label>
-                  <textarea
-                    name="keyQuestions"
-                    value={lesson.keyQuestions}
-                    onChange={handleChange}
-                    className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
-                    placeholder="How does tempo affect the mood? What happens when we play faster/slower?"
-                  />
-                </div>
+                {lesson.keyQuestions || true ? (
+                  <div className={`bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300 ${lesson.keyQuestions ? 'p-4' : 'p-3'}`}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Key Questions
+                    </label>
+                    <textarea
+                      name="keyQuestions"
+                      value={lesson.keyQuestions}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
+                      style={{ height: lesson.keyQuestions ? 'auto' : '60px', minHeight: '60px' }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = target.scrollHeight + 'px';
+                      }}
+                      placeholder="How does tempo affect the mood? What happens when we play faster/slower?"
+                    />
+                  </div>
+                ) : null}
 
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Resources
-                  </label>
-                  <textarea
-                    name="resources"
-                    value={lesson.resources}
-                    onChange={handleChange}
-                    className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
-                    placeholder="Percussion instruments, metronome, audio player, tempo cards"
-                  />
-                </div>
+                {lesson.resources || true ? (
+                  <div className={`bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300 ${lesson.resources ? 'p-4' : 'p-3'}`}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Resources
+                    </label>
+                    <textarea
+                      name="resources"
+                      value={lesson.resources}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
+                      style={{ height: lesson.resources ? 'auto' : '60px', minHeight: '60px' }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = target.scrollHeight + 'px';
+                      }}
+                      placeholder="Percussion instruments, metronome, audio player, tempo cards"
+                    />
+                  </div>
+                ) : null}
 
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Assessment
-                  </label>
-                  <textarea
-                    name="assessment"
-                    value={lesson.assessment}
-                    onChange={handleChange}
-                    className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
-                    placeholder="Observe: Can students match tempo? Do they understand terminology?"
-                  />
-                </div>
+                {lesson.assessment || true ? (
+                  <div className={`bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300 ${lesson.assessment ? 'p-4' : 'p-3'}`}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Assessment
+                    </label>
+                    <textarea
+                      name="assessment"
+                      value={lesson.assessment}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
+                      style={{ height: lesson.assessment ? 'auto' : '60px', minHeight: '60px' }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = target.scrollHeight + 'px';
+                      }}
+                      placeholder="Observe: Can students match tempo? Do they understand terminology?"
+                    />
+                  </div>
+                ) : null}
               </div>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Differentiation
-                </label>
-                <textarea
-                  name="differentiation"
-                  value={lesson.differentiation}
-                  onChange={handleChange}
-                  className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
-                  placeholder="Support: Use visual tempo indicators, simplified patterns. Extension: Compose using multiple tempo changes"
-                />
-              </div>
+              {lesson.differentiation || true ? (
+                <div className={`bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300 ${lesson.differentiation ? 'p-4' : 'p-3'}`}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Differentiation
+                  </label>
+                  <textarea
+                    name="differentiation"
+                    value={lesson.differentiation}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
+                    style={{ height: lesson.differentiation ? 'auto' : '80px', minHeight: '80px' }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = target.scrollHeight + 'px';
+                    }}
+                    placeholder="Support: Use visual tempo indicators, simplified patterns. Extension: Compose using multiple tempo changes"
+                  />
+                </div>
+              ) : null}
 
               {/* Web Links Card */}
               <div className="bg-gradient-to-br from-cyan-50 to-blue-50 border border-cyan-200 rounded-lg p-5">
