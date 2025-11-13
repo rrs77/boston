@@ -301,16 +301,16 @@ export function LessonDropZone({
                 className="w-full text-2xl font-bold text-white border-b border-white border-opacity-30 focus:border-opacity-100 focus:outline-none bg-transparent placeholder-green-100"
               />
               <div className="flex items-center flex-wrap gap-3 mt-2">
-                <div className="flex items-center space-x-2" style={{color: '#0BA596'}}>
+                <div className="flex items-center space-x-2 text-white">
                   <span>{lessonPlan.className}</span>
                 </div>
                 
-                <div className="flex items-center space-x-2" style={{color: '#0BA596'}}>
+                <div className="flex items-center space-x-2 text-white">
                   <Clock className="h-4 w-4" />
                   <span>{lessonPlan.duration} minutes</span>
                 </div>
                 
-                <div className="flex items-center space-x-2" style={{color: '#0BA596'}}>
+                <div className="flex items-center space-x-2 text-white">
                   <Users className="h-4 w-4" />
                   <span>{lessonPlan.activities.length} activities</span>
                 </div>
