@@ -2312,8 +2312,23 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
             const filteredLessonsData: Record<string, LessonData> = {};
             const filteredLessonNumbers: string[] = [];
             
-            if (lessonData.allLessonsData) {
-              Object.entries(lessonData.allLessonsData).forEach(([lessonNum, lesson]) => {
+            // Check if lessons are in allLessonsData or directly on the object
+            const lessonsSource = lessonData.allLessonsData || lessonData;
+            
+            // Extract lesson numbers (numeric keys only, exclude metadata like "teachingUnits", "lessonStandards")
+            const metadataKeys = ['teachingUnits', 'lessonStandards', 'allLessonsData'];
+            const lessonEntries = Object.entries(lessonsSource).filter(([key]) => 
+              !metadataKeys.includes(key) && !isNaN(parseInt(key))
+            );
+            
+            console.log('🔍 DEBUG: Processing lessons:', {
+              sourceKeys: Object.keys(lessonsSource),
+              lessonEntriesCount: lessonEntries.length,
+              filteredKeys: lessonEntries.map(([key]) => key)
+            });
+            
+            if (lessonEntries.length > 0) {
+              lessonEntries.forEach(([lessonNum, lesson]) => {
                 // Type assertion for lesson data
                 const typedLesson = lesson as LessonData;
                 // If lesson has no academic year set, assume it belongs to current year

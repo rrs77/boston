@@ -47,7 +47,7 @@ export function ActivityLibrary({
   selectedCategory = 'all',
   onCategoryChange
 }: ActivityLibraryProps) {
-  const {
+  const { 
     allActivities, 
     addActivity, 
     updateActivity, 

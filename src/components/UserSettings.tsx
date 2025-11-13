@@ -1647,31 +1647,31 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
               <div className="border border-teal-200 bg-teal-50 rounded-lg p-6">
                 <div className="flex items-center space-x-3 mb-4">
                   <GraduationCap className="h-6 w-6 text-teal-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Custom Objectives Management</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Curriculum Objectives</h3>
                 </div>
                 <p className="text-sm text-gray-600 mb-4">
-                  Create and manage custom objectives for Year 1+ curriculum groups like Drama, Music, etc. This extends beyond the EYFS system to support additional year groups and subjects.
+                  Create and manage curriculum objectives for any year group or subject.
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div className="bg-white rounded-lg p-4 border border-teal-200">
-                    <h4 className="font-medium text-teal-900 mb-2">Create Year Groups</h4>
+                    <h4 className="font-medium text-teal-900 mb-2">Year Groups</h4>
                     <p className="text-sm text-teal-700">
-                      Add new curriculum year groups like Y1 Drama, Y2 Music, Y3 Art, etc.
+                      Add curriculum groups (Y1 Drama, Y2 Music, etc.)
                     </p>
                   </div>
                   
                   <div className="bg-white rounded-lg p-4 border border-teal-200">
-                    <h4 className="font-medium text-teal-900 mb-2">Define Areas</h4>
+                    <h4 className="font-medium text-teal-900 mb-2">Learning Areas</h4>
                     <p className="text-sm text-teal-700">
-                      Create areas of learning within each year group (Performance, Technical Skills, etc.)
+                      Create learning areas (Performance, Technical Skills, etc.)
                     </p>
                   </div>
                   
                   <div className="bg-white rounded-lg p-4 border border-teal-200">
-                    <h4 className="font-medium text-teal-900 mb-2">Set Objectives</h4>
+                    <h4 className="font-medium text-teal-900 mb-2">Objectives</h4>
                     <p className="text-sm text-teal-700">
-                      Define specific objectives with codes and descriptions for each area
+                      Define objectives with codes and descriptions
                     </p>
                   </div>
                 </div>
@@ -1679,9 +1679,9 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                 <div className="bg-white rounded-lg p-4 border border-teal-200">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h4 className="font-medium text-gray-900">Manage Custom Objectives</h4>
+                      <h4 className="font-medium text-gray-900">Objectives Manager</h4>
                       <p className="text-sm text-gray-600 mt-1">
-                        Access the full admin interface to create, edit, and organize custom objectives
+                        Create, edit, and organize objectives
                       </p>
                     </div>
                     <button

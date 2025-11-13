@@ -105,6 +105,17 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
     }
   }, [isOpen]);
 
+  // Auto-expand all areas when a year group is selected
+  useEffect(() => {
+    if (selectedYearGroup) {
+      const yearGroup = yearGroups.find(yg => yg.id === selectedYearGroup);
+      if (yearGroup) {
+        const allAreaIds = new Set(yearGroup.areas.map(area => area.id));
+        setExpandedAreas(allAreaIds);
+      }
+    }
+  }, [selectedYearGroup, yearGroups]);
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -579,14 +590,6 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                 {(() => {
                   const yearGroup = yearGroups.find(yg => yg.id === selectedYearGroup);
                   if (!yearGroup) return null;
-
-                  // Auto-expand all areas when a year group is selected
-                  React.useEffect(() => {
-                    if (yearGroup) {
-                      const allAreaIds = new Set(yearGroup.areas.map(area => area.id));
-                      setExpandedAreas(allAreaIds);
-                    }
-                  }, [yearGroup.id]);
 
                   return (
                     <div>

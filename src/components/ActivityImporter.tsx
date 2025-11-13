@@ -301,17 +301,17 @@ export function ActivityImporter({ onImport, onClose }: ActivityImporterProps) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-teal-600 to-cyan-600 text-white">
           <div className="flex items-center space-x-3">
             <Upload className="h-6 w-6" />
             <div>
               <h2 className="text-xl font-bold">Import/Export Activities</h2>
-              <p className="text-purple-100 text-sm">Upload an Excel file with your activity data or export existing activities</p>
+              <p className="text-teal-100 text-sm">Upload an Excel file with your activity data or export existing activities</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-purple-100 hover:text-white hover:bg-purple-700 rounded-lg transition-colors duration-200"
+            className="p-2 text-teal-100 hover:text-white hover:bg-teal-700 rounded-lg transition-colors duration-200"
           >
             <X className="h-6 w-6" />
           </button>
@@ -393,7 +393,7 @@ export function ActivityImporter({ onImport, onClose }: ActivityImporterProps) {
                 accept=".xlsx,.xls,.csv"
                 onChange={handleFileUpload}
                 disabled={importStatus === 'processing'}
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 transition-colors duration-200"
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-colors duration-200"
                 dir="ltr"
               />
               
@@ -465,7 +465,7 @@ export function ActivityImporter({ onImport, onClose }: ActivityImporterProps) {
             <button
               onClick={handleImport}
               disabled={importStatus !== 'success' || importedData.length === 0}
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
+              className="px-6 py-3 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
             >
               <CheckCircle className="h-5 w-5" />
               <span>Import {importedData.length} Activities</span>
