@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { 
   Search, 
   Filter, 
@@ -370,6 +371,8 @@ export function ActivityLibrary({
   };
 
   const handleCreateActivity = async (newActivity: Activity) => {
+    const loadingToast = toast.loading('Creating activity...');
+    
     try {
       setLoading(true);
       
@@ -384,9 +387,15 @@ export function ActivityLibrary({
       
       await addActivity(newActivity);
       setShowCreator(false);
+      
+      toast.success(`Activity "${newActivity.activity}" created successfully!`, {
+        id: loadingToast,
+      });
     } catch (error) {
       console.error('Failed to create activity:', error);
-      alert('Failed to create activity. Please try again.');
+      toast.error('Failed to create activity. Please try again.', {
+        id: loadingToast,
+      });
     } finally {
       setLoading(false);
     }
