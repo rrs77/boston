@@ -27,6 +27,7 @@ export interface Activity {
   yearGroups?: string[]; // New field for multiple year groups
   unitName: string;
   lessonNumber: string;
+  requiredPack?: string; // Pack ID required to access this activity (e.g., 'DRAMA_PACK')
   standards?: string[];
   eyfsStandards?: string[]; // Keep for backward compatibility
   customObjectives?: string[]; // New field for custom objectives

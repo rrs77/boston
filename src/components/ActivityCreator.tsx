@@ -22,6 +22,8 @@ import { useSettings } from '../contexts/SettingsContextNew';
 import { RichTextEditor } from './RichTextEditor';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { NestedStandardsBrowser } from './NestedStandardsBrowser';
+import { activityPacksApi, ActivityPack } from '../config/api';
+import { useAuth } from '../hooks/useAuth';
 
 interface ActivityCreatorProps {
   onClose: () => void;
@@ -32,6 +34,7 @@ interface ActivityCreatorProps {
 
 export function ActivityCreator({ onClose, onSave, categories, levels }: ActivityCreatorProps) {
   const { categories: allCategories, customYearGroups } = useSettings();
+  const { user } = useAuth();
   const [activity, setActivity] = useState({
     activity: '',
     description: '',
@@ -52,12 +55,30 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
     custom_objective_ids: [] as string[], // New field for selected custom objectives
     unitName: '',
     lessonNumber: '',
-    teachingUnit: ''
+    teachingUnit: '',
+    requiredPack: '' // New field for pack requirement
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [showObjectivesBrowser, setShowObjectivesBrowser] = useState(false);
+  const [availablePacks, setAvailablePacks] = useState<ActivityPack[]>([]);
+  const isAdmin = user?.email === 'rob.reichstorer@gmail.com';
+
+  // Load available packs for admin
+  useEffect(() => {
+    if (isAdmin) {
+      const loadPacks = async () => {
+        try {
+          const packs = await activityPacksApi.getAllPacksAdmin();
+          setAvailablePacks(packs);
+        } catch (error) {
+          console.error('Failed to load packs:', error);
+        }
+      };
+      loadPacks();
+    }
+  }, [isAdmin]);
 
   // Dynamic level options based on year groups
   const simplifiedLevels = ['All', ...customYearGroups.map(group => group.name)];
@@ -281,6 +302,32 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                   <p className="mt-1 text-sm text-red-500">{errors.category}</p>
                 )}
               </div>
+
+              {/* Required Pack (Admin Only) */}
+              {isAdmin && availablePacks.length > 0 && (
+                <div className="col-span-2">
+                  <label htmlFor="requiredPack" className="block text-sm font-medium text-gray-700 mb-2">
+                    Required Pack (Optional)
+                  </label>
+                  <select
+                    id="requiredPack"
+                    name="requiredPack"
+                    value={activity.requiredPack}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gray-400 transition-colors duration-200 text-sm font-medium bg-white"
+                  >
+                    <option value="">Free (No pack required)</option>
+                    {availablePacks.filter(p => p.is_active).map((pack) => (
+                      <option key={pack.pack_id} value={pack.pack_id}>
+                        {pack.icon} {pack.name} - £{pack.price.toFixed(2)}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    If selected, only users who purchase this pack will see this activity
+                  </p>
+                </div>
+              )}
 
               {/* Year Groups - Multi-select */}
               <div>

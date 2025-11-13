@@ -28,6 +28,8 @@ import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { LevelDropdown } from './LevelDropdown';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
+import { useAuth } from '../hooks/useAuth';
+import { activityPacksApi } from '../config/api';
 import type { Activity, ActivityStack } from '../contexts/DataContext';
 
 interface ActivityLibraryProps {
@@ -45,7 +47,7 @@ export function ActivityLibrary({
   selectedCategory = 'all',
   onCategoryChange
 }: ActivityLibraryProps) {
-  const { 
+  const {
     allActivities, 
     addActivity, 
     updateActivity, 
@@ -61,6 +63,7 @@ export function ActivityLibrary({
     unstackActivities
   } = useData();
   const { getCategoryColor, categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [localSelectedCategory, setLocalSelectedCategory] = useState(selectedCategory);
   const [selectedLevel, setSelectedLevel] = useState('all');
@@ -76,12 +79,30 @@ export function ActivityLibrary({
   const [showCreator, setShowCreator] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [userOwnedPacks, setUserOwnedPacks] = useState<string[]>([]);
   
 
   // Sync local category with prop
   React.useEffect(() => {
     setLocalSelectedCategory(selectedCategory);
   }, [selectedCategory]);
+
+  // Load user's owned packs
+  React.useEffect(() => {
+    const loadUserPacks = async () => {
+      if (user?.email) {
+        try {
+          const packs = await activityPacksApi.getUserPurchases(user.email);
+          setUserOwnedPacks(packs);
+          console.log('📦 User owns these packs:', packs);
+        } catch (error) {
+          console.error('Failed to load user packs:', error);
+        }
+      }
+    };
+
+    loadUserPacks();
+  }, [user?.email]);
 
   // Handle local category change
   const handleCategoryChange = (category: string) => {
@@ -136,7 +157,10 @@ export function ActivityLibrary({
       // Remove year group filtering to show all 328 activities
       const matchesYearGroup = true;
       
-      return matchesSearch && matchesCategory && matchesLevel && matchesYearGroup;
+      // Check if user owns required pack (if activity requires one)
+      const hasPackAccess = !activity.requiredPack || userOwnedPacks.includes(activity.requiredPack);
+      
+      return matchesSearch && matchesCategory && matchesLevel && matchesYearGroup && hasPackAccess;
     });
 
     // Filter stacks - only show stacks with activities for the current year group
@@ -215,7 +239,7 @@ export function ActivityLibrary({
     });
 
     return { filteredAndSortedActivities: filteredActivities, filteredAndSortedStacks: filteredStacks };
-  }, [allActivities, activityStacks, searchQuery, localSelectedCategory, selectedLevel, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup]);
+  }, [allActivities, activityStacks, searchQuery, localSelectedCategory, selectedLevel, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup, userOwnedPacks]);
 
   const toggleSort = (field: 'name' | 'category' | 'time' | 'level') => {
     if (sortBy === field) {

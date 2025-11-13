@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Settings, Palette, RotateCcw, X, Plus, Trash2, GripVertical, Edit3, Save, Users, Database, AlertTriangle, GraduationCap } from 'lucide-react';
+import { Settings, Palette, RotateCcw, X, Plus, Trash2, GripVertical, Edit3, Save, Users, Database, AlertTriangle, GraduationCap, Package } from 'lucide-react';
 import { useSettings, Category } from '../contexts/SettingsContextNew';
 import { DataSourceSettings } from './DataSourceSettings';
 import { CustomObjectivesAdmin } from './CustomObjectivesAdmin';
+import { ActivityPacksAdmin } from './ActivityPacksAdmin';
 import { useAuth } from '../hooks/useAuth';
 
 interface UserSettingsProps {
@@ -17,7 +18,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [tempSettings, setTempSettings] = useState(settings);
   const [tempCategories, setTempCategories] = useState(categories);
   const [tempYearGroups, setTempYearGroups] = useState(customYearGroups);
-  const [activeTab, setActiveTab] = useState<'yeargroups' | 'categories' | 'purchases' | 'data' | 'backup' | 'admin'>('yeargroups');
+  const [activeTab, setActiveTab] = useState<'yeargroups' | 'categories' | 'purchases' | 'manage-packs' | 'data' | 'backup' | 'admin'>('yeargroups');
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState('#6B7280');
@@ -520,17 +521,33 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             🛒 Purchases
           </button>
           {isAdmin && (
-            <button
-              onClick={() => setActiveTab('data')}
-              className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
-                activeTab === 'data' 
-                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
-                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
-              }`}
-            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
-            >
-              Data Management
-            </button>
+            <>
+              <button
+                onClick={() => setActiveTab('manage-packs')}
+                className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+                  activeTab === 'manage-packs' 
+                    ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
+                    : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
+                }`}
+                style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+              >
+                <div className="flex items-center space-x-2">
+                  <Package className="h-4 w-4" />
+                  <span>Manage Packs</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('data')}
+                className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+                  activeTab === 'data' 
+                  ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
+                  : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
+                }`}
+              style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+              >
+                Data Management
+              </button>
+            </>
           )}
           <button
             onClick={() => setActiveTab('admin')}
@@ -1603,6 +1620,23 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                     />
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'manage-packs' && (
+            <div className="space-y-6">
+              {/* Activity Packs Management */}
+              <div className="border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 shadow-sm">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Package className="h-6 w-6 text-purple-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">Activity Packs Management</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-6">
+                  Create and manage activity packs for purchase. Link categories to packs, set prices, and track purchases.
+                </p>
+                
+                <ActivityPacksAdmin userEmail={user?.email || ''} />
               </div>
             </div>
           )}
