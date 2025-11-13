@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { 
@@ -473,6 +474,9 @@ export function LessonLibrary({
 
   // Save standalone lesson
   const handleSaveStandaloneLesson = async (lessonData: any) => {
+    // Show loading toast
+    const loadingToast = toast.loading('Saving lesson...');
+    
     try {
       console.log('💾 Saving standalone lesson:', lessonData);
       
@@ -486,29 +490,43 @@ export function LessonLibrary({
       console.log('📝 Generated lesson number:', newLessonNumber);
       
       // Use updateLessonData for proper Supabase and localStorage sync
-      if (updateLessonData) {
-        await updateLessonData(newLessonNumber, lessonData);
-        console.log('✅ Lesson saved via updateLessonData');
-      } else {
-        console.error('❌ updateLessonData is not available');
+      if (!updateLessonData) {
         throw new Error('Save function not available');
       }
       
-      // Close modal first
+      // Save to both localStorage and Supabase
+      await updateLessonData(newLessonNumber, lessonData);
+      console.log('✅ Lesson saved via updateLessonData');
+      
+      // Wait for Supabase to confirm write (longer delay for reliability)
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      
+      // Close modal
       setShowStandaloneLessonCreator(false);
       
-      console.log('⏳ Waiting for save to complete...');
+      // Show success toast
+      toast.success(`Lesson "${lessonData.title || newLessonNumber}" created successfully!`, {
+        id: loadingToast,
+        duration: 3000,
+      });
       
-      // Wait to ensure save fully completes
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Wait a moment for user to see success message
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       console.log('🔄 Reloading page to show new lesson');
       
       // Force a refresh of the lesson library
       window.location.reload();
+      
     } catch (error) {
       console.error('❌ Failed to create standalone lesson:', error);
-      alert(`❌ Failed to create lesson: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Show error toast
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to create lesson. Please try again.',
+        { id: loadingToast, duration: 5000 }
+      );
+      
       setShowStandaloneLessonCreator(false);
     }
   };
