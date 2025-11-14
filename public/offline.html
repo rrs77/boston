@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - Creative Curriculum Designer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 24px;
+      padding: 48px 32px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 24px;
+      background: #F0FDFA;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #111827;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    p {
+      font-size: 16px;
+      color: #6B7280;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: #FEF3C7;
+      color: #92400E;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 32px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #F59E0B;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .button {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #14B8A6;
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background: #0D9488;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(20, 184, 166, 0.3);
+    }
+
+    .features {
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid #E5E7EB;
+    }
+
+    .features h2 {
+      font-size: 18px;
+      color: #111827;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .features ul {
+      list-style: none;
+      text-align: left;
+    }
+
+    .features li {
+      padding: 8px 0;
+      color: #6B7280;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .features li::before {
+      content: "✓";
+      color: #14B8A6;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .online-indicator {
+      display: none;
+      padding: 12px 20px;
+      background: #D1FAE5;
+      color: #065F46;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 20px;
+    }
+
+    .online-indicator.visible {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    
+    <h1>You're Offline</h1>
+    
+    <p>
+      No internet connection detected. Don't worry - your previously viewed content
+      is still available!
+    </p>
+
+    <div class="status">
+      <span class="status-dot"></span>
+      <span id="status-text">Waiting for connection...</span>
+    </div>
+
+    <button class="button" onclick="location.reload()">
+      Try Again
+    </button>
+
+    <div id="online-indicator" class="online-indicator">
+      ✓ Back online! Click "Try Again" to continue
+    </div>
+
+    <div class="features">
+      <h2>What's Cached & Available Offline:</h2>
+      <ul>
+        <li>Recently viewed lessons</li>
+        <li>Activity library (last session)</li>
+        <li>Your lesson plans</li>
+        <li>App interface & navigation</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Monitor online/offline status
+    function updateOnlineStatus() {
+      const statusText = document.getElementById('status-text');
+      const onlineIndicator = document.getElementById('online-indicator');
+      
+      if (navigator.onLine) {
+        statusText.textContent = 'Connection restored!';
+        onlineIndicator.classList.add('visible');
+      } else {
+        statusText.textContent = 'Waiting for connection...';
+        onlineIndicator.classList.remove('visible');
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    
+    // Check initial status
+    updateOnlineStatus();
+
+    // Auto-reload when connection is restored (after a short delay)
+    window.addEventListener('online', () => {
+      setTimeout(() => {
+        location.reload();
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
+

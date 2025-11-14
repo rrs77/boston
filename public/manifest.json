@@ -1,0 +1,49 @@
+{
+  "name": "Creative Curriculum Designer",
+  "short_name": "CCD",
+  "description": "Plan lessons and activities for EYFS, KS1, and KS2. Works offline!",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#14B8A6",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/cd-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Lesson Builder",
+      "short_name": "Builder",
+      "description": "Create a new lesson",
+      "url": "/?tab=lesson-builder",
+      "icons": [{ "src": "/cd-logo.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Activity Library",
+      "short_name": "Activities",
+      "description": "Browse activities",
+      "url": "/?tab=activity-library",
+      "icons": [{ "src": "/cd-logo.svg", "sizes": "96x96" }]
+    }
+  ]
+}
+
