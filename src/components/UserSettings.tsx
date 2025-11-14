@@ -18,7 +18,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [tempSettings, setTempSettings] = useState(settings);
   const [tempCategories, setTempCategories] = useState(categories);
   const [tempYearGroups, setTempYearGroups] = useState(customYearGroups);
-  const [activeTab, setActiveTab] = useState<'yeargroups' | 'categories' | 'purchases' | 'manage-packs' | 'data' | 'backup' | 'admin'>('yeargroups');
+  const [activeTab, setActiveTab] = useState<'yeargroups' | 'categories' | 'purchases' | 'manage-packs' | 'data' | 'admin'>('yeargroups');
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState('#6B7280');
@@ -536,20 +536,20 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                   <span>Manage Packs</span>
                 </div>
               </button>
-              <button
-                onClick={() => setActiveTab('data')}
+            <button
+              onClick={() => setActiveTab('data')}
                 className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
-                  activeTab === 'data' 
+                activeTab === 'data' 
                   ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
                   : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
-                }`}
-              style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
-              >
-                Data Management
-              </button>
+              }`}
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+            >
+                Data & Backup
+            </button>
             </>
           )}
-          <button
+                          <button
             onClick={() => setActiveTab('admin')}
             className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'admin' 
@@ -559,19 +559,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
             Custom Objectives
-          </button>
-          <button
-            onClick={() => setActiveTab('backup')}
-              className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
-              activeTab === 'backup' 
-                  ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
-                  : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
-              }`}
-              style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
-            >
-            Backup
-          </button>
-        </div>
+                          </button>
+              </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
@@ -1441,7 +1430,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
 
                   <div className="flex items-center space-x-3">
                     <a
-                      href="https://www.paypal.com/paypalme/robreichstorer/24.99GBP"
+                      href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=rob.reichstorer@gmail.com&amount=24.99&currency_code=GBP&item_name=Drama%20Games%20Activity%20Pack&return=http://localhost:5173"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg text-center flex items-center justify-center space-x-2"
@@ -1504,13 +1493,11 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           )}
 
           {activeTab === 'data' && (
-            <DataSourceSettings embedded={true} />
-          )}
-
-          {activeTab === 'backup' && (
             <div className="space-y-6">
+              <DataSourceSettings embedded={true} />
+              
               {/* Database Backup & Restore */}
-              <div className="rounded-lg p-6" style={{border: '1px solid #B8E6E0', backgroundColor: '#E6F7F5'}}>
+              <div className="rounded-lg p-6 bg-gradient-to-br from-teal-50 to-cyan-50 shadow-sm">
                 <div className="flex items-center space-x-3 mb-4">
                   <Database className="h-6 w-6" style={{color: '#0BA596'}} />
                   <h3 className="text-lg font-semibold text-gray-900">Database Backup & Restore</h3>
