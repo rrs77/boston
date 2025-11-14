@@ -487,6 +487,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
 
         {/* Tabs */}
         <div className="flex bg-gray-50">
+          {/* Year Groups */}
           <button
             onClick={() => setActiveTab('yeargroups')}
             className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
@@ -498,6 +499,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           >
             Year Groups
           </button>
+          
+          {/* Categories */}
           <button
             onClick={() => setActiveTab('categories')}
             className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
@@ -509,47 +512,9 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           >
             Categories
           </button>
+          
+          {/* Custom Objectives */}
           <button
-            onClick={() => setActiveTab('purchases')}
-            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
-              activeTab === 'purchases' 
-                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
-                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
-            }`}
-            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
-          >
-            🛒 Purchases
-          </button>
-          {isAdmin && (
-            <>
-              <button
-                onClick={() => setActiveTab('manage-packs')}
-                className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
-                  activeTab === 'manage-packs' 
-                    ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
-                    : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
-                }`}
-                style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
-              >
-                <div className="flex items-center space-x-2">
-                  <Package className="h-4 w-4" />
-                  <span>Manage Packs</span>
-                </div>
-              </button>
-            <button
-              onClick={() => setActiveTab('data')}
-                className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
-                activeTab === 'data' 
-                  ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
-                  : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
-              }`}
-            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
-            >
-                Data & Backup
-            </button>
-            </>
-          )}
-                          <button
             onClick={() => setActiveTab('admin')}
             className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'admin' 
@@ -559,7 +524,51 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
             Custom Objectives
+          </button>
+          
+          {/* Data & Backup */}
+            <button
+              onClick={() => setActiveTab('data')}
+            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+                activeTab === 'data' 
+                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
+                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
+              }`}
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+            >
+            Data & Backup
+            </button>
+          
+          {/* Purchases - Different color for admin/seller */}
+                          <button
+            onClick={() => setActiveTab('purchases')}
+            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+              activeTab === 'purchases' 
+                ? 'text-blue-600 bg-white border-b-2 border-blue-600' 
+                : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+            }`}
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+          >
+            🛒 Purchases
                           </button>
+          
+          {/* Manage Packs - Admin only, different color */}
+          {isAdmin && (
+                          <button
+              onClick={() => setActiveTab('manage-packs')}
+              className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+                activeTab === 'manage-packs' 
+                  ? 'text-purple-600 bg-white border-b-2 border-purple-600' 
+                  : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+              }`}
+              style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+            >
+              <div className="flex items-center space-x-2">
+                <Package className="h-4 w-4" />
+                <span>Manage Packs</span>
+              </div>
+                          </button>
+          )}
               </div>
 
         {/* Content */}
