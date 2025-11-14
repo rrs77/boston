@@ -44,21 +44,10 @@ export function Tabs({ value, onValueChange, children, className }: TabsProps) {
 export function TabsList({ children, className }: TabsListProps) {
   return (
     <div 
-      className={clsx("nav-tabs-container", className)}
-              style={{
-                background: 'white',
-                border: 'none',
-                borderBottom: 'none',
-                outline: 'none',
-                padding: 0,
-                width: '100%',
-                display: 'flex',
-                alignItems: 'stretch',
-                gap: 0,
-                borderRadius: '12px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                margin: 0
-              }}
+      className={clsx(
+        "bg-white rounded-card shadow-soft p-1.5 flex items-stretch gap-2",
+        className
+      )}
     >
       {children}
     </div>
@@ -79,55 +68,13 @@ export function TabsTrigger({ value, children, className, style }: TabsTriggerPr
       data-state={isActive ? 'active' : 'inactive'}
       onClick={() => context.onValueChange(value)}
       className={clsx(
-        "nav-tab-button",
-        isActive ? "active" : "",
+        "flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500",
+        isActive 
+          ? "bg-gradient-primary text-white shadow-soft" 
+          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50",
         className
       )}
-      style={{
-        ...style,
-        color: isActive ? '#FFFFFF' : '#6B7280',
-        backgroundColor: isActive ? '#14B8A6' : 'transparent',
-        fontWeight: isActive ? 600 : 500,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        padding: '16px 24px',
-        fontSize: '14px',
-        border: 'none',
-        borderBottom: 'none',
-        borderTop: 'none',
-        borderLeft: 'none',
-        borderRight: 'none',
-        cursor: 'pointer',
-        transition: 'all 200ms ease',
-                minHeight: '56px',
-                borderRadius: '0',
-                boxShadow: isActive ? '0 2px 8px rgba(20, 184, 166, 0.3)' : 'none',
-                flex: 1,
-                margin: 0,
-                outline: 'none'
-              }}
-             onMouseEnter={(e) => {
-               if (!isActive) {
-                 // Inactive tab hover: light grey
-                 e.currentTarget.style.color = '#374151';
-                 e.currentTarget.style.backgroundColor = '#F3F4F6'; // Light grey
-               } else {
-                 // Active tab hover: slightly lighter teal
-                 e.currentTarget.style.backgroundColor = '#6DD5C7'; // Slightly lighter teal
-               }
-             }}
-             onMouseLeave={(e) => {
-               if (!isActive) {
-                 // Return inactive tab to normal state
-                 e.currentTarget.style.color = '#6B7280';
-                 e.currentTarget.style.backgroundColor = 'transparent';
-               } else {
-                 // Return active tab to normal teal
-                 e.currentTarget.style.backgroundColor = '#14B8A6'; // Original teal (#14B8A6)
-               }
-             }}
+      style={style}
     >
       {children}
     </button>
