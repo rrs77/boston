@@ -539,27 +539,27 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             Data & Backup
             </button>
           
-          {/* Purchases - Different color for admin/seller */}
+          {/* Purchases - Different background for admin/seller */}
                           <button
             onClick={() => setActiveTab('purchases')}
             className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'purchases' 
-                ? 'text-blue-600 bg-white border-b-2 border-blue-600' 
-                : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                ? 'text-teal-600 bg-white border-b-2 border-amber-500' 
+                : 'text-gray-600 hover:text-teal-600 bg-amber-50 hover:bg-amber-100'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
             🛒 Purchases
                           </button>
           
-          {/* Manage Packs - Admin only, different color */}
+          {/* Manage Packs - Admin only, same background color */}
           {isAdmin && (
                           <button
               onClick={() => setActiveTab('manage-packs')}
               className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
                 activeTab === 'manage-packs' 
-                  ? 'text-purple-600 bg-white border-b-2 border-purple-600' 
-                  : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                  ? 'text-teal-600 bg-white border-b-2 border-amber-500' 
+                  : 'text-gray-600 hover:text-teal-600 bg-amber-50 hover:bg-amber-100'
               }`}
               style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
