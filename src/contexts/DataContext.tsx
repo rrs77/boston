@@ -390,11 +390,28 @@ const DEFAULT_HALF_TERMS = [
 ];
 
 export function DataProvider({ children }: DataProviderProps) {
-  const [currentSheetInfo, setCurrentSheetInfo] = useState<SheetInfo>({
-    sheet: 'LKG',
-    display: 'Lower Kindergarten Music',
-    eyfs: 'LKG Statements'
-  });
+  // Initialize currentSheetInfo from localStorage if available
+  const getInitialSheetInfo = (): SheetInfo => {
+    try {
+      const saved = localStorage.getItem('currentSheetInfo');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        console.log('📌 Loaded currentSheetInfo from localStorage:', parsed);
+        return parsed;
+      }
+    } catch (error) {
+      console.error('Failed to load currentSheetInfo from localStorage:', error);
+    }
+    // Default to LKG if nothing saved
+    console.log('📌 Using default currentSheetInfo: LKG');
+    return {
+      sheet: 'LKG',
+      display: 'Lower Kindergarten Music',
+      eyfs: 'LKG Statements'
+    };
+  };
+  
+  const [currentSheetInfo, setCurrentSheetInfo] = useState<SheetInfo>(getInitialSheetInfo());
   
   const [lessonNumbers, setLessonNumbers] = useState<string[]>([]);
   const [teachingUnits, setTeachingUnits] = useState<string[]>([]);
@@ -1798,8 +1815,8 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
     
     setAllLessonsData(prev => {
       updatedAllLessonsData = {
-        ...prev,
-        [lessonNumber]: updatedData
+      ...prev,
+      [lessonNumber]: updatedData
       };
       return updatedAllLessonsData;
     });
