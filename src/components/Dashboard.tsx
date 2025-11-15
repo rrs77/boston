@@ -7,7 +7,7 @@ import { LessonPlanBuilder } from "./LessonPlanBuilder";
 import { LessonPlannerCalendar } from "./LessonPlannerCalendar";
 import { ActivityLibrary } from "./ActivityLibrary";
 import { LessonLibrary } from "./LessonLibrary";
-import { Calendar, BookOpen, Edit3, GraduationCap, FolderOpen, Tag, Book } from 'lucide-react';
+import { Calendar, BookOpen, Edit3, FolderOpen, Tag } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { useAuth } from '../hooks/useAuth';
@@ -241,8 +241,8 @@ export function Dashboard() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB', paddingTop: '56px' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Main Tabs */}
           <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6 lg:mb-8">
             <TabsList className="w-full grid grid-cols-2 lg:grid-cols-4 gap-1 lg:gap-0">
@@ -251,7 +251,7 @@ export function Dashboard() {
                 data-tab="unit-viewer"
                 className="flex flex-col lg:flex-row items-center space-y-1 lg:space-y-0 lg:space-x-2 p-2 lg:p-4 text-xs lg:text-sm"
               >
-                <GraduationCap className="h-4 w-4 lg:h-5 lg:w-5" />
+                <BookOpen className="h-5 w-5 lg:h-6 lg:w-6" />
                 <span className="hidden sm:inline">Unit Viewer</span>
                 <span className="sm:hidden">Units</span>
               </TabsTrigger>
@@ -261,7 +261,7 @@ export function Dashboard() {
                 data-tab="lesson-library"
                 className="flex flex-col lg:flex-row items-center space-y-1 lg:space-y-0 lg:space-x-2 p-2 lg:p-4 text-xs lg:text-sm"
               >
-                <Book className="h-4 w-4 lg:h-5 lg:w-5" />
+                <FolderOpen className="h-5 w-5 lg:h-6 lg:w-6" />
                 <span className="hidden sm:inline">Lesson Library</span>
                 <span className="sm:hidden">Lessons</span>
               </TabsTrigger>
@@ -271,7 +271,7 @@ export function Dashboard() {
                 data-tab="lesson-builder"
                 className="flex flex-col lg:flex-row items-center space-y-1 lg:space-y-0 lg:space-x-2 p-2 lg:p-4 text-xs lg:text-sm"
               >
-                <Edit3 className="h-4 w-4 lg:h-5 lg:w-5" />
+                <Edit3 className="h-5 w-5 lg:h-6 lg:w-6" />
                 <span className="hidden sm:inline">Lesson Builder</span>
                 <span className="sm:hidden">Builder</span>
               </TabsTrigger>
@@ -281,7 +281,7 @@ export function Dashboard() {
                 data-tab="activity-library"
                 className="flex flex-col lg:flex-row items-center space-y-1 lg:space-y-0 lg:space-x-2 p-2 lg:p-4 text-xs lg:text-sm"
               >
-                <Tag className="h-4 w-4 lg:h-5 lg:w-5" />
+                <Tag className="h-5 w-5 lg:h-6 lg:w-6" />
                 <span className="hidden sm:inline">Activity Library</span>
                 <span className="sm:hidden">Activities</span>
               </TabsTrigger>
@@ -303,24 +303,24 @@ export function Dashboard() {
             </TabsList>
 
 
-            <TabsContent value="unit-viewer" className="mt-3">
+            <TabsContent value="unit-viewer" className="mt-6">
               <UnitViewer />
             </TabsContent>
 
-            <TabsContent value="lesson-library" className="mt-3">
+            <TabsContent value="lesson-library" className="mt-6">
               <LessonLibrary 
                 className={currentSheetInfo.sheet}
                 onAssignToUnit={handleAssignLessonToHalfTerm}
               />
             </TabsContent>
 
-            <TabsContent value="lesson-builder" className="mt-3">
+            <TabsContent value="lesson-builder" className="mt-6">
               <LessonPlanBuilder 
                 onUnsavedChangesChange={setLessonBuilderHasUnsavedChanges}
               />
             </TabsContent>
 
-            <TabsContent value="activity-library" className="mt-3">
+            <TabsContent value="activity-library" className="mt-6">
               <ActivityLibrary
                 onActivitySelect={handleActivityAdd}
                 selectedActivities={[]}

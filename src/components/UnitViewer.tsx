@@ -604,7 +604,7 @@ export function UnitViewer() {
       <div key={refreshKey} className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
         <div className="max-w-7xl mx-auto px-8 py-6">
           {/* Clean White Header Card */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6" style={{ padding: '24px' }}>
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-8" style={{ padding: '28px' }}>
             <div className="text-gray-900">
               <div className="flex items-center justify-between">
                 <div>
@@ -779,7 +779,7 @@ export function UnitViewer() {
               <span className="ml-3 text-gray-600">Loading half-terms...</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
               {HALF_TERMS
                 .map((halfTerm) => {
                   const lessons = getLessonsForHalfTerm(halfTerm.id);

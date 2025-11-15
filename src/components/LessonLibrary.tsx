@@ -797,9 +797,9 @@ style={{ backgroundColor: '#10A293' }}>
       </div>
 
 
-      <div className="p-6">
+      <div className="p-8">
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center mb-6">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -982,9 +982,9 @@ style={{ backgroundColor: '#10A293' }}>
             </div>
           ) : (
             <div className={`
-              ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' :
-                viewMode === 'list' ? 'space-y-4' :
-                'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'
+              ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8' :
+                viewMode === 'list' ? 'space-y-6' :
+                'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'
               }
             `}>
               {filteredAndSortedLessons.map((lessonNum, index) => {

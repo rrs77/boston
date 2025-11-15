@@ -617,7 +617,7 @@ export function ActivityLibrary({
         ) : (
           viewMode === 'list' ? (
           // List View - Compact cards in grid layout with full functionality
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
             {filteredAndSortedActivities.map((activity, index) => (
               <div 
                 key={generateActivityKey(activity, index)}
@@ -683,7 +683,7 @@ export function ActivityLibrary({
           </div>
         ) : (
           // Grid View
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredAndSortedActivities.map((activity, index) => (
               <div key={generateActivityKey(activity, index)} className="h-full">
                 <ActivityCard
