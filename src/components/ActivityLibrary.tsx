@@ -443,26 +443,26 @@ export function ActivityLibrary({
 
 
   return (
-    <div className="bg-white rounded-card shadow-soft overflow-hidden">
+    <div className="bg-white rounded-xl shadow-lg  overflow-hidden">
       {/* Header */}
-      <div className="p-6 lg:p-8 bg-gradient-primary text-white">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-          <div className="flex items-center space-x-3 min-w-0">
-            <BookOpen className="h-6 w-6 lg:h-7 lg:w-7 flex-shrink-0" />
+      <div className="p-4 sm:p-6 border-b border-gray-200 text-white" style={{ background: 'linear-gradient(to right, #14B8A6, #0D9488)' }}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
             <div className="min-w-0">
-              <h2 className="text-page-title text-white truncate">Activity Library</h2>
-              <p className="text-white/90 text-sm">
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">Activity Library</h2>
+              <p className="text-white text-xs sm:text-sm">
                 {filteredAndSortedActivities.length} of {allActivities.length} activities
               </p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2 flex-wrap gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap gap-2">
             <button
               onClick={() => setShowCreator(true)}
-              className="px-4 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-button transition-all duration-200 flex items-center gap-2 text-sm font-medium shadow-soft hover:shadow-hover"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors duration-200 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Create Activity</span>
               <span className="sm:hidden">Create</span>
             </button>
@@ -470,18 +470,18 @@ export function ActivityLibrary({
             <button
               onClick={handleRefreshActivities}
               disabled={loading}
-              className="px-4 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed rounded-button transition-all duration-200 flex items-center gap-2 text-sm font-medium shadow-soft"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white bg-opacity-20 hover:bg-opacity-30 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors duration-200 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
               title="Refresh activities from Supabase"
             >
-              <RotateCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RotateCcw className={`h-3 w-3 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
             
             <button
               onClick={() => setShowImporter(true)}
-              className="px-4 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-button transition-all duration-200 flex items-center gap-2 text-sm font-medium shadow-soft hover:shadow-hover"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors duration-200 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
             >
-              <Upload className="h-4 w-4" />
+              <Upload className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Import/Export</span>
               <span className="sm:hidden">Import</span>
             </button>
@@ -489,76 +489,83 @@ export function ActivityLibrary({
         </div>
 
         {/* Search and Sort Controls */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
           <div className="relative flex-1 sm:max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/80" />
+            <Search 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" 
+              style={{ color: '#FFFFFF' }}
+            />
             <input
               type="text"
               placeholder="Search activities..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-button text-white placeholder-white/70 focus:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
+              className="w-full pl-10 pr-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg font-semibold text-sm placeholder-white"
+              style={{
+                color: '#FFFFFF',
+                '--tw-placeholder-color': '#FFFFFF',
+                '::placeholder': { color: '#FFFFFF' }
+              } as React.CSSProperties}
+              dir="ltr"
             />
           </div>
 
           {/* Category Filter Dropdown */}
-          <div className="relative min-w-[200px]">
+          <div className="relative" style={{ minWidth: '250px' }}>
             <SimpleNestedCategoryDropdown
               selectedCategory={localSelectedCategory === 'all' ? '' : localSelectedCategory}
               onCategoryChange={(category) => handleCategoryChange(category === '' ? 'all' : category)}
               placeholder="All Categories"
-              className="px-4 py-2.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-button text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 font-medium"
+              className="px-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent font-semibold"
             />
           </div>
 
           {/* Level Filter Dropdown */}
-          <div className="relative min-w-[180px]">
+          <div className="relative" style={{ minWidth: '200px' }}>
             <LevelDropdown
               selectedLevel={selectedLevel}
               onLevelChange={setSelectedLevel}
               placeholder="All Levels"
-              className="px-4 py-2.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-button text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 font-medium"
+              className="px-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent font-semibold"
             />
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex space-x-2">
             <button
               onClick={() => toggleSort('category')}
-              className={`flex items-center gap-1 px-3 py-2 rounded-button transition-all duration-200 ${
-                sortBy === 'category' ? 'bg-white/20 shadow-soft' : 'hover:bg-white/10'
+              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors duration-200 ${
+                sortBy === 'category' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
               }`}
-              title="Sort by category"
             >
               <Tag className="h-4 w-4" />
               {sortBy === 'category' && (sortOrder === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4" />)}
             </button>
             <button
               onClick={() => toggleSort('time')}
-              className={`flex items-center gap-1 px-3 py-2 rounded-button transition-all duration-200 ${
-                sortBy === 'time' ? 'bg-white/20 shadow-soft' : 'hover:bg-white/10'
+              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors duration-200 ${
+                sortBy === 'time' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
               }`}
-              title="Sort by duration"
             >
               <Clock className="h-4 w-4" />
               {sortBy === 'time' && (sortOrder === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4" />)}
             </button>
             
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center space-x-2 ml-auto">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-button transition-all duration-200 ${
-                  viewMode === 'grid' ? 'bg-white/20 shadow-soft' : 'hover:bg-white/10'
+                className={`p-2 rounded-lg transition-colors duration-200 ${
+                  viewMode === 'grid' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
                 }`}
-                title="Grid View"
+                title="Grid View - Normal sized activity cards"
               >
                 <Grid className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-button transition-all duration-200 ${
-                  viewMode === 'list' ? 'bg-white/20 shadow-soft' : 'hover:bg-white/10'
+                className={`p-2 rounded-lg transition-colors duration-200 ${
+                  viewMode === 'list' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
                 }`}
-                title="List View"
+                title="List View - 4-column table layout with horizontal rows"
               >
                 <List className="h-5 w-5" />
               </button>
@@ -569,17 +576,17 @@ export function ActivityLibrary({
 
 
       {/* Main Content */}
-      <div className="p-6 lg:p-8">
+      <div className="p-6">
         {loading || dataLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto mb-4"></div>
-            <p className="text-slate-600">Loading activities...</p>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading activities...</p>
           </div>
         ) : filteredAndSortedActivities.length === 0 ? (
-          <div className="text-center py-16">
-            <BookOpen className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-section-title text-slate-900 mb-2">No activities found</h3>
-            <p className="text-slate-600 mb-6">
+          <div className="text-center py-12">
+            <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No activities found</h3>
+            <p className="text-gray-600">
               {searchQuery || localSelectedCategory !== 'all' || selectedLevel !== 'all'
                 ? 'Try adjusting your search or filters'
                 : 'No activities available in the library. Create a new activity or import activities to get started.'
@@ -592,7 +599,7 @@ export function ActivityLibrary({
                   handleCategoryChange('all');
                   setSelectedLevel('all');
                 }}
-                className="px-6 py-2.5 bg-gradient-primary text-white rounded-button shadow-soft hover:shadow-hover transition-all duration-200 text-sm font-medium"
+                className="mt-4 px-4 py-2 btn-primary text-white rounded-lg text-sm"
               >
                 Clear Filters
               </button>
@@ -600,7 +607,7 @@ export function ActivityLibrary({
             {!searchQuery && localSelectedCategory === 'all' && selectedLevel === 'all' && (
               <button 
                 onClick={() => setShowCreator(true)}
-                className="px-6 py-2.5 bg-gradient-primary text-white rounded-button shadow-soft hover:shadow-hover transition-all duration-200 text-sm font-medium flex items-center gap-2 mx-auto"
+                className="mt-4 px-4 py-2 btn-primary text-white rounded-lg text-sm flex items-center space-x-2 mx-auto"
               >
                 <Plus className="h-4 w-4" />
                 <span>Create First Activity</span>
@@ -610,7 +617,7 @@ export function ActivityLibrary({
         ) : (
           viewMode === 'list' ? (
           // List View - Compact cards in grid layout with full functionality
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {filteredAndSortedActivities.map((activity, index) => (
               <div 
                 key={generateActivityKey(activity, index)}

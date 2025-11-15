@@ -749,47 +749,45 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
   }
 
   return (
-    <div className={`bg-white rounded-card shadow-soft overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-xl shadow-lg  overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="p-6 lg:p-8 bg-gradient-primary text-white">
+      <div className="p-6 border-b border-gray-200 text-white"
+style={{ backgroundColor: '#10A293' }}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <BookOpen className="h-6 w-6 lg:h-7 lg:w-7" />
+            <BookOpen className="h-6 w-6" />
             <div>
-              <h2 className="text-page-title text-white">Lesson Library</h2>
-              <p className="text-white/90 text-sm">
+              <h2 className="text-xl font-bold">Lesson Library</h2>
+              <p className="text-teal-100 text-sm">
                 {filteredAndSortedLessons.length} of {lessonNumbers.length} lessons
               </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center space-x-3">
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center space-x-1">
               <button
                 onClick={() => setViewMode('compact')}
-                className={`p-2 rounded-button transition-all duration-200 ${
-                  viewMode === 'compact' ? 'bg-white/20 shadow-soft' : 'hover:bg-white/10'
+                className={`p-2 rounded-lg transition-colors duration-200 ${
+                  viewMode === 'compact' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
                 }`}
-                title="Compact View"
               >
                 <Grid className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-button transition-all duration-200 ${
-                  viewMode === 'list' ? 'bg-white/20 shadow-soft' : 'hover:bg-white/10'
+                className={`p-2 rounded-lg transition-colors duration-200 ${
+                  viewMode === 'list' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
                 }`}
-                title="List View"
               >
                 <List className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-button transition-all duration-200 ${
-                  viewMode === 'grid' ? 'bg-white/20 shadow-soft' : 'hover:bg-white/10'
+                className={`p-2 rounded-lg transition-colors duration-200 ${
+                  viewMode === 'grid' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
                 }`}
-                title="Grid View"
               >
                 <MoreVertical className="h-5 w-5" />
               </button>
@@ -799,28 +797,30 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
       </div>
 
 
-      <div className="p-6 lg:p-8">
+      <div className="p-6">
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center mb-6">
+        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search lessons..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 bg-white border border-slate-200 rounded-button text-slate-900 placeholder-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all duration-200"
+              className="w-full h-10 pl-10 pr-4 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none"
+              dir="ltr"
             />
           </div>
           
           <select
             value={selectedHalfTerm}
             onChange={(e) => setSelectedHalfTerm(e.target.value)}
-            className="h-10 px-3 bg-white border border-slate-200 rounded-button text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all duration-200 w-48"
+            className="h-10 px-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none w-48"
+            dir="ltr"
           >
-            <option value="all">All Half-Terms</option>
+            <option value="all" className="text-gray-900">All Half-Terms</option>
             {HALF_TERMS.map(term => (
-              <option key={term.id} value={term.id}>
+              <option key={term.id} value={term.id} className="text-gray-900">
                 {term.name} ({term.months})
               </option>
             ))}
@@ -829,30 +829,27 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => toggleSort('number')}
-              className={`flex items-center justify-center gap-1 h-10 px-3 rounded-button transition-all duration-200 ${
-                sortBy === 'number' ? 'bg-gradient-primary text-white shadow-soft' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+              className={`flex items-center justify-center space-x-1 h-10 px-3 rounded-lg transition-colors duration-200 ${
+                sortBy === 'number' ? 'bg-teal-600 text-white border-2 border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-transparent'
               }`}
-              title="Sort by number"
             >
-              <span className="text-sm font-medium">#</span>
+              <span className="text-sm">#</span>
               {sortBy === 'number' && (sortOrder === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4" />)}
             </button>
             <button
               onClick={() => toggleSort('time')}
-              className={`flex items-center justify-center gap-1 h-10 px-3 rounded-button transition-all duration-200 ${
-                sortBy === 'time' ? 'bg-gradient-primary text-white shadow-soft' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+              className={`flex items-center justify-center space-x-1 h-10 px-3 rounded-lg transition-colors duration-200 ${
+                sortBy === 'time' ? 'bg-teal-600 text-white border-2 border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-transparent'
               }`}
-              title="Sort by duration"
             >
               <Clock className="h-4 w-4" />
               {sortBy === 'time' && (sortOrder === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4" />)}
             </button>
             <button
               onClick={() => toggleSort('activities')}
-              className={`flex items-center justify-center gap-1 h-10 px-3 rounded-button transition-all duration-200 ${
-                sortBy === 'activities' ? 'bg-gradient-primary text-white shadow-soft' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+              className={`flex items-center justify-center space-x-1 h-10 px-3 rounded-lg transition-colors duration-200 ${
+                sortBy === 'activities' ? 'bg-teal-600 text-white border-2 border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-transparent'
               }`}
-              title="Sort by activity count"
             >
               <Tag className="h-4 w-4" />
               {sortBy === 'activities' && (sortOrder === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4" />)}

@@ -23,16 +23,16 @@ export function Header() {
 
   return (
     <>
-      <header className="bg-white/95 backdrop-blur-sm fixed top-0 left-0 right-0 z-50 shadow-soft border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="flex justify-between items-center h-16 lg:h-18">
+      <header className="bg-white fixed top-0 left-0 right-0 z-50" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo and Title */}
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
               <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-black flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-bold text-sm sm:text-base">CD</span>
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="text-sm sm:text-lg lg:text-xl font-semibold text-slate-900 tracking-tight truncate">
+                <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-gray-900 truncate" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
                   <span className="hidden sm:inline">Creative Curriculum Designer</span>
                   <span className="sm:hidden">CCD</span>
                 </h1>
