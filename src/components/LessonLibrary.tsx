@@ -104,11 +104,14 @@ export function LessonLibrary({
   } = useLessonStacks();
   
   // DEBUG: Log allLessonsData to verify it's loaded
-  console.log('📚 LessonLibrary - allLessonsData:', {
-    keys: Object.keys(allLessonsData),
-    count: Object.keys(allLessonsData).length,
-    stacksCount: stacks.length,
-    sample: Object.keys(allLessonsData).slice(0, 3)
+  console.log('📚 LessonLibrary - Render state:', {
+    currentSheet: currentSheetInfo.sheet,
+    loading,
+    lessonNumbersCount: lessonNumbers?.length || 0,
+    lessonNumbersSample: lessonNumbers?.slice(0, 3) || [],
+    allLessonsDataKeys: Object.keys(allLessonsData),
+    allLessonsDataCount: Object.keys(allLessonsData).length,
+    stacksCount: stacks.length
   });
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -730,8 +733,16 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
     );
   }
 
-  // Show error state if no data
-  if (!lessonNumbers || !allLessonsData) {
+  // Show error state if no data (but only after loading is complete)
+  if (!loading && (!lessonNumbers || lessonNumbers.length === 0 || !allLessonsData || Object.keys(allLessonsData).length === 0)) {
+    console.log('📚 LessonLibrary - Showing no data message:', {
+      loading,
+      hasLessonNumbers: !!lessonNumbers,
+      lessonNumbersLength: lessonNumbers?.length,
+      hasAllLessonsData: !!allLessonsData,
+      allLessonsDataLength: Object.keys(allLessonsData || {}).length
+    });
+    
     return (
       <div className={`bg-white rounded-xl shadow-lg  overflow-hidden ${className}`}>
         <div className="p-6 border-b border-gray-200 text-white"
@@ -742,7 +753,8 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
           </div>
         </div>
         <div className="p-8 text-center">
-          <p className="text-gray-600">No lesson data available. Please check your data source.</p>
+          <p className="text-gray-600">No lessons found for {currentSheetInfo.display}.</p>
+          <p className="text-sm text-gray-500 mt-2">Switch to Lesson Builder to create your first lesson.</p>
         </div>
       </div>
     );

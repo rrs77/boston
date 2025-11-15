@@ -2298,6 +2298,12 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
   };
 
   const loadData = async () => {
+    console.log('🔄 DataContext.loadData CALLED:', {
+      currentSheet: currentSheetInfo.sheet,
+      currentAcademicYear,
+      dataWasCleared
+    });
+    
     try {
       setLoading(true);
       
@@ -2315,6 +2321,10 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
       // Try to load from Supabase if connected
       if (isSupabaseConfigured()) {
         try {
+          console.log('📡 Loading from Supabase:', {
+            sheet: currentSheetInfo.sheet,
+            academicYear: currentAcademicYear
+          });
           const lessonData = await lessonsApi.getBySheet(currentSheetInfo.sheet, currentAcademicYear);
           if (lessonData && Object.keys(lessonData).length > 0) {
             console.log('🔍 DEBUG: Loaded lesson data from Supabase:', {
@@ -2383,8 +2393,13 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
             setLessonNumbers(filteredLessonNumbers.sort((a, b) => parseInt(a) - parseInt(b)));
             setTeachingUnits(lessonData.teachingUnits || []);
             setLessonStandards(lessonData.lessonStandards || {});
-            console.log(`Loaded ${currentSheetInfo.sheet} data for academic year ${currentAcademicYear} from Supabase`);
+            console.log(`✅ Loaded ${currentSheetInfo.sheet} data for academic year ${currentAcademicYear} from Supabase:`, {
+              lessonCount: filteredLessonNumbers.length,
+              lessonNumbers: filteredLessonNumbers.slice(0, 5),
+              allLessonsDataKeys: Object.keys(filteredLessonsData).slice(0, 5)
+            });
             setLoading(false);
+            console.log('✅ setLoading(false) called - data load complete');
             return;
           }
         } catch (error) {
@@ -2473,6 +2488,9 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
         await loadSampleData();
       }
     } finally {
+      console.log('✅ loadData finally block - setting loading false:', {
+        currentSheet: currentSheetInfo.sheet
+      });
       setLoading(false);
     }
   };

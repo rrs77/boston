@@ -158,7 +158,7 @@ export function Header() {
                         });
                       }
                     }}
-                    className="w-full bg-gray-50 border-2 border-gray-300 text-gray-900 text-sm rounded-lg focus:border-teal-500 focus:outline-none outline-none block p-2.5"
+                    className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:border-teal-500 focus:outline-none outline-none block p-2.5"
                     style={{ outline: 'none', boxShadow: 'none' }}
                     onFocus={(e) => e.target.style.outline = 'none'}
                   >
