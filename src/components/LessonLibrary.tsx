@@ -819,7 +819,7 @@ style={{ backgroundColor: '#10A293' }}>
               placeholder="Search lessons..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none"
+              className="w-full h-10 pl-10 pr-4 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none"
               dir="ltr"
             />
           </div>
@@ -827,7 +827,7 @@ style={{ backgroundColor: '#10A293' }}>
           <select
             value={selectedHalfTerm}
             onChange={(e) => setSelectedHalfTerm(e.target.value)}
-            className="h-10 px-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none w-48"
+            className="h-10 px-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none w-48"
             dir="ltr"
           >
             <option value="all" className="text-gray-900">All Half-Terms</option>
@@ -842,7 +842,7 @@ style={{ backgroundColor: '#10A293' }}>
             <button
               onClick={() => toggleSort('number')}
               className={`flex items-center justify-center space-x-1 h-10 px-3 rounded-lg transition-colors duration-200 ${
-                sortBy === 'number' ? 'bg-teal-600 text-white border-2 border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-transparent'
+                sortBy === 'number' ? 'bg-teal-600 text-white border border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border border-transparent'
               }`}
             >
               <span className="text-sm">#</span>
@@ -851,7 +851,7 @@ style={{ backgroundColor: '#10A293' }}>
             <button
               onClick={() => toggleSort('time')}
               className={`flex items-center justify-center space-x-1 h-10 px-3 rounded-lg transition-colors duration-200 ${
-                sortBy === 'time' ? 'bg-teal-600 text-white border-2 border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-transparent'
+                sortBy === 'time' ? 'bg-teal-600 text-white border border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border border-transparent'
               }`}
             >
               <Clock className="h-4 w-4" />
@@ -860,7 +860,7 @@ style={{ backgroundColor: '#10A293' }}>
             <button
               onClick={() => toggleSort('activities')}
               className={`flex items-center justify-center space-x-1 h-10 px-3 rounded-lg transition-colors duration-200 ${
-                sortBy === 'activities' ? 'bg-teal-600 text-white border-2 border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-transparent'
+                sortBy === 'activities' ? 'bg-teal-600 text-white border border-teal-600' : 'bg-white text-gray-700 hover:bg-gray-50 border border-transparent'
               }`}
             >
               <Tag className="h-4 w-4" />
@@ -1056,7 +1056,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                     placeholder="Search activities..."
                     value={activitySearchQuery}
                     onChange={(e) => setActivitySearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none"
+                    className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none"
                   />
                 </div>
                 <div className="relative" style={{ minWidth: '250px' }}>
@@ -1064,7 +1064,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                     selectedCategory={selectedCategory === 'all' ? '' : selectedCategory}
                     onCategoryChange={(category) => setSelectedCategory(category || 'all')}
                     placeholder="All Categories"
-                    className="px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none"
+                    className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none"
                   />
                 </div>
               </div>

@@ -110,9 +110,9 @@ export function TabsTrigger({ value, children, className, style }: TabsTriggerPr
               }}
              onMouseEnter={(e) => {
                if (!isActive) {
-                 // Inactive tab hover: light grey
+                 // Inactive tab hover: light teal
                  e.currentTarget.style.color = '#374151';
-                 e.currentTarget.style.backgroundColor = '#F3F4F6'; // Light grey
+                 e.currentTarget.style.backgroundColor = '#D7F2EE'; // Light teal
                } else {
                  // Active tab hover: slightly lighter teal
                  e.currentTarget.style.backgroundColor = '#6DD5C7'; // Slightly lighter teal
