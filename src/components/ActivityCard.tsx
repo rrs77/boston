@@ -201,17 +201,17 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
     return (
       <div
         ref={draggable ? drag : undefined}
-        className={`bg-white rounded-lg border transition-all duration-200 hover:shadow-md cursor-pointer ${
-          isEditing ? 'ring-2 ring-blue-300' : 'border-gray-200 hover:border-gray-300'
+        className={`bg-white rounded-xl border-l-4 shadow-soft transition-all duration-200 hover:shadow-hover cursor-pointer ${
+          isEditing ? 'ring-2 ring-teal-400' : ''
         } ${isDragging ? 'opacity-50' : ''} h-full flex flex-col`}
-        style={{ borderLeftColor: cardColor, borderLeftWidth: '4px' }}
+        style={{ borderLeftColor: cardColor }}
         onClick={handleCardClick}
       >
         <div className="flex-1 p-3 flex flex-col">
-          <h4 className="font-semibold text-gray-900 text-sm leading-tight mb-1" dir="ltr">
+          <h4 className="font-semibold text-slate-900 text-sm leading-tight mb-1" dir="ltr">
             {activity.activity}
           </h4>
-          <p className="text-xs text-gray-600 mb-2" dir="ltr">{activity.category}</p>
+          <p className="text-xs text-slate-600 mb-2" dir="ltr">{activity.category}</p>
           
           <div className="mt-auto">
             <div className="flex items-center justify-between">
@@ -282,10 +282,10 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
     return (
       <div
         ref={draggable ? drag : undefined}
-        className={`bg-white rounded-lg shadow-md border transition-all duration-200 hover:shadow-lg ${draggable ? 'cursor-move' : 'cursor-pointer'} ${
-          isEditing ? 'ring-2 ring-blue-300' : 'border-gray-200 hover:border-gray-300'
+        className={`bg-white rounded-card shadow-soft border-l-4 transition-all duration-200 hover:shadow-hover ${draggable ? 'cursor-move' : 'cursor-pointer'} ${
+          isEditing ? 'ring-2 ring-teal-400' : ''
         } ${isDragging ? 'opacity-50' : ''} h-full flex flex-col`}
-        style={{ cursor: draggable ? 'move' : 'pointer', borderLeftColor: cardColor, borderLeftWidth: '4px' }}
+        style={{ cursor: draggable ? 'move' : 'pointer', borderLeftColor: cardColor }}
         onClick={handleCardClick}
       >
         <div className="p-4 flex flex-col flex-grow">
