@@ -332,23 +332,23 @@ export function LessonDetailsModal({
                           {(activity.videoLink || activity.musicLink || activity.backingLink || 
                             activity.resourceLink || activity.link || activity.vocalsLink || 
                             activity.imageLink) && (
-                            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                              <h5 className="text-sm font-medium text-blue-800 mb-2 flex items-center">
-                                <FileText className="h-4 w-4 mr-1" />
+                            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                              <h5 className="text-base font-semibold text-blue-800 mb-3 flex items-center">
+                                <FileText className="h-5 w-5 mr-2" />
                                 Web Resources
                               </h5>
-                              <div className="grid grid-cols-2 gap-2">
+                              <div className="grid grid-cols-2 gap-3">
                                 {activity.videoLink && (
                                   <button 
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleResourceClick(activity.videoLink, `${activity.activity} - Video`, 'video');
                                     }}
-                                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer"
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer py-1"
                                   >
-                                    <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                    <span className="w-3 h-3 bg-red-500 rounded-full mr-2 flex-shrink-0"></span>
                                     Video Link
-                                    <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+                                    <ExternalLink className="h-4 w-4 ml-2 flex-shrink-0" />
                                   </button>
                                 )}
                                 {activity.musicLink && (
@@ -357,11 +357,11 @@ export function LessonDetailsModal({
                                       e.stopPropagation();
                                       handleResourceClick(activity.musicLink, `${activity.activity} - Music`, 'music');
                                     }}
-                                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer"
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer py-1"
                                   >
-                                    <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                    <span className="w-3 h-3 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
                                     Music Link
-                                    <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+                                    <ExternalLink className="h-4 w-4 ml-2 flex-shrink-0" />
                                   </button>
                                 )}
                                 {activity.backingLink && (
@@ -370,11 +370,11 @@ export function LessonDetailsModal({
                                       e.stopPropagation();
                                       handleResourceClick(activity.backingLink, `${activity.activity} - Backing Track`, 'backing');
                                     }}
-                                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer"
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer py-1"
                                   >
-                                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                                    <span className="w-3 h-3 bg-blue-500 rounded-full mr-2 flex-shrink-0"></span>
                                     Backing Track
-                                    <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+                                    <ExternalLink className="h-4 w-4 ml-2 flex-shrink-0" />
                                   </button>
                                 )}
                                 {activity.resourceLink && (
@@ -383,11 +383,11 @@ export function LessonDetailsModal({
                                       e.stopPropagation();
                                       handleResourceClick(activity.resourceLink, `${activity.activity} - Resource`, 'resource');
                                     }}
-                                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer"
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer py-1"
                                   >
-                                    <span className="w-2 h-2 bg-purple-500 rounded-full mr-1"></span>
+                                    <span className="w-3 h-3 bg-purple-500 rounded-full mr-2 flex-shrink-0"></span>
                                     Resource
-                                    <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+                                    <ExternalLink className="h-4 w-4 ml-2 flex-shrink-0" />
                                   </button>
                                 )}
                                 {activity.link && (
@@ -396,11 +396,11 @@ export function LessonDetailsModal({
                                       e.stopPropagation();
                                       handleResourceClick(activity.link, `${activity.activity} - Additional Link`, 'link');
                                     }}
-                                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer"
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer py-1"
                                   >
-                                    <span className="w-2 h-2 bg-gray-500 rounded-full mr-1"></span>
+                                    <span className="w-3 h-3 bg-gray-500 rounded-full mr-2 flex-shrink-0"></span>
                                     Additional Link
-                                    <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+                                    <ExternalLink className="h-4 w-4 ml-2 flex-shrink-0" />
                                   </button>
                                 )}
                                 {activity.vocalsLink && (
@@ -409,11 +409,11 @@ export function LessonDetailsModal({
                                       e.stopPropagation();
                                       handleResourceClick(activity.vocalsLink, `${activity.activity} - Vocals`, 'vocals');
                                     }}
-                                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer"
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer py-1"
                                   >
-                                    <span className="w-2 h-2 bg-orange-500 rounded-full mr-1"></span>
+                                    <span className="w-3 h-3 bg-orange-500 rounded-full mr-2 flex-shrink-0"></span>
                                     Vocals
-                                    <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+                                    <ExternalLink className="h-4 w-4 ml-2 flex-shrink-0" />
                                   </button>
                                 )}
                                 {activity.imageLink && (
@@ -422,11 +422,11 @@ export function LessonDetailsModal({
                                       e.stopPropagation();
                                       handleResourceClick(activity.imageLink, `${activity.activity} - Image`, 'image');
                                     }}
-                                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer"
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center cursor-pointer py-1"
                                   >
-                                    <span className="w-2 h-2 bg-pink-500 rounded-full mr-1"></span>
+                                    <span className="w-3 h-3 bg-pink-500 rounded-full mr-2 flex-shrink-0"></span>
                                     Image
-                                    <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+                                    <ExternalLink className="h-4 w-4 ml-2 flex-shrink-0" />
                                   </button>
                                 )}
                               </div>

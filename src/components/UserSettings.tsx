@@ -486,14 +486,14 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-gray-50">
+        <div className="flex bg-gray-100">
           {/* Year Groups */}
           <button
             onClick={() => setActiveTab('yeargroups')}
             className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'yeargroups' 
-                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
-                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
+                ? 'text-white bg-teal-500' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -505,8 +505,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             onClick={() => setActiveTab('categories')}
             className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'categories' 
-                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
-                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
+                ? 'text-white bg-teal-500' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -518,8 +518,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             onClick={() => setActiveTab('admin')}
             className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'admin' 
-                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
-                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
+                ? 'text-white bg-teal-500' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -531,8 +531,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
               onClick={() => setActiveTab('data')}
             className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
                 activeTab === 'data' 
-                ? 'text-teal-600 bg-white border-b-2 border-teal-600' 
-                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
+                ? 'text-white bg-teal-500' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
               }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
@@ -544,8 +544,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             onClick={() => setActiveTab('purchases')}
             className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
               activeTab === 'purchases' 
-                ? 'text-teal-600 bg-white border-b-2 border-amber-500' 
-                : 'text-gray-600 hover:text-teal-600 bg-amber-50 hover:bg-amber-100'
+                ? 'text-white bg-amber-500' 
+                : 'text-gray-600 hover:text-gray-900 bg-amber-50 hover:bg-amber-200'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -558,8 +558,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
               onClick={() => setActiveTab('manage-packs')}
               className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
                 activeTab === 'manage-packs' 
-                  ? 'text-teal-600 bg-white border-b-2 border-amber-500' 
-                  : 'text-gray-600 hover:text-teal-600 bg-amber-50 hover:bg-amber-100'
+                  ? 'text-white bg-amber-500' 
+                  : 'text-gray-600 hover:text-gray-900 bg-amber-50 hover:bg-amber-200'
               }`}
               style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
@@ -1445,7 +1445,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                       className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg text-center flex items-center justify-center space-x-2"
                     >
                       <span>💳</span>
-                      <span>Purchase Now via PayPal</span>
+                      <span>Purchase Now via PayPal or debit and credit card</span>
                     </a>
                   </div>
                   

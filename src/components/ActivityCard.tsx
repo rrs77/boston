@@ -415,17 +415,43 @@ return (
                 <h3 className="text-lg font-bold leading-tight" dir="ltr">{activity.activity}</h3>
               )}
               
-              <div className="flex items-center space-x-3 mt-2">
-                <span className="text-sm opacity-90" dir="ltr">{activity.category}</span>
+              <div className="flex items-center space-x-2 mt-2 flex-wrap">
                 {activity.yearGroups && activity.yearGroups.length > 0 ? (
-                  activity.yearGroups.map(yearGroup => (
-                    <span 
-                      key={yearGroup} 
-                      className="px-2 py-1 bg-white bg-opacity-20 text-white text-xs font-medium rounded-full"
-                    >
-                      {yearGroup}
-                    </span>
-                  ))
+                  activity.yearGroups.map(yearGroup => {
+                    // Create abbreviation: "Lower Kindergarten Music" → "LKG M"
+                    const abbreviate = (label: string) => {
+                      if (!label) return label;
+                      // Handle "Lower Kindergarten" → "LKG"
+                      if (label.includes('Lower Kindergarten')) {
+                        const category = label.replace('Lower Kindergarten', '').trim();
+                        const catAbbr = category ? category.charAt(0) : '';
+                        return `LKG ${catAbbr}`.trim();
+                      }
+                      // Handle "Upper Kindergarten" → "UKG"
+                      if (label.includes('Upper Kindergarten')) {
+                        const category = label.replace('Upper Kindergarten', '').trim();
+                        const catAbbr = category ? category.charAt(0) : '';
+                        return `UKG ${catAbbr}`.trim();
+                      }
+                      // Handle "Reception" → "Reception M/D/etc"
+                      if (label.includes('Reception')) {
+                        const category = label.replace('Reception', '').trim();
+                        const catAbbr = category ? category.charAt(0) : '';
+                        return `Reception ${catAbbr}`.trim();
+                      }
+                      // Fallback: return original
+                      return label;
+                    };
+                    
+                    return (
+                      <span 
+                        key={yearGroup} 
+                        className="px-2 py-1 bg-white bg-opacity-20 text-white text-xs font-medium rounded-full whitespace-nowrap"
+                      >
+                        {abbreviate(yearGroup)}
+                      </span>
+                    );
+                  })
                 ) : activity.level && (
                   <span className="px-2 py-1 bg-white bg-opacity-20 text-xs font-medium rounded-full">
                     {activity.level}
