@@ -349,6 +349,91 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
           </div>
         </div>
 
+        {/* Database Backup & Restore */}
+        <div className="border border-teal-200 bg-teal-50 rounded-lg p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <Database className="h-6 w-6 text-teal-600" />
+            <h3 className="text-lg font-semibold text-gray-900">Database Backup & Restore</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Create a complete backup of your database or restore from a previous backup. This includes all activities, lessons, categories, and settings.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Backup Section */}
+            <div className="bg-white rounded-lg p-4 border border-teal-200">
+              <div className="flex items-center space-x-2 mb-3">
+                <Database className="h-5 w-5 text-teal-600" />
+                <h4 className="font-medium text-gray-900">Backup Database</h4>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Download a complete JSON backup of your database.
+              </p>
+              
+              <button
+                onClick={handleBackupDatabase}
+                disabled={backupStatus === 'backing-up'}
+                className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+              >
+                <Database className="h-4 w-4" />
+                <span>
+                  {backupStatus === 'backing-up' ? 'Creating Backup...' : 'Download Backup'}
+                </span>
+              </button>
+              
+              {backupStatus === 'success' && (
+                <div className="mt-3 p-2 bg-teal-100 text-teal-700 text-xs rounded">
+                  Backup completed successfully!
+                </div>
+              )}
+              
+              {backupStatus === 'error' && (
+                <div className="mt-3 p-2 bg-red-100 text-red-700 text-xs rounded">
+                  Backup failed. Please try again.
+                </div>
+              )}
+            </div>
+
+            {/* Restore Section */}
+            <div className="bg-white rounded-lg p-4 border border-teal-200">
+              <div className="flex items-center space-x-2 mb-3">
+                <Upload className="h-5 w-5 text-teal-600" />
+                <h4 className="font-medium text-gray-900">Restore Database</h4>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Upload a JSON backup file to restore your database.
+              </p>
+              
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleRestoreDatabase}
+                disabled={restoreStatus === 'restoring'}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              
+              {restoreStatus === 'restoring' && (
+                <div className="mt-3 p-2 bg-blue-100 text-blue-700 text-xs rounded flex items-center space-x-2">
+                  <RefreshCw className="h-3 w-3 animate-spin" />
+                  <span>Restoring database...</span>
+                </div>
+              )}
+              
+              {restoreStatus === 'success' && (
+                <div className="mt-3 p-2 bg-teal-100 text-teal-700 text-xs rounded">
+                  Database restored successfully!
+                </div>
+              )}
+              
+              {restoreStatus === 'error' && (
+                <div className="mt-3 p-2 bg-red-100 text-red-700 text-xs rounded">
+                  Restore failed. Please check the file format.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Clear All Data */}
         <div className="border border-red-200 bg-red-50 rounded-lg p-6">
           <div className="flex items-center space-x-3 mb-4">
@@ -381,51 +466,88 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
   if (embedded) {
     return (
       <div className="space-y-6">
-        {/* Excel File Upload */}
-        <div className="border border-gray-200 rounded-lg p-6">
+        {/* Database Backup & Restore */}
+        <div className="border border-teal-200 bg-teal-50 rounded-lg p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <Upload className="h-6 w-6 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Excel File Upload</h3>
+            <Database className="h-6 w-6 text-teal-600" />
+            <h3 className="text-lg font-semibold text-gray-900">Database Backup & Restore</h3>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            Upload an Excel file (.xlsx, .xls, .csv) to update your lesson data.
+            Create a complete backup of your database or restore from a previous backup. This includes all activities, lessons, categories, and settings.
           </p>
           
-          <div className="space-y-4">
-            <input
-              type="file"
-              accept=".xlsx,.xls,.csv"
-              onChange={handleFileUpload}
-              disabled={uploadStatus === 'uploading'}
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors duration-200"
-            />
-            
-            {uploadStatus === 'uploading' && (
-              <div className="flex items-center space-x-2 text-blue-600 p-3 bg-blue-50 rounded-lg">
-                <RefreshCw className="h-5 w-5 animate-spin" />
-                <span className="text-sm font-medium">
-                  {statusMessage || "Uploading and processing..."}
-                </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Backup Section */}
+            <div className="bg-white rounded-lg p-4 border border-teal-200">
+              <div className="flex items-center space-x-2 mb-3">
+                <Database className="h-5 w-5 text-teal-600" />
+                <h4 className="font-medium text-gray-900">Backup Database</h4>
               </div>
-            )}
-            
-            {uploadStatus === 'success' && (
-              <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg" style={{color: '#0BA596'}}>
-                <CheckCircle className="h-5 w-5" />
-                <span className="text-sm font-medium">
-                  {statusMessage || "Data updated successfully!"}
+              <p className="text-sm text-gray-600 mb-4">
+                Download a complete JSON backup of your database.
+              </p>
+              
+              <button
+                onClick={handleBackupDatabase}
+                disabled={backupStatus === 'backing-up'}
+                className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+              >
+                <Database className="h-4 w-4" />
+                <span>
+                  {backupStatus === 'backing-up' ? 'Creating Backup...' : 'Download Backup'}
                 </span>
+              </button>
+              
+              {backupStatus === 'success' && (
+                <div className="mt-3 p-2 bg-teal-100 text-teal-700 text-xs rounded">
+                  Backup completed successfully!
+                </div>
+              )}
+              
+              {backupStatus === 'error' && (
+                <div className="mt-3 p-2 bg-red-100 text-red-700 text-xs rounded">
+                  Backup failed. Please try again.
+                </div>
+              )}
+            </div>
+
+            {/* Restore Section */}
+            <div className="bg-white rounded-lg p-4 border border-teal-200">
+              <div className="flex items-center space-x-2 mb-3">
+                <Upload className="h-5 w-5 text-teal-600" />
+                <h4 className="font-medium text-gray-900">Restore Database</h4>
               </div>
-            )}
-            
-            {uploadStatus === 'error' && (
-              <div className="flex items-center space-x-2 text-red-600 p-3 bg-red-50 rounded-lg">
-                <AlertCircle className="h-5 w-5" />
-                <span className="text-sm font-medium">
-                  {statusMessage || "Update failed. Please try again."}
-                </span>
-              </div>
-            )}
+              <p className="text-sm text-gray-600 mb-4">
+                Upload a JSON backup file to restore your database.
+              </p>
+              
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleRestoreDatabase}
+                disabled={restoreStatus === 'restoring'}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              
+              {restoreStatus === 'restoring' && (
+                <div className="mt-3 p-2 bg-blue-100 text-blue-700 text-xs rounded flex items-center space-x-2">
+                  <RefreshCw className="h-3 w-3 animate-spin" />
+                  <span>Restoring database...</span>
+                </div>
+              )}
+              
+              {restoreStatus === 'success' && (
+                <div className="mt-3 p-2 bg-teal-100 text-teal-700 text-xs rounded">
+                  Database restored successfully!
+                </div>
+              )}
+              
+              {restoreStatus === 'error' && (
+                <div className="mt-3 p-2 bg-red-100 text-red-700 text-xs rounded">
+                  Restore failed. Please check the file format.
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
