@@ -486,7 +486,15 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
         </div>
 
         {/* Tabs - Scrollable on mobile */}
-        <div className="flex bg-gray-100 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
+        <div 
+          className="flex bg-gray-100 overflow-x-auto relative z-10 border-b border-gray-200 shadow-sm" 
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#9CA3AF #F3F4F6',
+            minHeight: '48px'
+          }}
+        >
           {/* Year Groups */}
           <button
             onClick={() => setActiveTab('yeargroups')}
