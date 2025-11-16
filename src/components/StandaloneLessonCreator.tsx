@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Eye, Music, BookOpen, Target, Link2 } from 'lucide-react';
+import { X, Plus, Trash2, Eye, Music, BookOpen, Target, Link2, Clock } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 
 interface StandaloneLessonCreatorProps {
@@ -141,8 +141,10 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[100]">
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[98vh] sm:max-h-[95vh] flex flex-col">
+    <>
+      {/* Main Create Lesson Modal */}
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[100]">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[98vh] sm:max-h-[95vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
@@ -586,74 +588,75 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
             </button>
           </div>
         </div>
+        </div>
+      </div>
 
-        {/* Preview Modal */}
-        {showPreview && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Card Preview</h3>
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-600" />
-                </button>
-              </div>
-              
-              {/* Lesson Card Preview */}
-              <div className="bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200">
-                {/* Card Header with Gradient */}
-                <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-4">
-                  <h4 className="text-lg font-bold text-white mb-1">
-                    {lesson.lessonTitle || 'Lesson Title'}
-                  </h4>
-                  <p className="text-sm text-teal-100">
-                    {lesson.lessonName || 'Lesson Name'}
-                  </p>
-                </div>
-                
-                {/* Card Content */}
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Clock className="h-4 w-4 text-teal-600" />
-                    <span>{lesson.duration} minutes</span>
-                  </div>
-                  
-                  {lesson.learningOutcome && (
-                    <div className="pt-3 border-t border-gray-100">
-                      <p className="text-xs font-semibold text-gray-700 mb-1">Learning Outcome</p>
-                      <p className="text-sm text-gray-600 line-clamp-2">{lesson.learningOutcome}</p>
-                    </div>
-                  )}
-                  
-                  {lesson.successCriteria && (
-                    <div className="pt-3 border-t border-gray-100">
-                      <p className="text-xs font-semibold text-gray-700 mb-1">Success Criteria</p>
-                      <p className="text-sm text-gray-600 line-clamp-2">{lesson.successCriteria}</p>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Card Footer */}
-                <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">Click to view full lesson</span>
-                    <Target className="h-4 w-4 text-teal-600" />
-                  </div>
-                </div>
-              </div>
-              
+      {/* Preview Modal - Separate overlay with higher z-index */}
+      {showPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-scale-in">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Card Preview</h3>
               <button
                 onClick={() => setShowPreview(false)}
-                className="mt-6 w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                Close Preview
+                <X className="h-5 w-5 text-gray-600" />
               </button>
             </div>
+            
+            {/* Lesson Card Preview */}
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200">
+              {/* Card Header with Gradient */}
+              <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-4">
+                <h4 className="text-lg font-bold text-white mb-1">
+                  {lesson.lessonTitle || 'Lesson Title'}
+                </h4>
+                <p className="text-sm text-teal-100">
+                  {lesson.lessonName || 'Lesson Name'}
+                </p>
+              </div>
+              
+              {/* Card Content */}
+              <div className="p-4 space-y-3">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Clock className="h-4 w-4 text-teal-600" />
+                  <span>{lesson.duration} minutes</span>
+                </div>
+                
+                {lesson.learningOutcome && (
+                  <div className="pt-3 border-t border-gray-100">
+                    <p className="text-xs font-semibold text-gray-700 mb-1">Learning Outcome</p>
+                    <p className="text-sm text-gray-600 line-clamp-2">{lesson.learningOutcome}</p>
+                  </div>
+                )}
+                
+                {lesson.successCriteria && (
+                  <div className="pt-3 border-t border-gray-100">
+                    <p className="text-xs font-semibold text-gray-700 mb-1">Success Criteria</p>
+                    <p className="text-sm text-gray-600 line-clamp-2">{lesson.successCriteria}</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Card Footer */}
+              <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Click to view full lesson</span>
+                  <Target className="h-4 w-4 text-teal-600" />
+                </div>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setShowPreview(false)}
+              className="mt-6 w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium transition-colors"
+            >
+              Close Preview
+            </button>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 };
