@@ -1474,8 +1474,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                   <p className="text-sm text-gray-600">
                     50+ Music activities covering rhythm, pitch, ensemble work, and creative composition.
                   </p>
-                </div>
-
+                  </div>
+                  
                 <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-6 opacity-75">
                   <div className="flex items-center space-x-3 mb-3">
                     <span className="text-4xl grayscale">⚽</span>
@@ -1512,119 +1512,6 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           {activeTab === 'data' && (
             <div className="space-y-6">
               <DataSourceSettings embedded={true} />
-              
-              {/* Database Backup & Restore */}
-              <div className="rounded-lg p-6 bg-gradient-to-br from-teal-50 to-cyan-50 shadow-sm">
-                <div className="flex items-center space-x-3 mb-4">
-                  <Database className="h-6 w-6" style={{color: '#0BA596'}} />
-                  <h3 className="text-lg font-semibold text-gray-900">Database Backup & Restore</h3>
-                </div>
-                <p className="text-sm text-gray-600 mb-4">
-                  Create a complete backup of your database or restore from a previous backup. This includes all activities, lessons, categories, and settings.
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Backup Section */}
-                  <div className="bg-white rounded-lg p-4" style={{border: '1px solid #B8E6E0'}}>
-                    <div className="flex items-center space-x-2 mb-3">
-                      <Database className="h-5 w-5" style={{color: '#0BA596'}} />
-                      <h4 className="font-medium text-gray-900">Backup Database</h4>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Download a complete JSON backup of your database.
-                    </p>
-                    
-                    <button
-                      onClick={async () => {
-                        try {
-                          console.log('🔄 Starting database backup...');
-                          
-                          // Import the dataApi dynamically to avoid circular imports
-                          const { dataApi } = await import('../config/api');
-                          
-                          // Export all data from Supabase
-                          const backupData = await dataApi.exportAll();
-                          
-                          // Add metadata
-                          const backupWithMetadata = {
-                            version: '1.0',
-                            timestamp: new Date().toISOString(),
-                            description: 'Complete database backup',
-                            data: backupData
-                          };
-                          
-                          const dataStr = JSON.stringify(backupWithMetadata, null, 2);
-                          const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                          const url = URL.createObjectURL(dataBlob);
-                          
-                          const link = document.createElement('a');
-                          link.href = url;
-                          link.download = `database-backup-${new Date().toISOString().split('T')[0]}.json`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          URL.revokeObjectURL(url);
-                          
-                          console.log('✅ Database backup completed');
-                        } catch (error: unknown) {
-                          console.error('❌ Database backup failed:', error);
-                          alert('Failed to backup database. Please try again.');
-                        }
-                      }}
-                      className="w-full text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-                      style={{backgroundColor: '#0BA596'}}
-                    >
-                      <Database className="h-4 w-4" />
-                      <span>Download Backup</span>
-                    </button>
-                  </div>
-                  
-                  {/* Restore Section */}
-                  <div className="bg-white rounded-lg p-4" style={{border: '1px solid #B8E6E0'}}>
-                    <div className="flex items-center space-x-2 mb-3">
-                      <Database className="h-5 w-5" style={{color: '#0BA596'}} />
-                      <h4 className="font-medium text-gray-900">Restore Database</h4>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Upload a JSON backup file to restore your database.
-                    </p>
-                    
-                    <input
-                      type="file"
-                      accept=".json"
-                      onChange={async (event) => {
-                        const file = event.target.files?.[0];
-                        if (!file) return;
-
-                        if (!window.confirm('Are you sure you want to restore the database? This will replace ALL current data with the backup data. This cannot be undone.')) {
-                          // Reset the file input
-                          event.target.value = '';
-                          return;
-                        }
-
-                        try {
-                          const text = await file.text();
-                          const backupData = JSON.parse(text);
-                          
-                          // Import the dataApi dynamically
-                          const { dataApi } = await import('../config/api');
-                          
-                          // Import all data to Supabase
-                          await dataApi.importAll(backupData.data);
-                          
-                          alert('Database restored successfully! The page will reload to apply changes.');
-                          window.location.reload();
-                        } catch (error: unknown) {
-                          console.error('❌ Database restore failed:', error);
-                          alert('Failed to restore database. Please check the file format and try again.');
-                          event.target.value = '';
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 transition-colors duration-200"
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
