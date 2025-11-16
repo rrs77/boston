@@ -360,7 +360,7 @@ export function UnitViewer() {
   if (selectedUnit) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           {/* Unit Header */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-6">
             <div 
@@ -428,7 +428,7 @@ export function UnitViewer() {
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Lessons and Stacks in this Unit</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {/* Display individual lessons */}
               {selectedUnit.lessonNumbers.map((lessonNumber, index) => {
                 const lessonData = allLessonsData[lessonNumber];
@@ -602,9 +602,9 @@ export function UnitViewer() {
   return (
     <DndProvider backend={HTML5Backend}>
       <div key={refreshKey} className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
-        <div className="max-w-7xl mx-auto px-8 py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
           {/* Clean White Header Card */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-8" style={{ padding: '28px' }}>
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6 sm:mb-8 p-4 sm:p-6 md:p-7">
             <div className="text-gray-900">
               <div className="flex items-center justify-between">
                 <div>
@@ -779,7 +779,7 @@ export function UnitViewer() {
               <span className="ml-3 text-gray-600">Loading half-terms...</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
               {HALF_TERMS
                 .map((halfTerm) => {
                   const lessons = getLessonsForHalfTerm(halfTerm.id);

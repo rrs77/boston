@@ -242,7 +242,7 @@ export function Dashboard() {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB', paddingTop: '56px' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
           {/* Main Tabs */}
           <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6 lg:mb-8">
             <TabsList className="w-full grid grid-cols-2 lg:grid-cols-4 gap-1 lg:gap-0">

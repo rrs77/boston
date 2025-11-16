@@ -994,9 +994,9 @@ style={{ backgroundColor: '#10A293' }}>
             </div>
           ) : (
             <div className={`
-              ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8' :
-                viewMode === 'list' ? 'space-y-6' :
-                'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'
+              ${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8' :
+                viewMode === 'list' ? 'space-y-4 sm:space-y-6' :
+                'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6'
               }
             `}>
               {filteredAndSortedLessons.map((lessonNum, index) => {
