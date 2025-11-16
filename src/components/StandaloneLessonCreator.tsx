@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Eye, Music, BookOpen, Target, Link2, Clock } from 'lucide-react';
+import { X, Plus, Trash2, Eye, BookOpen, Target, Link2, Clock } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 
 interface StandaloneLessonCreatorProps {
@@ -148,7 +148,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         {/* Header */}
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-            <Music className="h-5 w-5 sm:h-6 sm:w-6 text-white flex-shrink-0" />
+            <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white flex-shrink-0" />
             <h2 className="text-base sm:text-xl font-bold text-white truncate">Create Lesson Plan</h2>
           </div>
           <button
@@ -318,7 +318,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
               {/* Main Activity Card */}
               <div className={`bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg transition-all duration-300 ${lesson.mainActivity ? 'p-5' : 'p-4'}`}>
                 <div className="flex items-center space-x-2 mb-3">
-                  <Music className="h-5 w-5 text-green-600" />
+                  <Target className="h-5 w-5 text-green-600" />
                   <h3 className="text-base font-semibold text-gray-900">Main Activity</h3>
                 </div>
                 {lesson.mainActivity || true ? (
@@ -619,7 +619,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700">
                   {lesson.lessonName && (
                     <div className="flex items-center space-x-1">
-                      <Music className="h-4 w-4 text-teal-600" />
+                      <BookOpen className="h-4 w-4 text-teal-600" />
                       <span className="font-medium">{lesson.lessonName}</span>
                     </div>
                   )}
