@@ -1812,6 +1812,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
 const updateLessonData = async (lessonNumber: string, updatedData: any) => {
     // Use functional state update to avoid stale closure
     let updatedAllLessonsData: Record<string, LessonData> = {};
+    let updatedLessonNumbers: string[] = [];
     
     setAllLessonsData(prev => {
       updatedAllLessonsData = {
@@ -1821,9 +1822,33 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
       return updatedAllLessonsData;
     });
 
-    // Save to localStorage immediately
+    // Update lesson numbers if this is a new lesson
+    setLessonNumbers(prev => {
+      if (!prev.includes(lessonNumber)) {
+        // New lesson - add to array and sort
+        updatedLessonNumbers = [...prev, lessonNumber].sort((a, b) => {
+          const aNum = parseInt(a.replace('lesson', ''));
+          const bNum = parseInt(b.replace('lesson', ''));
+          return aNum - bNum;
+        });
+        console.log(`✅ Added ${lessonNumber} to lessonNumbers array`);
+      } else {
+        // Existing lesson - keep same array
+        updatedLessonNumbers = prev;
+      }
+      return updatedLessonNumbers;
+    });
+
+    // Save to localStorage immediately with updated lesson numbers
     try {
       localStorage.setItem(`${currentSheetInfo.sheet}-lessonsData`, JSON.stringify(updatedAllLessonsData));
+      
+      // Also save the updated lessonNumbers
+      const existingData = localStorage.getItem(`${currentSheetInfo.sheet}-data`);
+      const parsedData = existingData ? JSON.parse(existingData) : {};
+      parsedData.lessonNumbers = updatedLessonNumbers.length > 0 ? updatedLessonNumbers : lessonNumbers;
+      localStorage.setItem(`${currentSheetInfo.sheet}-data`, JSON.stringify(parsedData));
+      
       console.log(`💾 Lesson ${lessonNumber} saved to localStorage with orderedActivities`);
     } catch (error) {
       console.warn('Failed to save to localStorage:', error);
@@ -1837,7 +1862,7 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
       try {
         const dataToSave = {
           allLessonsData: updatedAllLessonsData,
-          lessonNumbers,
+          lessonNumbers: updatedLessonNumbers.length > 0 ? updatedLessonNumbers : lessonNumbers,
           teachingUnits,
           lessonStandards
         };
