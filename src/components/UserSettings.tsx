@@ -464,14 +464,14 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[60]">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[98vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
-          <div className="flex items-center space-x-3">
-            <Settings className="h-6 w-6 text-teal-600" />
+        <div className="flex items-center justify-between p-3 sm:p-6 border-b border-gray-200 bg-white">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-teal-600 flex-shrink-0" />
             <h2 
-              className="text-xl font-bold text-gray-900"
+              className="text-lg sm:text-xl font-bold text-gray-900 truncate"
               style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
               User Settings
@@ -479,18 +479,18 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           </div>
           <button
             onClick={handleCancel}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200 flex-shrink-0"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex bg-gray-100">
+        {/* Tabs - Scrollable on mobile */}
+        <div className="flex bg-gray-100 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
           {/* Year Groups */}
           <button
             onClick={() => setActiveTab('yeargroups')}
-            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+            className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
               activeTab === 'yeargroups' 
                 ? 'text-white bg-teal-500' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
@@ -503,7 +503,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           {/* Categories */}
           <button
             onClick={() => setActiveTab('categories')}
-            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+            className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
               activeTab === 'categories' 
                 ? 'text-white bg-teal-500' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
@@ -516,7 +516,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           {/* Custom Objectives */}
           <button
             onClick={() => setActiveTab('admin')}
-            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+            className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
               activeTab === 'admin' 
                 ? 'text-white bg-teal-500' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
@@ -529,7 +529,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           {/* Data & Backup */}
             <button
               onClick={() => setActiveTab('data')}
-            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+            className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
                 activeTab === 'data' 
                 ? 'text-white bg-teal-500' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
@@ -542,21 +542,21 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           {/* Purchases - Different background for admin/seller */}
                           <button
             onClick={() => setActiveTab('purchases')}
-            className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+            className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
               activeTab === 'purchases' 
                 ? 'text-white bg-amber-500' 
                 : 'text-gray-600 hover:text-gray-900 bg-amber-50 hover:bg-amber-200'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
-            🛒 Purchases
+            <span className="hidden sm:inline">🛒</span> Purchases
                           </button>
           
           {/* Manage Packs - Admin only, same background color */}
           {isAdmin && (
                           <button
               onClick={() => setActiveTab('manage-packs')}
-              className={`px-6 py-3 font-medium text-sm transition-all duration-200 focus:outline-none ${
+              className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
                 activeTab === 'manage-packs' 
                   ? 'text-white bg-amber-500' 
                   : 'text-gray-600 hover:text-gray-900 bg-amber-50 hover:bg-amber-200'
@@ -564,15 +564,15 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
               style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
               <div className="flex items-center space-x-2">
-                <Package className="h-4 w-4" />
+                <Package className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Manage Packs</span>
               </div>
                           </button>
           )}
               </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+        {/* Content - Responsive padding */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-8">
 
           {activeTab === 'yeargroups' && (
             <>

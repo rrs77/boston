@@ -131,8 +131,8 @@ export function LessonDetailsModal({
   const standardsCount = (lessonStandards[lessonNumber] || []).length;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[60] animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col animate-scale-in">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-2 sm:p-4 z-[60] animate-fade-in">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[98vh] sm:max-h-[95vh] overflow-hidden flex flex-col animate-scale-in">
         {/* Header */}
         <div 
           className="p-4 text-white relative"

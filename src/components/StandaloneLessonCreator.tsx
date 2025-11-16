@@ -141,17 +141,17 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[100]">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[100]">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[98vh] sm:max-h-[95vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600">
-          <div className="flex items-center space-x-3">
-            <Music className="h-6 w-6 text-white" />
-            <h2 className="text-xl font-bold text-white">Create Lesson Plan</h2>
+        <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            <Music className="h-5 w-5 sm:h-6 sm:w-6 text-white flex-shrink-0" />
+            <h2 className="text-base sm:text-xl font-bold text-white truncate">Create Lesson Plan</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors duration-200"
+            className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors duration-200 flex-shrink-0"
           >
             <X className="h-5 w-5 text-white" />
           </button>
