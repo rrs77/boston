@@ -616,17 +616,29 @@ export function LessonLibrary({
   // Filter and sort lessons
   const filteredAndSortedLessons = useMemo(() => {
     try {
-      if (!lessonNumbers || !Array.isArray(lessonNumbers)) {
-        console.warn('LessonLibrary: lessonNumbers is not an array:', lessonNumbers);
-        return [];
-      }
-      
       if (!allLessonsData || typeof allLessonsData !== 'object') {
         console.warn('LessonLibrary: allLessonsData is not an object:', allLessonsData);
         return [];
       }
       
-      let filtered = lessonNumbers.filter(lessonNum => {
+      // Safety check: Include all lessons from allLessonsData, even if not in lessonNumbers
+      // This ensures no lessons are missed due to sync issues
+      const allAvailableLessons = new Set<string>();
+      
+      // Add lessons from lessonNumbers array
+      if (lessonNumbers && Array.isArray(lessonNumbers)) {
+        lessonNumbers.forEach(num => allAvailableLessons.add(num));
+      }
+      
+      // Add any lessons that exist in allLessonsData but might be missing from lessonNumbers
+      Object.keys(allLessonsData).forEach(lessonNum => {
+        if (allLessonsData[lessonNum]) {
+          allAvailableLessons.add(lessonNum);
+        }
+      });
+      
+      // Convert to array and filter
+      let filtered = Array.from(allAvailableLessons).filter(lessonNum => {
         const lessonData = allLessonsData[lessonNum];
         if (!lessonData) return false;
       
@@ -665,7 +677,10 @@ export function LessonLibrary({
       
       switch (sortBy) {
         case 'number':
-          comparison = parseInt(a) - parseInt(b);
+          // Handle both "1" and "lesson1" formats
+          const numA = parseInt(a.replace('lesson', '')) || 0;
+          const numB = parseInt(b.replace('lesson', '')) || 0;
+          comparison = numA - numB;
           break;
         case 'title':
           comparison = (lessonA.title || `Lesson ${a}`).localeCompare(lessonB.title || `Lesson ${b}`);
@@ -1321,4 +1336,5 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
 
     </div>
   );
+}
 }
