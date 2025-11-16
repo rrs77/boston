@@ -59,9 +59,12 @@ export function Header() {
                       localStorage.setItem('currentSheetInfo', JSON.stringify(newSheetInfo));
                     }
                   }}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-xs lg:text-sm rounded-lg focus:border-teal-500 focus:outline-none outline-none block w-full p-1.5 lg:p-2 pr-6 lg:pr-8 appearance-none cursor-pointer transition-colors duration-200 hover:bg-gray-100 min-w-[120px] lg:min-w-[180px]"
-                  style={{ outline: 'none', boxShadow: 'none' }}
-                  onFocus={(e) => e.target.style.outline = 'none'}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-xs lg:text-sm rounded-lg focus:border-teal-500 focus:ring-0 focus:outline-none outline-none block w-full p-1.5 lg:p-2 pr-6 lg:pr-8 appearance-none cursor-pointer transition-colors duration-200 hover:bg-gray-100 min-w-[120px] lg:min-w-[180px]"
+                  style={{ outline: 'none', boxShadow: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }}
+                  onFocus={(e) => {
+                    e.target.style.outline = 'none';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 >
                   {customYearGroups.map((group) => (
                     <option key={group.id} value={group.id}>
@@ -158,9 +161,12 @@ export function Header() {
                         });
                       }
                     }}
-                    className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:border-teal-500 focus:outline-none outline-none block p-2.5"
-                    style={{ outline: 'none', boxShadow: 'none' }}
-                    onFocus={(e) => e.target.style.outline = 'none'}
+                    className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:border-teal-500 focus:ring-0 focus:outline-none outline-none block p-2.5"
+                    style={{ outline: 'none', boxShadow: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }}
+                    onFocus={(e) => {
+                      e.target.style.outline = 'none';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   >
                     {customYearGroups.map((group) => (
                       <option key={group.id} value={group.id}>

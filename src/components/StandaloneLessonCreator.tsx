@@ -591,69 +591,217 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         </div>
       </div>
 
-      {/* Preview Modal - Separate overlay with higher z-index */}
+      {/* Full Lesson Preview Modal - Separate overlay with higher z-index */}
       {showPreview && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-scale-in">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Card Preview</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-2 sm:p-4 animate-fade-in">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col animate-scale-in">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600">
+              <div className="flex items-center space-x-3">
+                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <h3 className="text-lg sm:text-xl font-bold text-white">Full Lesson Preview</h3>
+              </div>
               <button
                 onClick={() => setShowPreview(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
               >
-                <X className="h-5 w-5 text-gray-600" />
+                <X className="h-5 w-5 text-white" />
               </button>
             </div>
             
-            {/* Lesson Card Preview */}
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200">
-              {/* Card Header with Gradient */}
-              <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-4">
-                <h4 className="text-lg font-bold text-white mb-1">
-                  {lesson.lessonTitle || 'Lesson Title'}
-                </h4>
-                <p className="text-sm text-teal-100">
-                  {lesson.lessonName || 'Lesson Name'}
-                </p>
-              </div>
-              
-              {/* Card Content */}
-              <div className="p-4 space-y-3">
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Clock className="h-4 w-4 text-teal-600" />
-                  <span>{lesson.duration} minutes</span>
-                </div>
-                
-                {lesson.learningOutcome && (
-                  <div className="pt-3 border-t border-gray-100">
-                    <p className="text-xs font-semibold text-gray-700 mb-1">Learning Outcome</p>
-                    <p className="text-sm text-gray-600 line-clamp-2">{lesson.learningOutcome}</p>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+              {/* Lesson Header Info */}
+              <div className="bg-gradient-to-r from-teal-50 to-teal-100 rounded-lg p-4 border border-teal-200">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                  {lesson.lessonTitle || 'Untitled Lesson'}
+                </h2>
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700">
+                  {lesson.lessonName && (
+                    <div className="flex items-center space-x-1">
+                      <Music className="h-4 w-4 text-teal-600" />
+                      <span className="font-medium">{lesson.lessonName}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-1">
+                    <Clock className="h-4 w-4 text-teal-600" />
+                    <span className="font-medium">{lesson.duration} minutes</span>
                   </div>
-                )}
-                
-                {lesson.successCriteria && (
-                  <div className="pt-3 border-t border-gray-100">
-                    <p className="text-xs font-semibold text-gray-700 mb-1">Success Criteria</p>
-                    <p className="text-sm text-gray-600 line-clamp-2">{lesson.successCriteria}</p>
-                  </div>
-                )}
-              </div>
-              
-              {/* Card Footer */}
-              <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Click to view full lesson</span>
-                  <Target className="h-4 w-4 text-teal-600" />
                 </div>
               </div>
+
+              {/* Learning Outcome */}
+              {lesson.learningOutcome && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                    <Target className="h-5 w-5 text-teal-600" />
+                    <span>Learning Outcome</span>
+                  </h4>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: lesson.learningOutcome }}
+                  />
+                </div>
+              )}
+
+              {/* Success Criteria */}
+              {lesson.successCriteria && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                    <Target className="h-5 w-5 text-teal-600" />
+                    <span>Success Criteria</span>
+                  </h4>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: lesson.successCriteria }}
+                  />
+                </div>
+              )}
+
+              {/* Introduction */}
+              {lesson.introduction && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Introduction</h4>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: lesson.introduction }}
+                  />
+                </div>
+              )}
+
+              {/* Main Activity */}
+              {lesson.mainActivity && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Main Activity</h4>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: lesson.mainActivity }}
+                  />
+                </div>
+              )}
+
+              {/* Plenary */}
+              {lesson.plenary && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Plenary</h4>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: lesson.plenary }}
+                  />
+                </div>
+              )}
+
+              {/* Vocabulary */}
+              {lesson.vocabulary && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Vocabulary</h4>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: lesson.vocabulary }}
+                  />
+                </div>
+              )}
+
+              {/* Key Questions */}
+              {lesson.keyQuestions && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Key Questions</h4>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: lesson.keyQuestions }}
+                  />
+                </div>
+              )}
+
+              {/* Resources */}
+              {lesson.resources && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Resources</h4>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: lesson.resources }}
+                  />
+                </div>
+              )}
+
+              {/* Differentiation */}
+              {lesson.differentiation && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Differentiation</h4>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: lesson.differentiation }}
+                  />
+                </div>
+              )}
+
+              {/* Assessment */}
+              {lesson.assessment && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Assessment</h4>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: lesson.assessment }}
+                  />
+                </div>
+              )}
+
+              {/* Links Section */}
+              {(lesson.videoLink || lesson.resourceLink || lesson.imageLink || (lesson.additionalLinks && lesson.additionalLinks.length > 0)) && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                    <Link2 className="h-5 w-5 text-teal-600" />
+                    <span>Links & Resources</span>
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-2">
+                    {lesson.videoLink && (
+                      <div className="flex items-center space-x-2">
+                        <span className="w-3 h-3 bg-red-500 rounded-full flex-shrink-0"></span>
+                        <a href={lesson.videoLink} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-800 hover:underline text-sm">
+                          Video Link
+                        </a>
+                      </div>
+                    )}
+                    {lesson.resourceLink && (
+                      <div className="flex items-center space-x-2">
+                        <Link2 className="h-4 w-4 text-teal-600 flex-shrink-0" />
+                        <a href={lesson.resourceLink} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-800 hover:underline text-sm">
+                          Resource Link
+                        </a>
+                      </div>
+                    )}
+                    {lesson.imageLink && (
+                      <div className="flex items-center space-x-2">
+                        <Link2 className="h-4 w-4 text-teal-600 flex-shrink-0" />
+                        <a href={lesson.imageLink} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-800 hover:underline text-sm">
+                          Image Link
+                        </a>
+                      </div>
+                    )}
+                    {lesson.additionalLinks && lesson.additionalLinks.length > 0 && lesson.additionalLinks.map((link, index) => (
+                      link.url && (
+                        <div key={index} className="flex items-center space-x-2">
+                          <Link2 className="h-4 w-4 text-teal-600 flex-shrink-0" />
+                          <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-800 hover:underline text-sm">
+                            {link.label || `Link ${index + 1}`}
+                          </a>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             
-            <button
-              onClick={() => setShowPreview(false)}
-              className="mt-6 w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium transition-colors"
-            >
-              Close Preview
-            </button>
+            {/* Footer */}
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+              <button
+                onClick={() => setShowPreview(false)}
+                className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium transition-colors"
+              >
+                Close Preview
+              </button>
+            </div>
           </div>
         </div>
       )}
