@@ -59,9 +59,24 @@ export function ActivityCard({
   isSelected = false,
   onSelectionChange
 }: ActivityCardProps) {
-  const { getCategoryColor } = useSettings();
+  const { getCategoryColor, categories } = useSettings();
   const [editedActivity, setEditedActivity] = useState<Activity>(activity);
   const [showResources, setShowResources] = useState(false);
+  
+  // Normalize category name to match what's in the categories list (same logic as dropdown)
+  const getNormalizedCategoryName = (categoryName: string) => {
+    if (!categoryName) return categoryName;
+    // Try exact match first
+    const exactMatch = categories.find(c => c.name === categoryName);
+    if (exactMatch) return exactMatch.name;
+    // Try case-insensitive match
+    const caseInsensitiveMatch = categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
+    if (caseInsensitiveMatch) return caseInsensitiveMatch.name;
+    // Return original if no match found (might be a deleted/renamed category)
+    return categoryName;
+  };
+  
+  const normalizedCategory = getNormalizedCategoryName(activity.category);
   // Removed isExpanded state - always use modal instead
 
   // Set up drag and drop
@@ -141,8 +156,8 @@ export function ActivityCard({
     { label: 'Image', url: activity.imageLink, icon: Image, color: 'text-teal-600 bg-teal-50 border-teal-200', type: 'image' },
   ].filter(resource => resource.url && resource.url.trim());
 
-  // Get category color from context or use provided color
-  const cardColor = getCategoryColor(activity.category) || categoryColor || '#6B7280';
+  // Get category color from context or use provided color (use normalized category)
+  const cardColor = getCategoryColor(normalizedCategory) || categoryColor || '#6B7280';
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't trigger card click if clicking on a button or link
@@ -169,7 +184,7 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
         <div className="flex items-center justify-between h-full">
           <div className="flex-1 min-w-0">
             <h4 className="font-medium text-gray-900 text-sm truncate" dir="ltr">{activity.activity}</h4>
-            <p className="text-xs text-gray-500" dir="ltr">{activity.category}</p>
+            <p className="text-xs text-gray-500" dir="ltr">{normalizedCategory}</p>
           </div>
           <div className="flex items-center space-x-2">
             {selectable && (
@@ -211,7 +226,7 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
           <h4 className="font-semibold text-gray-900 text-sm leading-tight mb-1" dir="ltr">
             {activity.activity}
           </h4>
-          <p className="text-xs text-gray-600 mb-2" dir="ltr">{activity.category}</p>
+          <p className="text-xs text-gray-600 mb-2" dir="ltr">{normalizedCategory}</p>
           
           <div className="mt-auto">
             <div className="flex items-center justify-between">
@@ -300,7 +315,7 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
             </div>
           </div>
           
-          <p className="text-sm text-gray-600 mb-2" dir="ltr">{activity.category}</p>
+          <p className="text-sm text-gray-600 mb-2" dir="ltr">{normalizedCategory}</p>
           
           {activity.yearGroups && activity.yearGroups.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
