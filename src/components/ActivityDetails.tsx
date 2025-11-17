@@ -341,11 +341,68 @@ export function ActivityDetails({
                 {/* Display year groups */}
                 {!isEditMode && editedActivity.yearGroups && editedActivity.yearGroups.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {editedActivity.yearGroups.map(yearGroup => (
-                      <span key={yearGroup} className="px-2 py-1 bg-[#D4F1EF] text-[#17A697] text-xs font-medium rounded-full">
-                        {yearGroup}
-                      </span>
-                    ))}
+                    {editedActivity.yearGroups.map(yearGroup => {
+                      // Create abbreviation: "Lower Kindergarten Music" → "LKG M"
+                      // Also handles old labels like "EYFS U", "EYFS L", etc.
+                      // Handles comma-separated values like "EYFS U, Reception"
+                      const abbreviate = (label: string) => {
+                        if (!label) return label;
+                        
+                        // Handle comma-separated values (e.g., "EYFS U, Reception")
+                        if (label.includes(',')) {
+                          return label.split(',').map(part => abbreviate(part.trim())).join(', ');
+                        }
+                        
+                        // Handle old "EYFS U" format → "UKG"
+                        if (label === 'EYFS U' || label === 'Upper EYFS' || label.startsWith('EYFS U')) {
+                          const parts = label.split(' ');
+                          if (parts.length > 2) {
+                            const category = parts.slice(2).join(' ').trim();
+                            const catAbbr = category ? category.charAt(0) : '';
+                            return `UKG ${catAbbr}`.trim();
+                          }
+                          return 'UKG';
+                        }
+                        
+                        // Handle old "EYFS L" format → "LKG"
+                        if (label === 'EYFS L' || label === 'Lower EYFS' || label.startsWith('EYFS L')) {
+                          const parts = label.split(' ');
+                          if (parts.length > 2) {
+                            const category = parts.slice(2).join(' ').trim();
+                            const catAbbr = category ? category.charAt(0) : '';
+                            return `LKG ${catAbbr}`.trim();
+                          }
+                          return 'LKG';
+                        }
+                        
+                        // Handle "Lower Kindergarten" → "LKG"
+                        if (label.includes('Lower Kindergarten')) {
+                          const category = label.replace('Lower Kindergarten', '').trim();
+                          const catAbbr = category ? category.charAt(0) : '';
+                          return `LKG ${catAbbr}`.trim();
+                        }
+                        // Handle "Upper Kindergarten" → "UKG"
+                        if (label.includes('Upper Kindergarten')) {
+                          const category = label.replace('Upper Kindergarten', '').trim();
+                          const catAbbr = category ? category.charAt(0) : '';
+                          return `UKG ${catAbbr}`.trim();
+                        }
+                        // Handle "Reception" → "Reception M/D/etc"
+                        if (label.includes('Reception')) {
+                          const category = label.replace('Reception', '').trim();
+                          const catAbbr = category ? category.charAt(0) : '';
+                          return `Reception ${catAbbr}`.trim();
+                        }
+                        // Fallback: return original
+                        return label;
+                      };
+                      
+                      return (
+                        <span key={yearGroup} className="px-2 py-1 bg-[#D4F1EF] text-[#17A697] text-xs font-medium rounded-full whitespace-nowrap">
+                          {abbreviate(yearGroup)}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
                 {/* Edit year groups */}
