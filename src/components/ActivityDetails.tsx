@@ -93,7 +93,13 @@ export function ActivityDetails({
 
   // Initialize edited activity when the component mounts or activity changes
   useEffect(() => {
-    setEditedActivity({...activity});
+    const normalizedActivity = {
+      ...activity,
+      yearGroups: Array.isArray(activity.yearGroups) ? activity.yearGroups : (activity.level ? [activity.level] : []),
+      // Ensure category is properly set
+      category: activity.category || ''
+    };
+    setEditedActivity(normalizedActivity);
     setSelectedStandards(activity.standards || activity.eyfsStandards || []);
     // Only allow edit mode if onUpdate is provided and isEditing is true
     setIsEditMode(isLessonBuilderContext ? initialEditMode : (isEditing && !isReadOnly));

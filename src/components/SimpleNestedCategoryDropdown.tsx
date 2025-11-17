@@ -24,8 +24,25 @@ export function SimpleNestedCategoryDropdown({
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const getCategoryNameById = (name: string) => categories.find(c => c.name === name)?.name || name;
-  const getCategoryColorById = (name: string) => categories.find(c => c.name === name)?.color || '#ccc';
+  const getCategoryNameById = (name: string) => {
+    if (!name) return name;
+    // Try exact match first
+    const exactMatch = categories.find(c => c.name === name);
+    if (exactMatch) return exactMatch.name;
+    // Try case-insensitive match
+    const caseInsensitiveMatch = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (caseInsensitiveMatch) return caseInsensitiveMatch.name;
+    // Return original if no match found (might be a deleted/renamed category)
+    return name;
+  };
+  const getCategoryColorById = (name: string) => {
+    if (!name) return '#ccc';
+    const exactMatch = categories.find(c => c.name === name);
+    if (exactMatch) return exactMatch.color;
+    const caseInsensitiveMatch = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (caseInsensitiveMatch) return caseInsensitiveMatch.color;
+    return '#ccc';
+  };
 
   const currentSelectionName = selectedCategory ? getCategoryNameById(selectedCategory) : placeholder;
 
