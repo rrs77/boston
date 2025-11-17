@@ -1337,4 +1337,3 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
     </div>
   );
 }
-}
