@@ -330,7 +330,7 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
             )}
             
             {uploadStatus === 'success' && (
-              <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg" style={{color: '#0BA596'}}>
+              <div className="flex items-center space-x-2 p-3 bg-teal-50 rounded-lg" style={{color: '#0BA596'}}>
                 <CheckCircle className="h-5 w-5" />
                 <span className="text-sm font-medium">
                   {statusMessage || "Data updated successfully!"}
@@ -638,7 +638,7 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
                   </div>
                 ) : serverStatus === 'online' ? (
                   <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-teal-500 rounded-full"></div>
                     <span className="style={{color: '#0BA596'}} font-medium">Connected</span>
                   </div>
                 ) : (
@@ -704,7 +704,7 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
               )}
               
               {uploadStatus === 'success' && (
-                <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg" style={{color: '#0BA596'}}>
+                <div className="flex items-center space-x-2 p-3 bg-teal-50 rounded-lg" style={{color: '#0BA596'}}>
                   <CheckCircle className="h-5 w-5" />
                   <span className="text-sm font-medium">
                     {statusMessage || "Data updated successfully!"}
@@ -724,7 +724,7 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
           </div>
 
           {/* Database Backup & Restore */}
-          <div className="border border-green-200 bg-green-50 rounded-lg p-6">
+          <div className="border border-teal-200 bg-teal-50 rounded-lg p-6">
             <div className="flex items-center space-x-3 mb-4">
               <Archive className="h-6 w-6 style={{color: '#0BA596'}}" />
               <h3 className="text-lg font-semibold text-gray-900">Database Backup & Restore</h3>
@@ -735,7 +735,7 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Backup Section */}
-              <div className="bg-white rounded-lg p-4 border border-green-200">
+              <div className="bg-white rounded-lg p-4 border border-teal-200">
                 <div className="flex items-center space-x-2 mb-3">
                   <Download className="h-5 w-5 style={{color: '#0BA596'}}" />
                   <h4 className="font-medium text-gray-900">Backup Database</h4>
@@ -747,7 +747,7 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
                 <button
                   onClick={handleBackupDatabase}
                   disabled={backupStatus === 'backing-up' || serverStatus === 'offline'}
-                  className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                  className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
                 >
                   <Download className="h-4 w-4" />
                   <span>
@@ -756,7 +756,7 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
                 </button>
                 
                 {backupStatus === 'success' && (
-                  <div className="mt-3 p-2 bg-green-100 text-green-700 text-xs rounded">
+                  <div className="mt-3 p-2 bg-teal-100 text-teal-700 text-xs rounded">
                     Backup completed successfully!
                   </div>
                 )}
@@ -769,7 +769,7 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
               </div>
 
               {/* Restore Section */}
-              <div className="bg-white rounded-lg p-4 border border-green-200">
+              <div className="bg-white rounded-lg p-4 border border-teal-200">
                 <div className="flex items-center space-x-2 mb-3">
                   <Upload className="h-5 w-5 style={{color: '#0BA596'}}" />
                   <h4 className="font-medium text-gray-900">Restore Database</h4>
@@ -783,7 +783,7 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
                   accept=".json"
                   onChange={handleRestoreDatabase}
                   disabled={restoreStatus === 'restoring' || serverStatus === 'offline'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 
                 {restoreStatus === 'restoring' && (
@@ -794,7 +794,7 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
                 )}
                 
                 {restoreStatus === 'success' && (
-                  <div className="mt-3 p-2 bg-green-100 text-green-700 text-xs rounded">
+                  <div className="mt-3 p-2 bg-teal-100 text-teal-700 text-xs rounded">
                     Database restored successfully!
                   </div>
                 )}

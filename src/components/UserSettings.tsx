@@ -893,7 +893,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                 e.target.value = ''; // Reset select
                               }
                             }}
-                            className="border-0 outline-none text-sm bg-transparent flex-1"
+                            className="border border-gray-300 rounded outline-none text-sm bg-white text-gray-900 flex-1 px-2 py-1 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
                             defaultValue=""
                           >
                             <option value="" disabled>Add group...</option>
@@ -1220,7 +1220,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                         e.target.value = ''; // Reset select
                                       }
                                     }}
-                                    className="border-0 outline-none text-sm bg-transparent w-24"
+                                    className="border border-gray-300 rounded outline-none text-sm bg-white text-gray-900 w-24 px-2 py-1 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
                                     defaultValue=""
                                   >
                                     <option value="" disabled>Add group...</option>
@@ -1353,7 +1353,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                         e.target.value = ''; // Reset select
                                       }
                                     }}
-                                    className="border-0 outline-none text-sm bg-transparent w-24"
+                                    className="border border-gray-300 rounded outline-none text-sm bg-white text-gray-900 w-24 px-2 py-1 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
                                     defaultValue=""
                                   >
                                     <option value="" disabled>Add group...</option>
