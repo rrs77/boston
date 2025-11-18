@@ -85,7 +85,7 @@ export function Logo({ className = '', size = 'md', showText = true }: LogoProps
             }}
           >
           <span>Creative </span>
-          <span className="font-normal">Curriculum Designer</span>
+          <span className="font-bold">Curriculum Designer</span>
           </h1>
       )}
     </div>
