@@ -31,7 +31,7 @@ export function LoginForm() {
       <div className="w-full max-w-md">
         {/* Header with Logo */}
         <div className="mb-6 w-full flex items-center justify-center">
-          <LogoSVG size="lg" showText={true} className="justify-center" />
+          <LogoSVG size="lg" showText={true} className="justify-center" boldCurriculumDesigner={true} />
         </div>
 
         {/* Login Form */}

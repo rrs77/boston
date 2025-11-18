@@ -4,10 +4,11 @@ interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
+  boldCurriculumDesigner?: boolean;
 }
 
 // Main Logo Component - matches the shared design
-export function Logo({ className = '', size = 'md', showText = true }: LogoProps) {
+export function Logo({ className = '', size = 'md', showText = true, boldCurriculumDesigner = false }: LogoProps) {
   const sizeClasses = {
     sm: { 
       container: 'h-12 w-12',
@@ -85,7 +86,7 @@ export function Logo({ className = '', size = 'md', showText = true }: LogoProps
             }}
           >
           <span>Creative </span>
-          <span className="font-bold">Curriculum Designer</span>
+          <span className={boldCurriculumDesigner ? "font-bold" : "font-normal"}>Curriculum Designer</span>
           </h1>
       )}
     </div>
