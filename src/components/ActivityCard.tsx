@@ -461,7 +461,7 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
 return (
   <div
     ref={draggable ? drag : undefined}
-    className={`bg-white rounded-xl shadow-lg border-2 transition-all duration-300 hover:shadow-xl ${draggable ? 'cursor-move' : 'cursor-pointer'} overflow-hidden ${
+    className={`bg-white rounded-xl shadow-lg border transition-all duration-300 hover:shadow-xl ${draggable ? 'cursor-move' : 'cursor-pointer'} overflow-hidden ${
       isEditing ? 'ring-4 ring-blue-300' : 'border-gray-200 hover:border-gray-300'
     } ${isDragging ? 'opacity-50' : ''} h-full flex flex-col`}
     style={{ borderLeftColor: cardColor, borderLeftWidth: '6px', cursor: 'pointer' }}
@@ -626,7 +626,7 @@ return (
                 type="text"
                 value={editedActivity.unitName}
                 onChange={(e) => setEditedActivity(prev => ({ ...prev, unitName: e.target.value }))}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
                 placeholder="Unit name"
                 onClick={(e) => e.stopPropagation()}
                 dir="ltr"
@@ -694,7 +694,7 @@ return (
                       type="url"
                       value={editedActivity[key as keyof Activity] as string}
                       onChange={(e) => setEditedActivity(prev => ({ ...prev, [key]: e.target.value }))}
-                      className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-sm"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none text-sm"
                       placeholder={`${label} URL`}
                       dir="ltr"
                     />

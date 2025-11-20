@@ -113,7 +113,7 @@ export function ActivityStackCard({
     return (
       <div 
         ref={drag}
-        className={`bg-white rounded-xl shadow-lg border-2 border-gray-200 p-4 ${
+        className={`bg-white rounded-xl shadow-lg border border-gray-200 p-4 ${
           isDragging ? 'opacity-50' : ''
         }`}
         style={{ borderColor: categoryColor }}

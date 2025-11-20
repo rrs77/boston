@@ -137,7 +137,7 @@ function DraggableActivity({
       ref={ref}
       style={{ opacity }}
       data-handler-id={handlerId}
-      className="bg-white rounded-lg border-2 border-gray-200 p-4 transition-all duration-200 hover:shadow-md group cursor-pointer"
+      className="bg-white rounded-lg border border-gray-200 p-4 transition-all duration-200 hover:shadow-md group cursor-pointer"
       onClick={handleActivityClick} // NEW: Add click handler
     >
       <div className="flex items-start space-x-3">

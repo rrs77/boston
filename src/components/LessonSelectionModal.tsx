@@ -548,7 +548,7 @@ export function LessonSelectionModal({
                           return (
                             <div 
                               key={lessonNum} 
-                              className={`bg-white rounded-lg shadow-md border-2 p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                              className={`bg-white rounded-lg shadow-md border p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
                                 isSelected 
                                   ? 'border-blue-500 bg-blue-50' 
                                   : 'border-gray-200 hover:border-gray-300'

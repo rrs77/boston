@@ -285,7 +285,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Category <span className="text-red-500">*</span>
                 </label>
-                <div className={`border-2 rounded-lg ${errors.category ? 'border-red-500' : 'border-gray-300'} focus-within:border-gray-400 transition-colors duration-200`}
+                <div className={`border rounded-lg ${errors.category ? 'border-red-500' : 'border-gray-300'} focus-within:border-gray-400 transition-colors duration-200`}
                      style={{ 
                        borderColor: errors.category ? '#EF4444' : '#D1D5DB',
                        '--tw-ring-color': '#0BA596'
@@ -314,7 +314,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                     name="requiredPack"
                     value={activity.requiredPack}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-gray-400 transition-colors duration-200 text-sm font-medium bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors duration-200 text-sm font-medium bg-white"
                   >
                     <option value="">Free (No pack required)</option>
                     {availablePacks.filter(p => p.is_active).map((pack) => (
@@ -336,7 +336,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                 </label>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {customYearGroups.map(group => (
-                    <label key={group.name} className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg border-2 transition-all duration-200 ${
+                    <label key={group.name} className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg border transition-all duration-200 ${
                       activity.yearGroups.includes(group.name)
                         ? 'shadow-sm'
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-25'

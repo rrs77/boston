@@ -5,9 +5,13 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay"],
   "background_color": "#ffffff",
   "theme_color": "#14B8A6",
   "orientation": "any",
+  "dir": "ltr",
+  "lang": "en",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/cd-logo.svg",
@@ -16,19 +20,20 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/cdlogo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/cdlogo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
   "categories": ["education", "productivity"],
+  "screenshots": [],
   "shortcuts": [
     {
       "name": "Lesson Builder",

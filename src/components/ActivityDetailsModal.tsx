@@ -157,7 +157,7 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
                 onEdit(activity);
                 onClose();
               }}
-              className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border-2 border-gray-300 transition-colors duration-200 flex items-center space-x-2"
+              className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border border-gray-300 transition-colors duration-200 flex items-center space-x-2"
             >
               <Edit3 className="h-4 w-4" />
               <span>Edit</span>

@@ -651,7 +651,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                               
                               {/* Areas within this section */}
                               {areas.map((area) => (
-                                <div key={area.id} className="border-2 border-gray-200 rounded-lg overflow-hidden hover:border-teal-300 transition-colors">
+                                <div key={area.id} className="border border-gray-200 rounded-lg overflow-hidden hover:border-teal-300 transition-colors">
                                   <div
                                     className="p-4 bg-gradient-to-r from-gray-50 to-white cursor-pointer flex items-center justify-between hover:from-teal-50 hover:to-blue-50 transition-colors"
                                     onClick={() => toggleAreaExpansion(area.id)}
@@ -911,7 +911,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                                 autoResizeTextarea(e.target);
                                 handleObjectiveTextChange(areaIndex, 0, e.target.value);
                               }}
-                              className="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500 resize-none overflow-hidden"
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none overflow-hidden"
                               rows={Math.max(3, area.objectives.length)}
                               placeholder="Enter objectives here. Press Enter after each objective to separate them:&#10;&#10;Objective 1 text&#10;Objective 2 text&#10;Objective 3 text&#10;&#10;Or use # to separate:&#10;Objective 1 # Objective 2 # Objective 3"
                               style={{ minHeight: '5rem' }}

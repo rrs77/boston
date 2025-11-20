@@ -223,7 +223,7 @@ export const ActivityPacksAdmin: React.FC<ActivityPacksAdminProps> = ({ userEmai
         {packs.map((pack) => (
           <div
             key={pack.id}
-            className="bg-white border-2 border-gray-200 rounded-lg p-5 hover:border-teal-300 transition-colors"
+            className="bg-white border border-gray-200 rounded-lg p-5 hover:border-teal-300 transition-colors"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">

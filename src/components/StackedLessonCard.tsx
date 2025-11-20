@@ -197,7 +197,7 @@ export function StackedLessonCard({
     // Activity Stack Style - Compact horizontal cards matching activity stacks exactly
     return (
       <div 
-        className="bg-gray-100 rounded-lg shadow-sm border-2 border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200 cursor-pointer group relative"
+        className="bg-gray-100 rounded-lg shadow-sm border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200 cursor-pointer group relative"
         onClick={onClick}
       >
         <div className="p-3">

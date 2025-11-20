@@ -626,7 +626,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                         value={newYearGroupId}
                         onChange={(e) => setNewYearGroupId(e.target.value)}
                         placeholder="e.g., Year1"
-                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none text-sm"
                         style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
                         dir="ltr"
                       />
@@ -642,7 +642,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                         value={newYearGroupName}
                         onChange={(e) => setNewYearGroupName(e.target.value)}
                         placeholder="e.g., Year 1"
-                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none text-sm"
                         style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
                       />
                     </div>
@@ -862,7 +862,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                         value={newCategoryName}
                         onChange={(e) => setNewCategoryName(e.target.value)}
                         placeholder="Category name"
-                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
                         dir="ltr"
                       />
                     </div>
@@ -1041,7 +1041,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                 type="text"
                                 value={editingGroupName}
                                 onChange={(e) => setEditingGroupName(e.target.value)}
-                                className="flex-1 px-2 py-1 border-2 border-gray-300 rounded focus:border-teal-500 focus:outline-none"
+                                className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
                                 onKeyPress={(e) => e.key === 'Enter' && handleSaveGroupEdit()}
                                 autoFocus
                               />
@@ -1148,7 +1148,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                     setTempCategories(categories);
                                   }
                                 }}
-                                className="flex-1 px-2 py-1 border-2 border-gray-300 rounded text-sm focus:border-teal-500 focus:outline-none"
+                                className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
                                 dir="ltr"
                               />
                               <div className="relative">
@@ -1412,7 +1412,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                 <h4 className="text-lg font-semibold text-gray-900">Available Card Sets</h4>
                 
                 {/* Drama Games Card Set */}
-                <div className="rounded-lg border-2 border-teal-200 bg-white p-6 hover:shadow-lg transition-shadow">
+                <div className="rounded-lg border border-teal-200 bg-white p-6 hover:shadow-lg transition-shadow">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-3">
@@ -1463,7 +1463,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                 </div>
 
                 {/* Coming Soon - More Card Sets */}
-                <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-6 opacity-75">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 opacity-75">
                   <div className="flex items-center space-x-3 mb-3">
                     <span className="text-4xl grayscale">🎵</span>
                     <div>
@@ -1476,7 +1476,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                   </p>
                   </div>
                   
-                <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-6 opacity-75">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 opacity-75">
                   <div className="flex items-center space-x-3 mb-3">
                     <span className="text-4xl grayscale">⚽</span>
                     <div>
