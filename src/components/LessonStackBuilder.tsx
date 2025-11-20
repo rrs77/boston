@@ -61,7 +61,7 @@ export function LessonStackBuilder({
   // Form state
   const [stackName, setStackName] = useState('');
   const [stackDescription, setStackDescription] = useState('');
-  const [stackColor, setStackColor] = useState('#3B82F6');
+  const [stackColor, setStackColor] = useState('#14B8A6');
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -92,7 +92,7 @@ export function LessonStackBuilder({
     } else {
       setStackName('');
       setStackDescription('');
-      setStackColor('#3B82F6');
+      setStackColor('#14B8A6');
       setSelectedLessons([]);
       setCustomObjectives([]);
     }
@@ -209,7 +209,7 @@ export function LessonStackBuilder({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 text-white" style={{ backgroundColor: '#64748B' }}>
+        <div className="p-6 border-b border-gray-200 text-white bg-gradient-to-r from-teal-500 to-teal-600">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Layers className="h-6 w-6" />
@@ -238,7 +238,7 @@ export function LessonStackBuilder({
                   type="text"
                   value={stackName}
                   onChange={(e) => setStackName(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   placeholder="e.g., Fractions Unit"
                 />
               </div>
@@ -349,9 +349,9 @@ export function LessonStackBuilder({
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden flex">
+          <div className="flex-1 overflow-hidden flex min-h-0">
             {/* Available Lessons */}
-            <div className="w-1/2 border-r border-gray-200 overflow-hidden flex flex-col">
+            <div className="w-1/2 border-r border-gray-200 overflow-hidden flex flex-col min-h-0">
               <div className="p-4 border-b border-gray-200 bg-white">
                 <h3 className="font-semibold text-gray-900 mb-3">Available Lessons</h3>
                 
@@ -364,7 +364,7 @@ export function LessonStackBuilder({
                       placeholder="Search lessons..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-500"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
                   
@@ -372,7 +372,7 @@ export function LessonStackBuilder({
                     selectedCategory={selectedCategory === 'all' ? '' : selectedCategory}
                     onCategoryChange={(category) => setSelectedCategory(category || 'all')}
                     placeholder="All Categories"
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -457,7 +457,7 @@ export function LessonStackBuilder({
             </div>
 
             {/* Selected Lessons */}
-            <div className="w-1/2 overflow-hidden flex flex-col">
+            <div className="w-1/2 overflow-hidden flex flex-col min-h-0">
               <div className="p-4 border-b border-gray-200 bg-white">
                 <h3 className="font-semibold text-gray-900 mb-3">
                   Selected Lessons ({selectedLessons.length})
