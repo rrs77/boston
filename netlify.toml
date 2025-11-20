@@ -2,6 +2,14 @@
   publish = "dist"
   command = "npm run build"
 
+# Force HTTPS redirect for custom domain
+[[redirects]]
+  from = "http://ccdesigner.rhythmstix.co.uk/*"
+  to = "https://ccdesigner.rhythmstix.co.uk/:splat"
+  status = 301
+  force = true
+
+# SPA routing - must be last
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -49,3 +57,13 @@
   for = "/*.svg"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Security headers for SSL
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
