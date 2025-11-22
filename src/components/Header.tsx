@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, User, LogOut, BookOpen, RefreshCw, Settings, HelpCircle } from 'lucide-react';
+import { Menu, X, User, LogOut, BookOpen, RefreshCw, Settings, HelpCircle, Download } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
@@ -7,11 +7,13 @@ import { UserSettings } from './UserSettings';
 import { WalkthroughGuide } from './WalkthroughGuide';
 import { HelpGuide } from './HelpGuide';
 import { LogoSVG } from './Logo';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export function Header() {
   const { user, logout } = useAuth();
   const { currentSheetInfo, setCurrentSheetInfo, refreshData, loading } = useData();
   const { settings, getThemeForClass, customYearGroups } = useSettings();
+  const { canInstall, isInstalled, install } = usePWAInstall();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
@@ -73,6 +75,23 @@ export function Header() {
                   ))}
                 </select>
               </div>
+
+              {/* Install App Button */}
+              {canInstall && !isInstalled && (
+                <button
+                  onClick={async () => {
+                    const installed = await install();
+                    if (!installed) {
+                      // Show instructions for iOS or manual install
+                      alert('To install this app:\n\nDesktop: Look for the install icon (⊕) in your browser\'s address bar\n\niOS: Tap Share → Add to Home Screen\n\nAndroid: Tap Menu → Install app');
+                    }
+                  }}
+                  className="p-1.5 lg:p-2.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors duration-200 flex-shrink-0"
+                  title="Install App"
+                >
+                  <Download className="h-4 w-4 lg:h-5 lg:w-5" />
+                </button>
+              )}
 
               {/* Help Button */}
               <button
@@ -195,6 +214,20 @@ export function Header() {
                     </span>
                   </div>
                   <div className="flex space-x-2 flex-shrink-0">
+                    {canInstall && !isInstalled && (
+                      <button
+                        onClick={async () => {
+                          const installed = await install();
+                          if (!installed) {
+                            alert('To install this app:\n\nDesktop: Look for the install icon (⊕) in your browser\'s address bar\n\niOS: Tap Share → Add to Home Screen\n\nAndroid: Tap Menu → Install app');
+                          }
+                        }}
+                        className="p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors duration-200"
+                        title="Install App"
+                      >
+                        <Download className="h-5 w-5" />
+                      </button>
+                    )}
                     <button
                       onClick={() => setShowHelpGuide(true)}
                       className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"

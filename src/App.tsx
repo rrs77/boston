@@ -10,7 +10,6 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { Footer } from './components/Footer';
 import { useAuth } from './hooks/useAuth';
 import { HelpGuide } from './components/HelpGuide';
-import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -73,7 +72,6 @@ function AppContent() {
         onClose={() => setShowHelpGuide(false)}
         initialSection={helpGuideSection}
       />
-      <PWAInstallPrompt />
     </div>
   );
 }

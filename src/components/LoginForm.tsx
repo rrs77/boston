@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle, Download, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LogoSVG } from './Logo';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export function LoginForm() {
   const { login, loading } = useAuth();
+  const { canInstall, isInstalled, install } = usePWAInstall();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   // Check if WordPress is configured
   const wordpressUrl = import.meta.env.VITE_WORDPRESS_URL;
@@ -26,9 +29,49 @@ export function LoginForm() {
     }
   };
 
+  // Show install prompt after a short delay if available
+  React.useEffect(() => {
+    if (canInstall && !isInstalled) {
+      const timer = setTimeout(() => {
+        const dismissed = localStorage.getItem('pwa-install-dismissed');
+        if (!dismissed) {
+          setShowInstallPrompt(true);
+        } else {
+          const dismissedTime = parseInt(dismissed, 10);
+          const daysSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24);
+          if (daysSinceDismissed >= 7) {
+            setShowInstallPrompt(true);
+          }
+        }
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [canInstall, isInstalled]);
+
+  const handleInstall = async () => {
+    const installed = await install();
+    if (installed) {
+      setShowInstallPrompt(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'rgb(77, 181, 168)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ backgroundColor: 'rgb(77, 181, 168)' }}>
       <div className="w-full max-w-md">
+        {/* Install Button - Top Right */}
+        {canInstall && !isInstalled && (
+          <div className="absolute top-4 right-4 z-10">
+            <button
+              onClick={() => setShowInstallPrompt(true)}
+              className="flex items-center space-x-2 bg-white/90 hover:bg-white text-teal-600 px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all text-sm font-medium"
+              title="Install App"
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Install</span>
+            </button>
+          </div>
+        )}
+
         {/* Header with Logo */}
         <div className="mb-6 w-full flex items-center justify-center">
           <LogoSVG size="lg" showText={true} className="justify-center" boldCurriculumDesigner={true} />
@@ -133,6 +176,66 @@ export function LoginForm() {
           </p>
         </div>
       </div>
+
+      {/* Install Prompt Modal */}
+      {showInstallPrompt && canInstall && !isInstalled && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-in">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-teal-100 rounded-lg">
+                  <Download className="h-6 w-6 text-teal-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Install App</h3>
+                  <p className="text-sm text-gray-600">Get quick access and work offline</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowInstallPrompt(false);
+                  localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+                }}
+                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                <p className="text-sm text-teal-900 font-medium mb-2">Benefits of installing:</p>
+                <ul className="text-sm text-teal-800 space-y-1 list-disc list-inside">
+                  <li>Quick access from your desktop or home screen</li>
+                  <li>Works offline with cached data</li>
+                  <li>Faster loading times</li>
+                  <li>No browser tabs needed</li>
+                </ul>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleInstall}
+                  className="flex-1 bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-teal-600 hover:to-teal-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                >
+                  <Download className="h-5 w-5" />
+                  <span>Install Now</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowInstallPrompt(false);
+                    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+                  }}
+                  className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                >
+                  Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
