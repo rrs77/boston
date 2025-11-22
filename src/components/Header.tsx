@@ -30,8 +30,40 @@ export function Header() {
           <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo and Title */}
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-black flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-sm sm:text-base">CD</span>
+              {/* Teal gradient logo matching app design */}
+              <div className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 relative">
+                <svg 
+                  viewBox="0 0 80 80" 
+                  className="w-full h-full"
+                  style={{ fill: 'none' }}
+                >
+                  <defs>
+                    <linearGradient id="headerTealGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#14B8A6" />
+                      <stop offset="50%" stopColor="#0D9488" />
+                      <stop offset="100%" stopColor="#008272" />
+                    </linearGradient>
+                  </defs>
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="38"
+                    fill="url(#headerTealGradient)"
+                  />
+                  <text
+                    x="40"
+                    y="40"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill="white"
+                    fontSize="32"
+                    fontWeight="700"
+                    fontFamily="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+                    letterSpacing="-1"
+                  >
+                    CD
+                  </text>
+                </svg>
               </div>
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-gray-900 truncate" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
