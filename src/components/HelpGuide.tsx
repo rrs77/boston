@@ -59,8 +59,8 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
         <div className="space-y-3">
           <p>Start by navigating to the <strong>Activity Library</strong> tab in the main navigation.</p>
           <p>Click the <strong>Create Activity</strong> button at the top of the page to open the activity creation form.</p>
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-            <p className="text-sm text-blue-900"><strong>Tip:</strong> Activities are the building blocks of your lessons. Create reusable activities that can be combined in different ways across multiple lessons.</p>
+          <div className="bg-teal-50 border-l-4 border-teal-500 p-3 rounded">
+            <p className="text-sm text-teal-900"><strong>Tip:</strong> Activities are the building blocks of your lessons. Create reusable activities that can be combined in different ways across multiple lessons.</p>
           </div>
         </div>
       ),
@@ -129,7 +129,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
           </ul>
           <p className="mt-3">Click the <strong>Create Activity</strong> button at the bottom of the form.</p>
           <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded mt-3">
-            <p className="text-sm text-blue-900"><strong>Success!</strong> Your activity now appears in the Activity Library and is ready to be added to lessons. You can edit or delete it anytime from the library.</p>
+            <p className="text-sm text-teal-900"><strong>Success!</strong> Your activity now appears in the Activity Library and is ready to be added to lessons. You can edit or delete it anytime from the library.</p>
           </div>
         </div>
       )
@@ -143,8 +143,8 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
         <div className="space-y-3">
           <p>Navigate to the <strong>Lesson Builder</strong> tab in the main navigation.</p>
           <p>You'll see a blank lesson template with an activity library panel on the right side.</p>
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-            <p className="text-sm text-blue-900"><strong>Overview:</strong> Lessons are composed of activities from your library. Build a structured lesson by selecting and arranging activities in a logical flow.</p>
+          <div className="bg-teal-50 border-l-4 border-teal-500 p-3 rounded">
+            <p className="text-sm text-teal-900"><strong>Overview:</strong> Lessons are composed of activities from your library. Build a structured lesson by selecting and arranging activities in a logical flow.</p>
           </div>
         </div>
       ),
@@ -228,7 +228,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
             <li><strong>Edit Later:</strong> Access saved lessons from the Unit Builder or Calendar views</li>
           </ul>
           <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded mt-3">
-            <p className="text-sm text-blue-900"><strong>Next Step:</strong> Once saved, your lesson is ready to be added to a unit and scheduled on your calendar. You can also duplicate and modify it for different year groups or terms.</p>
+            <p className="text-sm text-teal-900"><strong>Next Step:</strong> Once saved, your lesson is ready to be added to a unit and scheduled on your calendar. You can also duplicate and modify it for different year groups or terms.</p>
           </div>
         </div>
       )
@@ -242,8 +242,8 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
         <div className="space-y-3">
           <p>Navigate to the <strong>Unit Builder</strong> tab in the main navigation.</p>
           <p>Click the <strong>Create New</strong> button to start building a fresh unit of work.</p>
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-            <p className="text-sm text-blue-900"><strong>What is a Unit?</strong> A unit is a collection of related lessons organized around a theme or topic, typically covering a half-term (5-7 weeks) of teaching.</p>
+          <div className="bg-teal-50 border-l-4 border-teal-500 p-3 rounded">
+            <p className="text-sm text-teal-900"><strong>What is a Unit?</strong> A unit is a collection of related lessons organized around a theme or topic, typically covering a half-term (5-7 weeks) of teaching.</p>
           </div>
         </div>
       ),
@@ -312,7 +312,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
             <li>Duplicate units to create variations for different year groups</li>
           </ul>
           <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded mt-3">
-            <p className="text-sm text-blue-900"><strong>Ready to Schedule:</strong> Your saved unit is now ready to be assigned to specific weeks on your calendar, making it easy to plan your entire academic year.</p>
+            <p className="text-sm text-teal-900"><strong>Ready to Schedule:</strong> Your saved unit is now ready to be assigned to specific weeks on your calendar, making it easy to plan your entire academic year.</p>
           </div>
         </div>
       )
@@ -326,8 +326,8 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
         <div className="space-y-3">
           <p>Navigate to the <strong>Calendar</strong> tab in the main navigation.</p>
           <p>The calendar view shows your entire academic year divided into weeks, with half-term boundaries clearly marked.</p>
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-            <p className="text-sm text-blue-900"><strong>Calendar Overview:</strong> This is where your planning comes to life. Assign units to specific dates to create a complete year-long curriculum map.</p>
+          <div className="bg-teal-50 border-l-4 border-teal-500 p-3 rounded">
+            <p className="text-sm text-teal-900"><strong>Calendar Overview:</strong> This is where your planning comes to life. Assign units to specific dates to create a complete year-long curriculum map.</p>
           </div>
         </div>
       ),
@@ -387,13 +387,13 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
               <p className="font-semibold" style={{color: '#0BA596'}}>Spring 2 (SP2)</p>
               <p className="text-sm" style={{color: '#0BA596'}}>March - April</p>
             </div>
-            <div className="bg-blue-50 p-2 rounded border border-blue-200">
-              <p className="font-semibold text-blue-900">Summer 1 (SM1)</p>
-              <p className="text-sm text-blue-800">April - May</p>
+            <div className="bg-teal-50 p-2 rounded border border-teal-200">
+              <p className="font-semibold text-teal-900">Summer 1 (SM1)</p>
+              <p className="text-sm text-teal-800">April - May</p>
             </div>
-            <div className="bg-blue-100 p-2 rounded border border-blue-300">
-              <p className="font-semibold text-blue-900">Summer 2 (SM2)</p>
-              <p className="text-sm text-blue-800">June - July</p>
+            <div className="bg-teal-100 p-2 rounded border border-teal-300">
+              <p className="font-semibold text-teal-900">Summer 2 (SM2)</p>
+              <p className="text-sm text-teal-800">June - July</p>
             </div>
           </div>
         </div>
@@ -582,14 +582,14 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
         isAnimating ? 'modal-bounce' : ''
       }`}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white">
           <div className="flex items-center space-x-3">
             <HelpCircle className="h-6 w-6" />
             <h2 className="text-xl font-bold">Creative Curriculum Designer</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-blue-100 hover:text-white hover:bg-blue-700 rounded-lg transition-colors duration-200"
+            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200"
           >
             <X className="h-6 w-6" />
           </button>
@@ -611,7 +611,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
                 </div>
               </div>
               <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
-                <div className="flex items-center space-x-1.5 text-blue-600">
+                <div className="flex items-center space-x-1.5 text-teal-600">
                   <Edit3 className="h-3.5 w-3.5" />
                   <h4 className="font-semibold text-xs">Lesson Builder</h4>
                 </div>
@@ -735,7 +735,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
                 <div 
                   key={index}
                   className={`w-2.5 h-2.5 rounded-full transition-colors duration-200 ${
-                    index === currentStep ? 'bg-blue-600' : 'bg-gray-300'
+                    index === currentStep ? 'bg-teal-600' : 'bg-gray-300'
                   }`}
                 />
               ))}
@@ -764,7 +764,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
           
           <button
             onClick={handleNext}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
+            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
           >
             <span>{currentStep < currentSteps.length - 1 || activeSection !== 'assign' ? 'Next' : 'Finish'}</span>
             <ChevronRight className="h-5 w-5" />

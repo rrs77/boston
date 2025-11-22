@@ -74,6 +74,9 @@ export function LessonLibraryCard({
     return null;
   }
 
+  // Check if this is a user-created lesson
+  const isUserCreated = lessonData.isUserCreated === true;
+
   // Ensure required properties exist
   const safeLessonData = {
     ...lessonData,
@@ -112,13 +115,22 @@ export function LessonLibraryCard({
     return (
       <div className="relative group">
         <div 
-          className="bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration-200 hover:shadow-md cursor-pointer h-full"
-          style={{ borderLeftColor: theme.primary }}
+          className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration-200 hover:shadow-md cursor-pointer h-full ${
+            isUserCreated ? 'border-teal-500' : ''
+          }`}
+          style={isUserCreated ? {} : { borderLeftColor: theme.primary }}
           onClick={onClick}
         >
           <div className="flex items-center justify-between h-full">
             <div className="flex-1 min-w-0">
-              <h4 className="font-medium text-gray-900 text-sm truncate" dir="ltr">{safeLessonData.title}</h4>
+              <div className="flex items-center space-x-2">
+                <h4 className="font-medium text-gray-900 text-sm truncate" dir="ltr">{safeLessonData.title}</h4>
+                {isUserCreated && (
+                  <span className="px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded text-xs font-medium whitespace-nowrap flex-shrink-0">
+                    Custom
+                  </span>
+                )}
+              </div>
               <div className="flex items-center space-x-2 text-xs text-gray-500">
                 <span>{safeLessonData.totalTime} mins</span>
                 <span>•</span>
@@ -192,7 +204,11 @@ export function LessonLibraryCard({
     return (
       <div className="relative group">
         <div 
-          className="bg-white rounded-xl shadow-md border border-gray-200 p-4 transition-all duration-200 hover:shadow-lg cursor-pointer hover:border-blue-300"
+          className={`bg-white rounded-xl shadow-md border p-4 transition-all duration-200 hover:shadow-lg cursor-pointer ${
+            isUserCreated 
+              ? 'border-teal-300 hover:border-teal-400 border-l-4' 
+              : 'border-gray-200 hover:border-blue-300'
+          }`}
           onClick={onClick}
         >
           <div className="flex items-start">
@@ -205,7 +221,14 @@ export function LessonLibraryCard({
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-gray-900 text-base truncate" dir="ltr">{safeLessonData.title}</h4>
+                <div className="flex items-center space-x-2">
+                  <h4 className="font-semibold text-gray-900 text-base truncate" dir="ltr">{safeLessonData.title}</h4>
+                  {isUserCreated && (
+                    <span className="px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full text-xs font-medium whitespace-nowrap">
+                      Custom
+                    </span>
+                  )}
+                </div>
               </div>
               
               <div className="flex items-center space-x-3 mt-1 text-sm text-gray-600">
@@ -296,10 +319,10 @@ export function LessonLibraryCard({
         className="bg-white rounded-xl shadow-lg border border-gray-300 transition-all duration-300 hover:shadow-xl cursor-pointer overflow-hidden hover:scale-[1.02] h-full flex flex-col"
         onClick={onClick}
       >
-        {/* Header with blue color */}
+        {/* Header with blue color - teal for user-created lessons */}
         <div 
           className="p-4 text-white relative overflow-hidden"
-          style={{ backgroundColor: '#4580ED' }}
+          style={{ backgroundColor: isUserCreated ? '#14B8A6' : '#4580ED' }}
         >
           <div className="absolute top-0 right-0 w-20 h-20 bg-white bg-opacity-10 rounded-full -translate-y-10 translate-x-10"></div>
           
@@ -308,6 +331,11 @@ export function LessonLibraryCard({
               <h3 className="text-lg font-bold">
                 Lesson {displayNumber}
               </h3>
+              {isUserCreated && (
+                <span className="px-2 py-0.5 bg-white bg-opacity-20 rounded-full text-xs font-medium">
+                  Custom
+                </span>
+              )}
             </div>
             <p className="text-gray-100 text-sm font-medium" dir="ltr">
               {safeLessonData.title}

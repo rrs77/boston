@@ -58,6 +58,7 @@ export interface LessonData {
   customHeader?: string; // Custom header for print
   customFooter?: string; // Custom footer for print
   orderedActivities?: Activity[]; // Flat array of activities in exact order
+  isUserCreated?: boolean; // Flag to mark user-created standalone lessons
 }
 
 interface SheetInfo {
@@ -1840,16 +1841,22 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
     });
 
     // Save to localStorage immediately with updated lesson numbers
+    // Use the same key format as loadData: lesson-data-${sheet}
     try {
-      localStorage.setItem(`${currentSheetInfo.sheet}-lessonsData`, JSON.stringify(updatedAllLessonsData));
-      
-      // Also save the updated lessonNumbers
-      const existingData = localStorage.getItem(`${currentSheetInfo.sheet}-data`);
+      const existingData = localStorage.getItem(`lesson-data-${currentSheetInfo.sheet}`);
       const parsedData = existingData ? JSON.parse(existingData) : {};
-      parsedData.lessonNumbers = updatedLessonNumbers.length > 0 ? updatedLessonNumbers : lessonNumbers;
-      localStorage.setItem(`${currentSheetInfo.sheet}-data`, JSON.stringify(parsedData));
       
-      console.log(`💾 Lesson ${lessonNumber} saved to localStorage with orderedActivities`);
+      // Update allLessonsData and lessonNumbers
+      parsedData.allLessonsData = updatedAllLessonsData;
+      parsedData.lessonNumbers = updatedLessonNumbers.length > 0 ? updatedLessonNumbers : lessonNumbers;
+      
+      // Preserve other data if it exists
+      if (!parsedData.teachingUnits) parsedData.teachingUnits = teachingUnits;
+      if (!parsedData.lessonStandards) parsedData.lessonStandards = lessonStandards;
+      
+      localStorage.setItem(`lesson-data-${currentSheetInfo.sheet}`, JSON.stringify(parsedData));
+      
+      console.log(`💾 Lesson ${lessonNumber} saved to localStorage with key: lesson-data-${currentSheetInfo.sheet}`);
     } catch (error) {
       console.warn('Failed to save to localStorage:', error);
     }

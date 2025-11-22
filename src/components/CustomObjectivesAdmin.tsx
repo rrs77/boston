@@ -721,7 +721,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                     type="text"
                     value={cloneData.targetName}
                     onChange={(e) => setCloneData(prev => ({ ...prev, targetName: e.target.value }))}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -790,7 +790,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                         ...prev,
                         year_group: { ...prev.year_group, name: e.target.value }
                       }))}
-                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       placeholder="e.g., Communication and Language, Mathematics"
                     />
                   </div>
@@ -820,7 +820,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                       ...prev,
                       year_group: { ...prev.year_group, description: e.target.value }
                     }))}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     rows={2}
                     placeholder="Brief description of this subject area (e.g., age group, context)"
                   />
@@ -865,7 +865,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                                   i === areaIndex ? { ...a, section: e.target.value } : a
                                 )
                               }))}
-                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                               placeholder="e.g., Communication and Language, Physical Development"
                             />
                             <p className="text-xs text-gray-500 mt-1">
@@ -886,7 +886,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                                   i === areaIndex ? { ...a, name: e.target.value } : a
                                 )
                               }))}
-                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                               placeholder="e.g., Listening, Attention and Understanding"
                             />
                             <p className="text-xs text-gray-500 mt-1">

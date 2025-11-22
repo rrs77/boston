@@ -80,11 +80,8 @@ export function Header() {
               {canInstall && !isInstalled && (
                 <button
                   onClick={async () => {
-                    const installed = await install();
-                    if (!installed) {
-                      // Show instructions for iOS or manual install
-                      alert('To install this app:\n\nDesktop: Look for the install icon (⊕) in your browser\'s address bar\n\niOS: Tap Share → Add to Home Screen\n\nAndroid: Tap Menu → Install app');
-                    }
+                    // Automatically trigger installation - browser will handle the prompt
+                    await install();
                   }}
                   className="flex items-center space-x-1.5 px-3 py-1.5 lg:px-4 lg:py-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors duration-200 flex-shrink-0 border border-teal-200"
                   title="Install this app to your device for quick access and offline use"

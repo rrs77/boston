@@ -49,10 +49,10 @@ export function LoginForm() {
   }, [canInstall, isInstalled]);
 
   const handleInstall = async () => {
-    const installed = await install();
-    if (installed) {
-      setShowInstallPrompt(false);
-    }
+    // Automatically trigger installation - browser will handle the prompt
+    await install();
+    // Close modal after attempting installation (browser handles the rest)
+    setShowInstallPrompt(false);
   };
 
   return (
@@ -62,7 +62,10 @@ export function LoginForm() {
         {canInstall && !isInstalled && (
           <div className="absolute top-4 right-4 z-10">
             <button
-              onClick={() => setShowInstallPrompt(true)}
+              onClick={async () => {
+                // Automatically trigger installation
+                await install();
+              }}
               className="flex items-center space-x-2 bg-white/90 hover:bg-white text-teal-600 px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all text-sm font-medium"
               title="Install App"
             >

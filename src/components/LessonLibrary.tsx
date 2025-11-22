@@ -486,11 +486,21 @@ export function LessonLibrary({
       // Generate next lesson number
       const maxLessonNumber = Math.max(
         0,
-        ...Object.keys(allLessonsData).map(num => parseInt(num.replace('lesson', '')) || 0)
+        ...Object.keys(allLessonsData).map(num => {
+          const numStr = num.replace('lesson', '');
+          return parseInt(numStr) || 0;
+        })
       );
       const newLessonNumber = `lesson${maxLessonNumber + 1}`;
       
       console.log('📝 Generated lesson number:', newLessonNumber);
+      
+      // Mark as user-created lesson and ensure academic year is set
+      const lessonDataWithFlag = {
+        ...lessonData,
+        isUserCreated: true,
+        academicYear: currentSheetInfo.sheet // Use current sheet context
+      };
       
       // Use updateLessonData for proper Supabase and localStorage sync
       if (!updateLessonData) {
@@ -498,11 +508,11 @@ export function LessonLibrary({
       }
       
       // Save to both localStorage and Supabase
-      await updateLessonData(newLessonNumber, lessonData);
+      await updateLessonData(newLessonNumber, lessonDataWithFlag);
       console.log('✅ Lesson saved via updateLessonData');
       
-      // Wait for Supabase to confirm write (longer delay for reliability)
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      // Wait a moment for state to update
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Close modal
       setShowStandaloneLessonCreator(false);
@@ -513,13 +523,8 @@ export function LessonLibrary({
         duration: 3000,
       });
       
-      // Wait a moment for user to see success message
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log('🔄 Reloading page to show new lesson');
-      
-      // Force a refresh of the lesson library
-      window.location.reload();
+      // The lesson should now appear automatically due to state updates
+      // No page reload needed - React will re-render with the new lesson
       
     } catch (error) {
       console.error('❌ Failed to create standalone lesson:', error);
