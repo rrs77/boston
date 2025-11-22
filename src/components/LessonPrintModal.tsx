@@ -233,17 +233,28 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       const lessonData = allLessonsData[lessonNum];
       if (!lessonData) return;
 
+      // Extract numeric lesson number (handle "lesson1" format)
+      const getLessonDisplayNumber = (num: string): string => {
+        const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+        return numericPart || num;
+      };
+      
+      const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
+      const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
+
       // Debug custom header/footer
       console.log(`📄 Print - Lesson ${lessonNum} Header/Footer:`, {
         customHeader: lessonData.customHeader,
         customFooter: lessonData.customFooter,
         hasCustomHeader: !!lessonData.customHeader,
-        hasCustomFooter: !!lessonData.customFooter
+        hasCustomFooter: !!lessonData.customFooter,
+        lessonDisplayNumber,
+        termSpecificNumber
       });
 
-      // Use custom footer if available, otherwise use default
+      // Use custom footer if available, otherwise use default with correct lesson number
       const footerText = lessonData.customFooter || 
-        ['Creative Curriculum Designer', `Lesson ${lessonNum}`, currentSheetInfo.display, halfTermName || unitName, '© Rhythmstix 2025']
+        ['Creative Curriculum Designer', `Lesson ${termSpecificNumber}`, currentSheetInfo.display, halfTermName || unitName, '© Rhythmstix 2025']
           .filter(Boolean)
           .join(' • ');
       
@@ -280,7 +291,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
           <div class="page-header bg-blue-50 px-6 py-3 border-b border-gray-200">
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium text-blue-800">
-                Lesson ${halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonNum} Preview
+                Lesson ${termSpecificNumber} Preview
               </span>
               <span class="text-xs text-blue-600">
                 Page ${lessonIndex + 1} of ${lessonsToRender.length}
@@ -293,7 +304,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
             <!-- Lesson Title -->
             <div class="mb-3 border-b border-black pb-2">
               <h3 class="text-xl font-bold text-black">
-                ${lessonData.customHeader || `Lesson ${halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonNum}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music`}
+                ${lessonData.customHeader || `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music`}
               </h3>
             </div>
       `;
@@ -818,7 +829,13 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-blue-800">
                         {(() => {
-                          const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonIndex + 1;
+                          // Extract numeric lesson number (handle "lesson1" format)
+                          const getLessonDisplayNumber = (num: string): string => {
+                            const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+                            return numericPart || num;
+                          };
+                          const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
+                          const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
                           return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - Lesson Preview`;
                         })()}
                       </span>
@@ -834,7 +851,13 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         <div className="mb-3 border-b border-black pb-2">
                           <h3 className="text-xl font-bold text-black">
                             {lessonData.customHeader || (() => {
-                              const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonIndex + 1;
+                              // Extract numeric lesson number (handle "lesson1" format)
+                              const getLessonDisplayNumber = (num: string): string => {
+                                const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+                                return numericPart || num;
+                              };
+                              const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
+                              const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
                               return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music`;
                             })()}
                           </h3>
@@ -1105,7 +1128,16 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
 
                       {/* Page Footer - Fixed at bottom */}
                       <div className="absolute bottom-0 left-0 right-0 bg-gray-50 px-6 py-3 text-center text-xs text-gray-500 rounded-b-lg">
-                        <p><strong>{lessonData.customFooter || `Creative Curriculum Designer • Lesson ${lessonNum} • ${currentSheetInfo.display} • ${halfTermName || unitName || ''} • © Rhythmstix 2025`}</strong></p>
+                        <p><strong>{lessonData.customFooter || (() => {
+                          // Extract numeric lesson number (handle "lesson1" format)
+                          const getLessonDisplayNumber = (num: string): string => {
+                            const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+                            return numericPart || num;
+                          };
+                          const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
+                          const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
+                          return `Creative Curriculum Designer • Lesson ${termSpecificNumber} • ${currentSheetInfo.display} • ${halfTermName || unitName || ''} • © Rhythmstix 2025`;
+                        })()}</strong></p>
                       </div>
                     </div>
                 );

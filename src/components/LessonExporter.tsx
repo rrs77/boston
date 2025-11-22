@@ -239,7 +239,14 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
                     {currentSheetInfo.display} Lesson Plan
                   </h1>
                   <h2 className="text-2xl font-semibold mb-2 print:text-xl">
-                    {lessonData.title || `Lesson ${lessonNumber}`}
+                    {lessonData.title || (() => {
+                      // Extract numeric lesson number (handle "lesson1" format)
+                      const getLessonDisplayNumber = (num: string): string => {
+                        const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+                        return numericPart || num;
+                      };
+                      return `Lesson ${getLessonDisplayNumber(lessonNumber)}`;
+                    })()}
                   </h2>
                   <div className="text-blue-100 font-medium text-lg">
                     Total Time: {totalDuration} minutes
