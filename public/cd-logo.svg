@@ -6,49 +6,39 @@
       <stop offset="50%" stop-color="#0D9488" />
       <stop offset="100%" stop-color="#008272" />
     </linearGradient>
-    
-    <!-- Shadow for depth -->
-    <filter id="shadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.2"/>
-    </filter>
   </defs>
   
-  <!-- Background circle with gradient -->
-  <circle cx="256" cy="256" r="240" fill="url(#tealGradient)" filter="url(#shadow)"/>
+  <!-- Background circle with gradient - fills the icon area -->
+  <circle cx="256" cy="256" r="240" fill="url(#tealGradient)"/>
   
-  <!-- Inner circle for depth -->
-  <circle cx="256" cy="256" r="220" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
-  
-  <!-- Book/Document icon representing curriculum -->
+  <!-- Simplified book icon - cleaner design for small sizes -->
   <g transform="translate(256, 256)">
-    <!-- Book base -->
-    <rect x="-80" y="-100" width="160" height="200" rx="8" fill="white" opacity="0.95"/>
+    <!-- Book base - simplified -->
+    <rect x="-70" y="-90" width="140" height="180" rx="6" fill="white" opacity="0.95"/>
     
-    <!-- Book pages/lines representing curriculum -->
-    <line x1="-60" y1="-60" x2="60" y2="-60" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
-    <line x1="-60" y1="-20" x2="60" y2="-20" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
-    <line x1="-60" y1="20" x2="60" y2="20" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
-    <line x1="-60" y1="60" x2="60" y2="60" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
+    <!-- Book pages/lines - fewer lines for clarity -->
+    <line x1="-50" y1="-40" x2="50" y2="-40" stroke="#14B8A6" stroke-width="5" stroke-linecap="round"/>
+    <line x1="-50" y1="0" x2="50" y2="0" stroke="#14B8A6" stroke-width="5" stroke-linecap="round"/>
+    <line x1="-50" y1="40" x2="50" y2="40" stroke="#14B8A6" stroke-width="5" stroke-linecap="round"/>
     
     <!-- Book spine -->
-    <rect x="-80" y="-100" width="20" height="200" rx="4" fill="#0D9488"/>
+    <rect x="-70" y="-90" width="18" height="180" rx="3" fill="#0D9488"/>
     
-    <!-- Decorative checkmark representing completion/planning -->
-    <circle cx="40" cy="-80" r="20" fill="#14B8A6"/>
-    <path d="M 32 -80 L 38 -74 L 48 -84" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Checkmark badge -->
+    <circle cx="50" cy="-70" r="18" fill="#14B8A6"/>
+    <path d="M 44 -70 L 48 -66 L 56 -74" stroke="white" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
   
-  <!-- CD text overlay - subtle -->
+  <!-- CD text - larger and bolder for visibility -->
   <text
     x="256"
     y="380"
     text-anchor="middle"
     fill="white"
-    font-size="64"
-    font-weight="700"
+    font-size="80"
+    font-weight="800"
     font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
-    letter-spacing="-2"
-    opacity="0.9"
+    letter-spacing="-3"
   >
     CD
   </text>
