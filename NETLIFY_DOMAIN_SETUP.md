@@ -65,9 +65,44 @@ Add to `netlify.toml`:
 ### Issue: "Certificate expired"
 - **Solution**: Netlify auto-renews, but you can manually renew in SSL settings
 
-### Issue: Intermittent SSL errors
-- **Solution**: Clear DNS cache or wait for propagation
-- Check DNS propagation: https://www.whatsmydns.net/#CNAME/ccdesigner.rhythmstix.co.uk
+### Issue: Intermittent SSL errors (ERR_SSL_PROTOCOL_ERROR)
+This happens "sometimes" and requires a refresh. Common causes:
+
+**1. SSL Certificate Renewal**
+- Netlify auto-renews certificates every 60-90 days
+- During renewal, brief SSL errors can occur
+- **Solution**: Wait 5-10 minutes and refresh
+
+**2. Browser Cache**
+- Old SSL certificate cached in browser
+- **Solution**: 
+  - Hard refresh: `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac)
+  - Clear SSL state: Chrome → Settings → Privacy → Clear browsing data → Cached images and files
+  - Or use incognito/private mode
+
+**3. DNS Propagation/Caching**
+- DNS changes can take time to propagate
+- **Solution**: 
+  - Clear DNS cache: `ipconfig /flushdns` (Windows) or `sudo dscacheutil -flushcache` (Mac)
+  - Check DNS: https://www.whatsmydns.net/#CNAME/ccdesigner.rhythmstix.co.uk
+
+**4. Netlify SSL Provisioning**
+- Certificate provisioning can cause temporary errors
+- **Solution**: Check Netlify dashboard → Domain settings → SSL/TLS
+  - Status should be "Active" (not "Pending" or "Provisioning")
+  - If pending, wait 24-48 hours
+
+**5. Certificate Chain Issues**
+- Incomplete certificate chain
+- **Solution**: Netlify handles this automatically, but you can verify:
+  - https://www.ssllabs.com/ssltest/analyze.html?d=ccdesigner.rhythmstix.co.uk
+  - Should show "Chain issues: None"
+
+**Quick Fixes:**
+- Hard refresh the page (bypasses browser cache)
+- Try incognito/private mode (bypasses all cache)
+- Wait 5-10 minutes if certificate is renewing
+- Check Netlify dashboard for SSL status
 
 ## Testing:
 

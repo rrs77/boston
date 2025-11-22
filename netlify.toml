@@ -3,8 +3,16 @@
   command = "npm run build"
 
 # Force HTTPS redirect for custom domain
+# This ensures all HTTP traffic is redirected to HTTPS
 [[redirects]]
   from = "http://ccdesigner.rhythmstix.co.uk/*"
+  to = "https://ccdesigner.rhythmstix.co.uk/:splat"
+  status = 301
+  force = true
+
+# Also redirect www subdomain if configured
+[[redirects]]
+  from = "http://www.ccdesigner.rhythmstix.co.uk/*"
   to = "https://ccdesigner.rhythmstix.co.uk/:splat"
   status = 301
   force = true
