@@ -86,10 +86,11 @@ export function Header() {
                       alert('To install this app:\n\nDesktop: Look for the install icon (⊕) in your browser\'s address bar\n\niOS: Tap Share → Add to Home Screen\n\nAndroid: Tap Menu → Install app');
                     }
                   }}
-                  className="p-1.5 lg:p-2.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors duration-200 flex-shrink-0"
-                  title="Install App"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 lg:px-4 lg:py-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors duration-200 flex-shrink-0 border border-teal-200"
+                  title="Install this app to your device for quick access and offline use"
                 >
                   <Download className="h-4 w-4 lg:h-5 lg:w-5" />
+                  <span className="hidden lg:inline text-sm font-medium">Install</span>
                 </button>
               )}
 
@@ -222,10 +223,11 @@ export function Header() {
                             alert('To install this app:\n\nDesktop: Look for the install icon (⊕) in your browser\'s address bar\n\niOS: Tap Share → Add to Home Screen\n\nAndroid: Tap Menu → Install app');
                           }
                         }}
-                        className="p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors duration-200"
-                        title="Install App"
+                        className="flex items-center space-x-2 px-3 py-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors duration-200 border border-teal-200"
+                        title="Install this app to your device"
                       >
                         <Download className="h-5 w-5" />
+                        <span className="text-sm font-medium">Install</span>
                       </button>
                     )}
                     <button

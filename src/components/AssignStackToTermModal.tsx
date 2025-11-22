@@ -70,7 +70,7 @@ export function AssignStackToTermModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+        <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Calendar className="h-5 w-5" />
@@ -78,7 +78,7 @@ export function AssignStackToTermModal({
             </div>
             <button
               onClick={handleClose}
-              className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors duration-200"
+              className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200"
             >
               <X className="h-5 w-5" />
             </button>

@@ -163,7 +163,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         <div className="flex bg-gray-50">
           <button
             onClick={() => setActiveTab('main')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-b ${
               activeTab === 'main'
                 ? 'text-teal-600 border-teal-600 bg-white'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-transparent'
@@ -176,7 +176,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
           </button>
           <button
             onClick={() => setActiveTab('extended')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-b ${
               activeTab === 'extended'
                 ? 'text-teal-600 border-teal-600 bg-white'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-transparent'

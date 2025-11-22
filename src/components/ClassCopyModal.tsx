@@ -97,14 +97,14 @@ export function ClassCopyModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Copy Lessons to Another Class</h2>
-            <p className="text-sm text-gray-500 mt-1">Select lessons to copy from <strong>{availableClasses.find(c => c.id === currentClass)?.name}</strong> to another class</p>
+            <h2 className="text-2xl font-bold">Copy Lessons to Another Class</h2>
+            <p className="text-sm text-white/90 mt-1">Select lessons to copy from <strong>{availableClasses.find(c => c.id === currentClass)?.name}</strong> to another class</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="h-6 w-6" />
           </button>

@@ -671,7 +671,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                                   </div>
                                   
                                   {expandedAreas.has(area.id) && (
-                                    <div className="p-4 bg-white border-t-2 border-gray-100">
+                                    <div className="p-4 bg-white border-t border-gray-100">
                                       <div className="space-y-2">
                                         {area.objectives.map((objective, idx) => (
                                           <div key={objective.id} className="flex items-start space-x-3 p-3 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg border border-teal-100">

@@ -162,7 +162,7 @@ export function NestedStandardsBrowser({
       {!isControlledMode && (
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-50 to-blue-50 border-2 border-teal-200 rounded-lg hover:from-teal-100 hover:to-blue-100 transition-all duration-200 shadow-sm"
+          className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-200 rounded-lg hover:from-teal-100 hover:to-blue-100 transition-all duration-200 shadow-sm"
         >
           <div className="flex items-center space-x-2">
             <Tag className="h-5 w-5 text-teal-600" />
@@ -179,9 +179,9 @@ export function NestedStandardsBrowser({
       )}
 
       {isOpen && (
-        <div className={`${isControlledMode ? '' : 'absolute'} z-[60] ${isControlledMode ? '' : 'mt-2'} w-full bg-white rounded-xl shadow-2xl border-2 border-teal-200 overflow-hidden`}>
+        <div className={`${isControlledMode ? '' : 'absolute'} z-[60] ${isControlledMode ? '' : 'mt-2'} w-full bg-white rounded-xl shadow-2xl border border-teal-200 overflow-hidden`}>
           {/* Header */}
-          <div className="p-4 border-b-2 border-teal-100 bg-gradient-to-r from-teal-600 to-teal-700">
+          <div className="p-4 border-b border-teal-100 bg-gradient-to-r from-teal-500 to-teal-600">
             <div className="flex items-center justify-center">
               <div className="flex items-center space-x-2 text-white">
                 <Tag className="h-5 w-5" />
@@ -206,7 +206,7 @@ export function NestedStandardsBrowser({
                   const sections = Object.keys(sectionsMap);
                   
                   return (
-                    <div key={yearGroup.id} className="border-2 border-gray-200 rounded-lg overflow-hidden">
+                    <div key={yearGroup.id} className="border border-gray-200 rounded-lg overflow-hidden">
                       {/* Year Group Header */}
                       <button
                         onClick={() => toggleYearGroup(yearGroup.id)}
@@ -234,7 +234,7 @@ export function NestedStandardsBrowser({
                             const sectionKey = `${yearGroup.id}-${section}`;
                             
                             return (
-                              <div key={sectionKey} className="border-t-2 border-gray-100">
+                              <div key={sectionKey} className="border-t border-gray-100">
                                 {/* Section Header */}
                                 <button
                                   onClick={() => toggleSection(sectionKey)}
@@ -323,7 +323,7 @@ export function NestedStandardsBrowser({
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t-2 border-teal-100 bg-gradient-to-r from-teal-50 to-blue-50">
+          <div className="p-4 border-t border-teal-100 bg-gradient-to-r from-teal-50 to-blue-50">
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold text-teal-700">
                 {selectedObjectiveIds.length} standard{selectedObjectiveIds.length !== 1 ? 's' : ''} selected
@@ -341,7 +341,7 @@ export function NestedStandardsBrowser({
 
       {/* Selected Standards Preview - only in uncontrolled mode */}
       {!isControlledMode && selectedObjectiveIds.length > 0 && !isOpen && (
-        <div className="mt-3 p-3 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg border-2 border-teal-100">
+        <div className="mt-3 p-3 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg border border-teal-100">
           <div className="flex flex-wrap gap-2">
             {selectedObjectiveIds.map((objectiveId) => {
               const objective = customObjectives.find(obj => obj.id === objectiveId);
@@ -350,7 +350,7 @@ export function NestedStandardsBrowser({
               return (
                 <div
                   key={objectiveId}
-                  className="inline-flex items-center space-x-2 px-3 py-1.5 bg-white border-2 border-teal-200 text-teal-800 text-sm rounded-full shadow-sm"
+                  className="inline-flex items-center space-x-2 px-3 py-1.5 bg-white border border-teal-200 text-teal-800 text-sm rounded-full shadow-sm"
                 >
                   <span className="truncate max-w-[250px]">{objective.objective_text}</span>
                   <button

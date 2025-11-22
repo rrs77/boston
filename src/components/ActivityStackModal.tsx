@@ -32,10 +32,7 @@ export function ActivityStackModal({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-white w-full max-w-5xl max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div 
-          className="flex items-center justify-between px-6 py-4 border-b border-gray-200" 
-          style={{ background: 'linear-gradient(135deg, #10A293 0%, #0EA5E9 100%)' }}
-        >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white">
           <div>
             <h3 className="text-white text-lg font-semibold">{stack.name}</h3>
             <p className="text-white/80 text-sm">

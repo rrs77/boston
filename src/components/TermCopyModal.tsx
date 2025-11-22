@@ -73,19 +73,17 @@ export function TermCopyModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Copy className="h-6 w-6 text-purple-600" />
-            </div>
+            <Copy className="h-6 w-6" />
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Copy Term Between Years</h2>
-              <p className="text-sm text-gray-600">Copy lesson plans from one academic year to another</p>
+              <h2 className="text-xl font-bold">Copy Term Between Years</h2>
+              <p className="text-sm text-white/90">Copy lesson plans from one academic year to another</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="h-5 w-5" />
           </button>

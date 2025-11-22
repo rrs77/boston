@@ -650,7 +650,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
             onClick={() => { setActiveSection('activity'); setCurrentStep(0); }}
             className={`flex items-center space-x-2 px-4 py-3 font-medium text-sm transition-colors duration-200 ${
               activeSection === 'activity' 
-                ? 'border-b-2 border-blue-600 text-blue-600' 
+                ? 'border-b-2 border-teal-600 text-teal-600 bg-white' 
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -661,7 +661,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
             onClick={() => { setActiveSection('lesson'); setCurrentStep(0); }}
             className={`flex items-center space-x-2 px-4 py-3 font-medium text-sm transition-colors duration-200 ${
               activeSection === 'lesson' 
-                ? 'border-b-2 border-blue-600 text-blue-600' 
+                ? 'border-b-2 border-teal-600 text-teal-600 bg-white' 
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -672,7 +672,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
             onClick={() => { setActiveSection('unit'); setCurrentStep(0); }}
             className={`flex items-center space-x-2 px-4 py-3 font-medium text-sm transition-colors duration-200 ${
               activeSection === 'unit' 
-                ? 'border-b-2 border-blue-600 text-blue-600' 
+                ? 'border-b-2 border-teal-600 text-teal-600 bg-white' 
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -683,7 +683,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
             onClick={() => { setActiveSection('assign'); setCurrentStep(0); }}
             className={`flex items-center space-x-2 px-4 py-3 font-medium text-sm transition-colors duration-200 ${
               activeSection === 'assign' 
-                ? 'border-b-2 border-blue-600 text-blue-600' 
+                ? 'border-b-2 border-teal-600 text-teal-600 bg-white' 
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >

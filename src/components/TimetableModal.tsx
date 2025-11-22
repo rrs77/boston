@@ -183,7 +183,7 @@ export function TimetableModal({
             onClick={() => setActiveTab('add')}
             className={`px-6 py-3 font-medium text-sm transition-colors duration-200 ${
               activeTab === 'add' 
-                ? 'border-b-2 border-blue-600 text-blue-600' 
+                ? 'border-b-2 border-teal-600 text-teal-600 bg-white' 
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -193,7 +193,7 @@ export function TimetableModal({
             onClick={() => setActiveTab('manage')}
             className={`px-6 py-3 font-medium text-sm transition-colors duration-200 ${
               activeTab === 'manage' 
-                ? 'border-b-2 border-blue-600 text-blue-600' 
+                ? 'border-b-2 border-teal-600 text-teal-600 bg-white' 
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
