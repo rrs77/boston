@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background: #14B8A6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0D9488;
+        }
+    </style>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    <p>This will generate PNG icons from the SVG logo for PWA installation.</p>
+    
+    <canvas id="icon192" width="192" height="192"></canvas>
+    <button onclick="downloadIcon(192)">Download 192x192</button>
+    
+    <canvas id="icon512" width="512" height="512"></canvas>
+    <button onclick="downloadIcon(512)">Download 512x512</button>
+    
+    <canvas id="maskable192" width="192" height="192"></canvas>
+    <button onclick="downloadMaskable(192)">Download Maskable 192x192</button>
+    
+    <canvas id="maskable512" width="512" height="512"></canvas>
+    <button onclick="downloadMaskable(512)">Download Maskable 512x512</button>
+
+    <script>
+        const svgString = `<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tealGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14B8A6" />
+      <stop offset="50%" stop-color="#0D9488" />
+      <stop offset="100%" stop-color="#008272" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  <circle cx="256" cy="256" r="240" fill="url(#tealGradient)" filter="url(#shadow)"/>
+  <circle cx="256" cy="256" r="220" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+  <g transform="translate(256, 256)">
+    <rect x="-80" y="-100" width="160" height="200" rx="8" fill="white" opacity="0.95"/>
+    <line x1="-60" y1="-60" x2="60" y2="-60" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-60" y1="-20" x2="60" y2="-20" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-60" y1="20" x2="60" y2="20" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-60" y1="60" x2="60" y2="60" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
+    <rect x="-80" y="-100" width="20" height="200" rx="4" fill="#0D9488"/>
+    <circle cx="40" cy="-80" r="20" fill="#14B8A6"/>
+    <path d="M 32 -80 L 38 -74 L 48 -84" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="256" y="380" text-anchor="middle" fill="white" font-size="64" font-weight="700" font-family="Inter, sans-serif" letter-spacing="-2" opacity="0.9">CD</text>
+</svg>`;
+
+        function renderIcon(canvasId, size, isMaskable = false) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            const img = new Image();
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(svgBlob);
+            
+            img.onload = function() {
+                ctx.clearRect(0, 0, size, size);
+                
+                if (isMaskable) {
+                    // Maskable icons need safe zone - 80% of size
+                    const safeZone = size * 0.8;
+                    const padding = (size - safeZone) / 2;
+                    ctx.drawImage(img, padding, padding, safeZone, safeZone);
+                } else {
+                    ctx.drawImage(img, 0, 0, size, size);
+                }
+                
+                URL.revokeObjectURL(url);
+            };
+            
+            img.src = url;
+        }
+        
+        function downloadIcon(size) {
+            const canvas = document.getElementById(`icon${size}`);
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        function downloadMaskable(size) {
+            const canvas = document.getElementById(`maskable${size}`);
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-maskable-${size}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // Render all icons on load
+        window.onload = function() {
+            renderIcon('icon192', 192);
+            renderIcon('icon512', 512);
+            renderIcon('maskable192', 192, true);
+            renderIcon('maskable512', 512, true);
+        };
+    </script>
+</body>
+</html>
+

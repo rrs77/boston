@@ -1,33 +1,55 @@
-<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="fill: none;">
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Teal gradient -->
     <linearGradient id="tealGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#14B8A6" />
       <stop offset="50%" stop-color="#0D9488" />
       <stop offset="100%" stop-color="#008272" />
     </linearGradient>
+    
+    <!-- Shadow for depth -->
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.2"/>
+    </filter>
   </defs>
   
-  <!-- Circular background with teal gradient -->
-  <circle
-    cx="40"
-    cy="40"
-    r="38"
-    fill="url(#tealGradient)"
-  />
+  <!-- Background circle with gradient -->
+  <circle cx="256" cy="256" r="240" fill="url(#tealGradient)" filter="url(#shadow)"/>
   
-  <!-- CD Text -->
+  <!-- Inner circle for depth -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+  
+  <!-- Book/Document icon representing curriculum -->
+  <g transform="translate(256, 256)">
+    <!-- Book base -->
+    <rect x="-80" y="-100" width="160" height="200" rx="8" fill="white" opacity="0.95"/>
+    
+    <!-- Book pages/lines representing curriculum -->
+    <line x1="-60" y1="-60" x2="60" y2="-60" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-60" y1="-20" x2="60" y2="-20" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-60" y1="20" x2="60" y2="20" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-60" y1="60" x2="60" y2="60" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
+    
+    <!-- Book spine -->
+    <rect x="-80" y="-100" width="20" height="200" rx="4" fill="#0D9488"/>
+    
+    <!-- Decorative checkmark representing completion/planning -->
+    <circle cx="40" cy="-80" r="20" fill="#14B8A6"/>
+    <path d="M 32 -80 L 38 -74 L 48 -84" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- CD text overlay - subtle -->
   <text
-    x="40"
-    y="40"
+    x="256"
+    y="380"
     text-anchor="middle"
-    dominant-baseline="central"
     fill="white"
-    font-size="32"
+    font-size="64"
     font-weight="700"
     font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
-    letter-spacing="-1"
+    letter-spacing="-2"
+    opacity="0.9"
   >
     CD
   </text>
 </svg>
-
