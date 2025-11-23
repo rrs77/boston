@@ -117,3 +117,38 @@ Use Netlify's default domain temporarily:
 
 This always has SSL working.
 
+## Immediate Action Required:
+
+If you're seeing `ERR_SSL_PROTOCOL_ERROR` right now:
+
+1. **Check Netlify Dashboard:**
+   - Go to: https://app.netlify.com
+   - Select your site
+   - Go to: **Domain settings** → **SSL/TLS**
+   - Check the certificate status:
+     - ✅ **Active** = Certificate is valid (try hard refresh)
+     - ⏳ **Provisioning** = Wait 24-48 hours
+     - ⚠️ **Pending** = DNS not verified (check DNS settings)
+     - ❌ **Error** = Click "Renew certificate" or "Verify DNS"
+
+2. **If Certificate Status is "Pending" or "Error":**
+   - Click **"Verify DNS configuration"** button
+   - Ensure DNS records match exactly what Netlify shows
+   - Wait 1-2 hours for DNS propagation
+
+3. **If Certificate Status is "Active" but still getting errors:**
+   - Hard refresh: `Cmd+Shift+R` (Mac) or `Ctrl+Shift+R` (Windows)
+   - Clear browser cache
+   - Try incognito/private mode
+   - Wait 5-10 minutes (certificate might be renewing)
+
+4. **Force Certificate Renewal:**
+   - In Netlify → Domain settings → SSL/TLS
+   - Click **"Renew certificate"** button
+   - Wait 5-10 minutes for renewal
+
+5. **Check DNS Configuration:**
+   - Verify CNAME record points to: `[your-site-name].netlify.app`
+   - Use: https://www.whatsmydns.net/#CNAME/ccdesigner.rhythmstix.co.uk
+   - All locations should show the same CNAME value
+

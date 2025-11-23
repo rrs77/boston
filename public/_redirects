@@ -1,0 +1,13 @@
+# Netlify redirects file (backup to netlify.toml)
+# This ensures redirects work even if netlify.toml has issues
+
+# Force HTTPS for HTTP requests
+http://ccdesigner.rhythmstix.co.uk/* https://ccdesigner.rhythmstix.co.uk/:splat 301!
+http://www.ccdesigner.rhythmstix.co.uk/* https://ccdesigner.rhythmstix.co.uk/:splat 301!
+
+# Redirect www HTTPS to non-www
+https://www.ccdesigner.rhythmstix.co.uk/* https://ccdesigner.rhythmstix.co.uk/:splat 301!
+
+# SPA routing - catch all (must be last)
+/* /index.html 200
+

@@ -17,6 +17,13 @@
   status = 301
   force = true
 
+# Redirect HTTPS www to non-www (if www subdomain exists)
+[[redirects]]
+  from = "https://www.ccdesigner.rhythmstix.co.uk/*"
+  to = "https://ccdesigner.rhythmstix.co.uk/:splat"
+  status = 301
+  force = true
+
 # SPA routing - must be last
 [[redirects]]
   from = "/*"
