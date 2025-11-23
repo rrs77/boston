@@ -229,7 +229,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Activity Name */}
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-base font-semibold text-gray-900 mb-2">
                   Activity Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -237,7 +237,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                   name="activity"
                   value={activity.activity}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border ${errors.activity ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:border-transparent`}
+                  className={`w-full px-4 py-3 border ${errors.activity ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:border-transparent text-base`}
                   style={{ '--tw-ring-color': '#0BA596' } as React.CSSProperties}
                   onFocus={(e) => e.target.style.borderColor = '#0BA596'}
                   onBlur={(e) => e.target.style.borderColor = errors.activity ? '#EF4444' : '#D1D5DB'}
@@ -418,7 +418,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-3">
                 Introduction/Context
               </label>
               <RichTextEditor
@@ -431,14 +431,14 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
 
             {/* Activity Text - NEW FIELD */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-base font-semibold text-gray-900 mb-3">
                 Activity
               </label>
               <RichTextEditor
                 value={activity.activityText}
                 onChange={(value) => setActivity(prev => ({ ...prev, activityText: value }))}
                 placeholder="Enter activity instructions..."
-                minHeight="100px"
+                minHeight="150px"
               />
             </div>
 
