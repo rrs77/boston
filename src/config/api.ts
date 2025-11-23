@@ -99,8 +99,15 @@ export const activitiesApi = {
         level: activityData.level,
         unit_name: activityData.unitName,
         lesson_number: activityData.lessonNumber,
-        eyfs_standards: activityData.eyfsStandards
+        eyfs_standards: activityData.eyfsStandards,
+        yeargroups: Array.isArray(activityData.yearGroups) ? activityData.yearGroups : [] // CRITICAL: Save yearGroups
       };
+      
+      console.log('💾 Creating activity in Supabase with yearGroups:', {
+        activity: dbActivity.activity,
+        yeargroups: dbActivity.yeargroups,
+        yeargroupsLength: dbActivity.yeargroups.length
+      });
       
       const { data, error } = await supabase
         .from(TABLES.ACTIVITIES)
@@ -129,7 +136,8 @@ export const activitiesApi = {
         level: data.level,
         unitName: data.unit_name,
         lessonNumber: data.lesson_number,
-        eyfsStandards: data.eyfs_standards
+        eyfsStandards: data.eyfs_standards,
+        yearGroups: Array.isArray(data.yeargroups) ? data.yeargroups : (data.yeargroups ? [data.yeargroups] : []) // CRITICAL: Return yearGroups
       };
     } catch (error) {
       console.warn('Failed to create activity in Supabase:', error);
@@ -158,8 +166,16 @@ export const activitiesApi = {
         level: activityData.level,
         unit_name: activityData.unitName,
         lesson_number: activityData.lessonNumber,
-        eyfs_standards: activityData.eyfsStandards
+        eyfs_standards: activityData.eyfsStandards,
+        yeargroups: Array.isArray(activityData.yearGroups) ? activityData.yearGroups : [] // CRITICAL: Save yearGroups
       };
+      
+      console.log('💾 Updating activity in Supabase with yearGroups:', {
+        id,
+        activity: dbActivity.activity,
+        yeargroups: dbActivity.yeargroups,
+        yeargroupsLength: dbActivity.yeargroups.length
+      });
       
       const { data, error } = await supabase
         .from(TABLES.ACTIVITIES)
@@ -189,7 +205,8 @@ export const activitiesApi = {
         level: data.level,
         unitName: data.unit_name,
         lessonNumber: data.lesson_number,
-        eyfsStandards: data.eyfs_standards
+        eyfsStandards: data.eyfs_standards,
+        yearGroups: Array.isArray(data.yeargroups) ? data.yeargroups : (data.yeargroups ? [data.yeargroups] : []) // CRITICAL: Return yearGroups
       };
     } catch (error) {
       console.warn('Failed to update activity in Supabase:', error);
