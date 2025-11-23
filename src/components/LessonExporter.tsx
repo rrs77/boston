@@ -112,9 +112,15 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
             }
           }
           
-          // Save the PDF
-          const title = lessonData.title || `Lesson ${lessonNumber}`;
-          pdf.save(`${currentSheetInfo.sheet}_${title.replace(/\s+/g, '_')}.pdf`);
+          // Save the PDF - use lesson number in filename
+          // Extract numeric lesson number (handle "lesson1" format)
+          const getLessonDisplayNumber = (num: string): string => {
+            const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+            return numericPart || num;
+          };
+          const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber);
+          const fileName = `${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
+          pdf.save(fileName);
         }
       }
       

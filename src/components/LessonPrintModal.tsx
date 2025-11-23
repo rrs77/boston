@@ -675,9 +675,18 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       const link = document.createElement('a');
       link.href = url;
 
-      // Set filename
+      // Set filename - use lesson number in filename
+      // Extract numeric lesson number (handle "lesson1" format)
+      const getLessonDisplayNumber = (num: string): string => {
+        const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+        return numericPart || num;
+      };
+      
       const fileName = exportMode === 'single'
-          ? `${currentSheetInfo.sheet}_Lesson_${lessonNumber}.pdf`
+          ? (() => {
+              const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber!);
+              return `${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
+            })()
           : `${currentSheetInfo.sheet}_${(unitName || halfTermName || 'Unit').replace(/\s+/g, '_')}.pdf`;
 
       link.download = fileName;
