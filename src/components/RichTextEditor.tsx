@@ -85,6 +85,16 @@ export function RichTextEditor({
           direction: ltr;
           text-align: left;
           color: #2D3748;
+          font-size: 16px;
+          line-height: 1.6;
+        }
+        .rich-text-editor .ql-editor p {
+          font-size: 16px;
+          line-height: 1.6;
+        }
+        .rich-text-editor .ql-editor li {
+          font-size: 16px;
+          line-height: 1.6;
         }
         .rich-text-editor .ql-editor.ql-blank::before {
           color: #9ca3af;
