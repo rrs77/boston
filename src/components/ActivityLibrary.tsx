@@ -404,10 +404,21 @@ export function ActivityLibrary({
       if (newActivity.level === "EYFS U") {
         newActivity.level = "UKG";
       }
-      // Ensure yearGroups field exists
-      if (!newActivity.yearGroups) {
+      
+      // CRITICAL: Preserve yearGroups array - don't overwrite if it exists
+      // Only set default if yearGroups is missing or empty
+      if (!newActivity.yearGroups || !Array.isArray(newActivity.yearGroups) || newActivity.yearGroups.length === 0) {
         newActivity.yearGroups = newActivity.level ? [newActivity.level] : [];
       }
+      
+      // Ensure yearGroups is properly formatted as an array
+      newActivity.yearGroups = Array.isArray(newActivity.yearGroups) ? newActivity.yearGroups : [];
+      
+      console.log('💾 Saving activity with yearGroups:', {
+        activity: newActivity.activity,
+        yearGroups: newActivity.yearGroups,
+        yearGroupsLength: newActivity.yearGroups.length
+      });
       
       await addActivity(newActivity);
       setShowCreator(false);

@@ -229,7 +229,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Activity Name */}
               <div className="col-span-2">
-                <label className="block text-base font-semibold text-gray-900 mb-2">
+                <label className="block text-lg font-semibold text-gray-900 mb-2">
                   Activity Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -237,7 +237,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                   name="activity"
                   value={activity.activity}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border ${errors.activity ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:border-transparent text-base`}
+                  className={`w-full px-4 py-3 border ${errors.activity ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:border-transparent text-lg`}
                   style={{ '--tw-ring-color': '#0BA596' } as React.CSSProperties}
                   onFocus={(e) => e.target.style.borderColor = '#0BA596'}
                   onBlur={(e) => e.target.style.borderColor = errors.activity ? '#EF4444' : '#D1D5DB'}

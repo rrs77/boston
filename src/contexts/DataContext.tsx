@@ -1437,11 +1437,21 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
       if (savedActivities) {
         const activities = JSON.parse(savedActivities);
         // Ensure yearGroups is always an array for each activity
-        const normalizedActivities = activities.map((activity: Activity) => ({
-          ...activity,
-          yearGroups: Array.isArray(activity.yearGroups) ? activity.yearGroups : 
-                     (activity.yearGroups ? [activity.yearGroups] : [])
-        }));
+        const normalizedActivities = activities.map((activity: Activity) => {
+          // Preserve yearGroups if it's already a valid array
+          let yearGroups: string[] = [];
+          if (Array.isArray(activity.yearGroups) && activity.yearGroups.length > 0) {
+            yearGroups = activity.yearGroups;
+          } else if (activity.level) {
+            // Fallback to level if yearGroups is missing
+            yearGroups = [activity.level];
+          }
+          
+          return {
+            ...activity,
+            yearGroups: yearGroups
+          };
+        });
         setAllActivities(normalizedActivities);
         return;
       }

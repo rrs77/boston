@@ -85,16 +85,25 @@ export function RichTextEditor({
           direction: ltr;
           text-align: left;
           color: #2D3748;
-          font-size: 16px;
-          line-height: 1.6;
+          font-size: 18px;
+          line-height: 1.7;
         }
         .rich-text-editor .ql-editor p {
-          font-size: 16px;
-          line-height: 1.6;
+          font-size: 18px;
+          line-height: 1.7;
+          margin-bottom: 0.75em;
         }
         .rich-text-editor .ql-editor li {
-          font-size: 16px;
+          font-size: 18px;
+          line-height: 1.7;
+          margin-bottom: 0.5em;
+        }
+        .rich-text-editor .ql-editor h1,
+        .rich-text-editor .ql-editor h2,
+        .rich-text-editor .ql-editor h3 {
+          font-size: 20px;
           line-height: 1.6;
+          font-weight: 600;
         }
         .rich-text-editor .ql-editor.ql-blank::before {
           color: #9ca3af;
