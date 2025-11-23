@@ -439,11 +439,20 @@ export function UnitViewer() {
                   unitLessonIndex: index + 1
                 });
                 
-                // FIXED: Only show lessons that exist in allLessonsData
-                // Since selectedUnit.lessonNumbers already contains the lessons for this half-term,
-                // we don't need to check if they're assigned again
+                // Only show lessons that exist in allLessonsData
                 if (!lessonData) {
                   console.warn('⚠️ Lesson data not found for:', lessonNumber);
+                  return null;
+                }
+                
+                // FIXED: Only show lessons that are actually assigned to a half-term
+                // Check if this lesson is assigned to any half-term
+                const isAssignedToHalfTerm = halfTerms.some(term => 
+                  term.lessons.includes(lessonNumber)
+                );
+                
+                if (!isAssignedToHalfTerm) {
+                  console.log('⚠️ Lesson not assigned to any half-term, skipping:', lessonNumber);
                   return null;
                 }
                 
