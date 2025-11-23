@@ -262,11 +262,26 @@ export function ActivityDetails({
   ].filter(resource => resource.url && resource.url.trim());
 
   const handleResourceClick = (resource: any) => {
-    setSelectedLink({
-      url: resource.url,
-      title: `${activity.activity} - ${resource.label}`,
-      type: resource.type
-    });
+    // Open resource link directly in browser, not in PWA context
+    const url = resource.url;
+    
+    // Force open in browser window - bypass PWA context
+    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+    
+    // Fallback if popup blocked - create temporary link and click it
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      // Add to body temporarily
+      document.body.appendChild(link);
+      link.click();
+      // Remove after click
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 100);
+    }
   };
 
   const handleStandardsToggle = (standard: string) => {

@@ -125,13 +125,34 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {resources.map((resource, index) => {
                   const IconComponent = resource.icon;
+                  
+                  // Handle resource click - ensure it opens in browser, not PWA
+                  const handleResourceClick = (e: React.MouseEvent, url: string) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Force open in browser window, not PWA context
+                    // Use window.open with explicit flags to ensure browser opens it
+                    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+                    
+                    // Fallback if popup blocked
+                    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                      // If popup blocked, try creating a temporary link and clicking it
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.target = '_blank';
+                      link.rel = 'noopener noreferrer';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }
+                  };
+                  
                   return (
-                    <a
+                    <button
                       key={index}
-                      href={resource.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`p-3 rounded-lg border transition-all duration-200 hover:shadow-md ${resource.color}`}
+                      onClick={(e) => handleResourceClick(e, resource.url!)}
+                      className={`p-3 rounded-lg border transition-all duration-200 hover:shadow-md text-left w-full ${resource.color}`}
                     >
                       <div className="flex items-center space-x-3">
                         <IconComponent className="h-5 w-5" />
@@ -139,9 +160,9 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
                           <p className="text-sm font-medium truncate">{resource.label}</p>
                           <p className="text-xs opacity-75 truncate">{resource.url}</p>
                         </div>
-                        <ExternalLink className="h-4 w-4" />
+                        <ExternalLink className="h-4 w-4 flex-shrink-0" />
                       </div>
-                    </a>
+                    </button>
                   );
                 })}
               </div>

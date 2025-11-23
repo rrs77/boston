@@ -59,14 +59,23 @@ export function LessonDetailsModal({
 
   const lessonData = allLessonsData[lessonNumber];
 
-  // Handle resource clicks to open LinkViewer modal
+  // Handle resource clicks - open directly in browser, not PWA
   const handleResourceClick = (url: string, title: string, type: string) => {
-    setLinkViewerProps({ 
-      url, 
-      title, 
-      type: type as 'video' | 'music' | 'backing' | 'resource' | 'link' | 'vocals' | 'image'
-    });
-    setShowLinkViewer(true);
+    // Force open in browser window, bypassing PWA context
+    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+    
+    // Fallback if popup blocked - create temporary link and click it
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 100);
+    }
   };
 
   // Initialize lesson title when component mounts

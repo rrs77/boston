@@ -9,38 +9,33 @@ interface LinkViewerProps {
 }
 
 export function LinkViewer({ url, title, type = 'link', onClose }: LinkViewerProps) {
-  // Auto-open ALL links in new tab fullscreen
+  // Auto-open ALL links in browser, not PWA context
   useEffect(() => {
     console.log('LinkViewer opened with URL:', url);
     
-    // Open in fullscreen new tab
-    const openFullscreen = () => {
-      try {
-        // Try to open in fullscreen
-        const newWindow = window.open(
-          url, 
-          '_blank',
-          `fullscreen=yes,width=${screen.width},height=${screen.height},left=0,top=0,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no`
-        );
-        
-        // Fallback if fullscreen doesn't work
-        if (newWindow) {
-          // Try to make it fullscreen programmatically
-          try {
-            newWindow.moveTo(0, 0);
-            newWindow.resizeTo(screen.width, screen.height);
-          } catch (e) {
-            console.log('Could not resize window programmatically');
-          }
-        }
-      } catch (error) {
-        // Fallback to regular new tab if fullscreen fails
-        console.log('Fullscreen failed, opening regular new tab');
-        window.open(url, '_blank', 'noopener,noreferrer');
+    // Force open in browser - bypass PWA context
+    const openInBrowser = () => {
+      // Try window.open first
+      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+      
+      // Check if window opened successfully
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        // Popup blocked - use fallback method
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        // Add to body temporarily
+        document.body.appendChild(link);
+        link.click();
+        // Remove after click
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
       }
     };
 
-    openFullscreen();
+    openInBrowser();
     onClose();
   }, [url, onClose]);
 
