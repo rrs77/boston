@@ -104,7 +104,7 @@ export function ActivitySearchModal({
                   <div
                     key={activity._id || activity.id || index}
                     onClick={() => handleActivityClick(activity)}
-                    className={`cursor-pointer transition-all duration-200 rounded-lg ${
+                    className={`cursor-pointer transition-all duration-200 rounded-lg p-1 ${
                       isSelected 
                         ? 'ring-2 ring-teal-500 bg-teal-50' 
                         : 'hover:shadow-md hover:ring-2 hover:ring-teal-300'
@@ -113,7 +113,10 @@ export function ActivitySearchModal({
                     <ActivityCard
                       activity={activity}
                       viewMode="compact"
-                      onActivityClick={() => handleActivityClick(activity)}
+                      onActivityClick={(activity) => {
+                        // Prevent default card click behavior - just add to lesson
+                        handleActivityClick(activity);
+                      }}
                     />
                   </div>
                 );
