@@ -37,7 +37,15 @@ export function ActivitySearchModal({
   }, [allActivities, searchQuery]);
 
   const handleActivityClick = (activity: Activity) => {
-    onSelectActivity(activity);
+    // Check if already added
+    const isAlreadyAdded = selectedActivities.some(
+      selected => (selected._id || selected.id) === (activity._id || activity.id)
+    );
+    
+    // Only add if not already added
+    if (!isAlreadyAdded) {
+      onSelectActivity(activity);
+    }
   };
 
   if (!isOpen) return null;
@@ -96,10 +104,10 @@ export function ActivitySearchModal({
                   <div
                     key={activity._id || activity.id || index}
                     onClick={() => handleActivityClick(activity)}
-                    className={`cursor-pointer transition-all duration-200 ${
+                    className={`cursor-pointer transition-all duration-200 rounded-lg ${
                       isSelected 
                         ? 'ring-2 ring-teal-500 bg-teal-50' 
-                        : 'hover:shadow-md hover:border-teal-300'
+                        : 'hover:shadow-md hover:ring-2 hover:ring-teal-300'
                     }`}
                   >
                     <ActivityCard
