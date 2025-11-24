@@ -19,7 +19,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
   const { allActivities } = useData();
   const { categories, customYearGroups } = useSettings();
   
-  const [activeTab, setActiveTab] = useState<'main' | 'extended' | 'activities'>('main');
+  const [activeTab, setActiveTab] = useState<'main' | 'extended' | 'activities'>('activities');
   const [showPreview, setShowPreview] = useState(false);
   
   const [lesson, setLesson] = useState({
@@ -250,11 +250,24 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         {/* Tabs */}
         <div className="flex bg-gray-50">
           <button
+            onClick={() => setActiveTab('activities')}
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'activities'
+                ? 'text-white bg-teal-600'
+                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
+            }`}
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <Plus className="h-4 w-4" />
+              <span>Activities ({selectedActivities.length})</span>
+            </div>
+          </button>
+          <button
             onClick={() => setActiveTab('main')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-b ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
               activeTab === 'main'
-                ? 'text-teal-600 border-teal-600 bg-white'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-transparent'
+                ? 'text-white bg-teal-600'
+                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
@@ -264,28 +277,15 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
           </button>
           <button
             onClick={() => setActiveTab('extended')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-b ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
               activeTab === 'extended'
-                ? 'text-teal-600 border-teal-600 bg-white'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-transparent'
+                ? 'text-white bg-teal-600'
+                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
               <BookOpen className="h-4 w-4" />
               <span>Extended Details</span>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('activities')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-b ${
-              activeTab === 'activities'
-                ? 'text-teal-600 border-teal-600 bg-white'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-transparent'
-            }`}
-          >
-            <div className="flex items-center justify-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>Activities ({selectedActivities.length})</span>
             </div>
           </button>
         </div>
