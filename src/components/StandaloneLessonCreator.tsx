@@ -19,7 +19,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
   const { allActivities } = useData();
   const { categories, customYearGroups } = useSettings();
   
-  const [activeTab, setActiveTab] = useState<'main' | 'extended' | 'activities'>('activities');
+  const [activeTab, setActiveTab] = useState<'main' | 'extended'>('main');
   const [showPreview, setShowPreview] = useState(false);
   
   const [lesson, setLesson] = useState({
@@ -250,28 +250,6 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         {/* Tabs */}
         <div className="flex bg-gray-50 border-0" style={{ border: 'none', borderBottom: 'none', outline: 'none' }}>
           <button
-            onClick={() => setActiveTab('activities')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none ${
-              activeTab === 'activities'
-                ? 'text-white bg-teal-600'
-                : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
-            }`}
-            style={{ 
-              border: 'none', 
-              borderBottom: 'none', 
-              borderTop: 'none',
-              borderLeft: 'none',
-              borderRight: 'none',
-              outline: 'none',
-              boxShadow: 'none'
-            }}
-          >
-            <div className="flex items-center justify-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>Activities ({selectedActivities.length})</span>
-            </div>
-          </button>
-          <button
             onClick={() => setActiveTab('main')}
             className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none ${
               activeTab === 'main'
@@ -482,6 +460,84 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                   />
                 ) : null}
               </div>
+
+              {/* Activities Section - Minimal with search */}
+              <DndProvider backend={HTML5Backend}>
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <Plus className="h-5 w-5 text-indigo-600" />
+                      <h3 className="text-lg font-semibold text-gray-900">Activities</h3>
+                      {selectedActivities.length > 0 && (
+                        <span className="text-sm text-gray-600">({selectedActivities.length} selected)</span>
+                      )}
+                    </div>
+                    <div className="relative w-64">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search activities..."
+                        value={activitySearchQuery}
+                        onChange={(e) => setActivitySearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Activity Library - Minimal */}
+                    <div className="bg-white rounded-lg border border-gray-200 p-3 flex flex-col max-h-[400px]">
+                      <div className="flex-1 overflow-y-auto space-y-2">
+                        {filteredActivities.slice(0, 10).map((activity, index) => (
+                          <ActivityCard
+                            key={`${activity._id || activity.id || index}-${activity.activity}`}
+                            activity={activity}
+                            draggable={true}
+                            viewMode="compact"
+                            onActivityClick={() => {}}
+                          />
+                        ))}
+                        {filteredActivities.length === 0 && (
+                          <div className="text-center py-6 text-gray-500 text-sm">
+                            <p>No activities found</p>
+                          </div>
+                        )}
+                        {filteredActivities.length > 10 && (
+                          <div className="text-center py-2 text-gray-500 text-xs">
+                            <p>Showing first 10 results. Refine search to see more.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Selected Activities */}
+                    <div className="bg-white rounded-lg border border-gray-200 p-3 flex flex-col max-h-[400px]">
+                      <LessonDropZone
+                        lessonPlan={{
+                          id: '',
+                          date: new Date(),
+                          week: 1,
+                          className: '',
+                          activities: selectedActivities,
+                          duration: selectedActivities.reduce((sum, a) => sum + (a.time || 0), 0),
+                          notes: '',
+                          status: 'draft',
+                          title: lesson.lessonTitle,
+                          createdAt: new Date(),
+                          updatedAt: new Date()
+                        }}
+                        onActivityAdd={handleActivityAdd}
+                        onActivityRemove={handleActivityRemove}
+                        onActivityReorder={handleActivityReorder}
+                        onLessonPlanFieldUpdate={() => {}}
+                        isEditing={true}
+                        onActivityClick={() => {}}
+                        onSave={() => {}}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </DndProvider>
             </div>
           ) : activeTab === 'extended' ? (
             <div className="p-6 space-y-5">
@@ -685,97 +741,6 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                 </button>
               </div>
             </div>
-          ) : activeTab === 'activities' ? (
-            <DndProvider backend={HTML5Backend}>
-              <div className="p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Activity Library */}
-                  <div className="bg-white rounded-lg border border-gray-200 p-4 flex flex-col max-h-[calc(100vh-300px)]">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Library</h3>
-                    
-                    {/* Search and Filters */}
-                    <div className="space-y-3 mb-4">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                          type="text"
-                          placeholder="Search activities..."
-                          value={activitySearchQuery}
-                          onChange={(e) => setActivitySearchQuery(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <SimpleNestedCategoryDropdown
-                          selectedCategory={selectedCategory === 'all' ? '' : selectedCategory}
-                          onCategoryChange={(category) => setSelectedCategory(category || 'all')}
-                          placeholder="All Categories"
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                        <select
-                          value={selectedLevel}
-                          onChange={(e) => setSelectedLevel(e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        >
-                          <option value="all">All Levels</option>
-                          {customYearGroups.map(group => (
-                            <option key={group.name} value={group.name}>{group.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    
-                    {/* Activity List */}
-                    <div className="flex-1 overflow-y-auto space-y-2">
-                      {filteredActivities.map((activity, index) => (
-                        <ActivityCard
-                          key={`${activity._id || activity.id || index}-${activity.activity}`}
-                          activity={activity}
-                          draggable={true}
-                          viewMode="compact"
-                          onActivityClick={() => {}}
-                        />
-                      ))}
-                      {filteredActivities.length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                          <p>No activities found</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Selected Activities */}
-                  <div className="bg-white rounded-lg border border-gray-200 p-4 flex flex-col max-h-[calc(100vh-300px)]">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Selected Activities ({selectedActivities.length})
-                    </h3>
-                    
-                    <LessonDropZone
-                      lessonPlan={{
-                        id: '',
-                        date: new Date(),
-                        week: 1,
-                        className: '',
-                        activities: selectedActivities,
-                        duration: selectedActivities.reduce((sum, a) => sum + (a.time || 0), 0),
-                        notes: '',
-                        status: 'draft',
-                        title: lesson.lessonTitle,
-                        createdAt: new Date(),
-                        updatedAt: new Date()
-                      }}
-                      onActivityAdd={handleActivityAdd}
-                      onActivityRemove={handleActivityRemove}
-                      onActivityReorder={handleActivityReorder}
-                      onLessonPlanFieldUpdate={() => {}}
-                      isEditing={true}
-                      onActivityClick={() => {}}
-                      onSave={() => {}}
-                    />
-                  </div>
-                </div>
-                </div>
-              </DndProvider>
             ) : null}
           </div>
 

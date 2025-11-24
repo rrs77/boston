@@ -360,7 +360,7 @@ export function LessonDropZone({
             <div className="space-y-4">
               {lessonPlan.activities.map((activity, index) => (
                 <DraggableActivity
-                  key={`${activity.activity}-${index}`}
+                  key={activity._uniqueId || `${activity._id || activity.id || activity.activity}-${index}`}
                   activity={activity}
                   index={index}
                   onRemove={() => onActivityRemove(index)}
