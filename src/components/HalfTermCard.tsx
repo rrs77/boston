@@ -1,6 +1,5 @@
 import React from 'react';
 import { Calendar, BookOpen, ChevronRight, CheckCircle, Plus } from 'lucide-react';
-import { IndexCard } from './IndexCard';
 import type { LessonData } from '../contexts/DataContext';
 
 interface HalfTermCardProps {
@@ -12,10 +11,6 @@ interface HalfTermCardProps {
   stackCount?: number;
   onClick: () => void;
   isComplete: boolean;
-  indexCards?: Array<{
-    unitName: string;
-    lessons: Array<{ lessonNumber: string; lessonData: LessonData }>;
-  }>;
   theme?: {
     primary: string;
     secondary: string;
@@ -36,7 +31,6 @@ export function HalfTermCard({
   stackCount = 0,
   onClick,
   isComplete,
-  indexCards = [],
   theme,
   onLessonClick,
   onLessonEdit,
@@ -163,22 +157,6 @@ export function HalfTermCard({
 
       </div>
 
-      {/* Index Cards Section - Show units grouped by unit name */}
-      {indexCards && indexCards.length > 0 && theme && (
-        <div className="border-t border-gray-200 bg-white p-4 space-y-3">
-          {indexCards.map((indexCard, idx) => (
-            <IndexCard
-              key={`${indexCard.unitName}-${idx}`}
-              unitName={indexCard.unitName}
-              lessons={indexCard.lessons}
-              theme={theme}
-              onLessonClick={onLessonClick || (() => {})}
-              onLessonEdit={onLessonEdit}
-              halfTerms={halfTerms}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

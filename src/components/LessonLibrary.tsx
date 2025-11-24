@@ -39,6 +39,7 @@ import { LessonDetailsModal } from './LessonDetailsModal';
 import { AssignToHalfTermModal } from './AssignToHalfTermModal';
 import { ClassCopyModal } from './ClassCopyModal';
 import { StandaloneLessonCreator } from './StandaloneLessonCreator';
+import { IndexCard } from './IndexCard';
 
 // Helper function to safely render HTML content
 const renderHtmlContent = (htmlContent) => {
@@ -1049,6 +1050,78 @@ style={{ backgroundColor: '#10A293' }}>
               })}
             </div>
         )}
+
+        {/* Index Cards by Unit */}
+        {(() => {
+          // Group lessons by unit name from their activities
+          const lessonsByUnit: Record<string, Array<{ lessonNumber: string; lessonData: any }>> = {};
+          
+          Object.entries(allLessonsData).forEach(([lessonNumber, lessonData]) => {
+            // Extract unit names from activities
+            const unitNames = new Set<string>();
+            
+            // Check all activities in the lesson
+            Object.values(lessonData.grouped || {}).forEach((activities: any[]) => {
+              activities.forEach((activity: any) => {
+                if (activity.unitName && activity.unitName.trim()) {
+                  unitNames.add(activity.unitName.trim());
+                }
+              });
+            });
+            
+            // Also check orderedActivities if available
+            if (lessonData.orderedActivities) {
+              lessonData.orderedActivities.forEach((activity: any) => {
+                if (activity.unitName && activity.unitName.trim()) {
+                  unitNames.add(activity.unitName.trim());
+                }
+              });
+            }
+            
+            // Add lesson to each unit it belongs to
+            unitNames.forEach(unitName => {
+              if (!lessonsByUnit[unitName]) {
+                lessonsByUnit[unitName] = [];
+              }
+              lessonsByUnit[unitName].push({ lessonNumber, lessonData });
+            });
+          });
+          
+          // Sort lessons within each unit
+          Object.keys(lessonsByUnit).forEach(unitName => {
+            lessonsByUnit[unitName].sort((a, b) => {
+              const numA = parseInt(a.lessonNumber.replace(/^lesson/i, '')) || 0;
+              const numB = parseInt(b.lessonNumber.replace(/^lesson/i, '')) || 0;
+              return numA - numB;
+            });
+          });
+          
+          const unitNames = Object.keys(lessonsByUnit).sort();
+          
+          if (unitNames.length === 0) return null;
+          
+          return (
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Index Cards by Unit</h2>
+                <span className="text-sm text-gray-600">{unitNames.length} {unitNames.length === 1 ? 'unit' : 'units'}</span>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {unitNames.map(unitName => (
+                  <IndexCard
+                    key={unitName}
+                    unitName={unitName}
+                    lessons={lessonsByUnit[unitName]}
+                    theme={theme}
+                    onLessonClick={handleLessonClick}
+                    onLessonEdit={handleStartEditing}
+                    halfTerms={halfTerms}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Activity Picker Modal */}

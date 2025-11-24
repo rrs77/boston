@@ -442,10 +442,10 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
 
               {/* Activities Section - Below Main Activity */}
               <DndProvider backend={HTML5Backend}>
-                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-5">
+                <div className="bg-gradient-to-br from-teal-50 to-teal-50 border border-teal-200 rounded-lg p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                      <Plus className="h-5 w-5 text-indigo-600" />
+                      <Plus className="h-5 w-5 text-teal-600" />
                       <h3 className="text-lg font-semibold text-gray-900">Activities</h3>
                       {selectedActivities.length > 0 && (
                         <span className="text-sm text-gray-600">({selectedActivities.length} selected)</span>
