@@ -31,12 +31,13 @@ import { LessonSelectionModal } from './LessonSelectionModal';
 import { HalfTermView } from './HalfTermView';
 import { LessonDetailsModal } from './LessonDetailsModal';
 import { LessonPrintModal } from './LessonPrintModal';
-import { LessonPlanBuilder } from './LessonPlanBuilder';
 import { YearNavigation } from './YearNavigation';
 import { TermCopyModal } from './TermCopyModal';
 import { StackCard } from './StackCard';
 import { StackModal } from './StackModal';
 import { useLessonStacks } from '../hooks/useLessonStacks';
+import { MinimizableActivityCard } from './MinimizableActivityCard';
+import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import type { Activity } from '../contexts/DataContext';
 
 interface Unit {
@@ -95,7 +96,9 @@ export function UnitViewer() {
     getAcademicYearData,
     copyTermToYear,
     refreshData,
-    loading
+    loading,
+    allActivities,
+    updateLessonData
   } = useData();
   const { getThemeForClass } = useSettings();
   const { stacks } = useLessonStacks();
@@ -122,10 +125,27 @@ export function UnitViewer() {
   
   // Lesson editing states
   const [editingLessonNumber, setEditingLessonNumber] = useState<string | null>(null);
+  const [editingLessonActivities, setEditingLessonActivities] = useState<any[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showHeaderFooterEdit, setShowHeaderFooterEdit] = useState(false);
+  const [customHeader, setCustomHeader] = useState<string>('');
+  const [customFooter, setCustomFooter] = useState<string>('');
+  
+  // Add Activity Modal State
+  const [showActivityPicker, setShowActivityPicker] = useState(false);
+  const [activitySearchQuery, setActivitySearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   
   // Get theme colors for current class
   const theme = getThemeForClass(currentSheetInfo.sheet);
+  
+  // Helper function to get plain text from HTML
+  const getPlainTextFromHtml = (html: string) => {
+    if (!html) return '';
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+  };
 
   // Handle year change
   const handleYearChange = async (year: string) => {
@@ -342,19 +362,164 @@ export function UnitViewer() {
     }
   };
 
-  // Handle editing a lesson
+  // Start editing a lesson (same as LessonLibrary)
   const handleEditLesson = (lessonNumber: string) => {
-    console.log('✏️ Starting to edit lesson:', lessonNumber);
+    const lessonData = allLessonsData[lessonNumber];
+    if (lessonData) {
+      // Use orderedActivities if available (preserves exact order across categories)
+      // Otherwise fall back to categoryOrder method (for backward compatibility)
+      let activities: any[];
+      
+      if (lessonData.orderedActivities && Array.isArray(lessonData.orderedActivities)) {
+        // Use the flat ordered array - this preserves exact order including cross-category ordering
+        activities = lessonData.orderedActivities.map((activity: any, index: number) => ({
+          ...activity,
+          _editId: `${lessonNumber}-${index}-${Date.now()}`
+        }));
+        console.log('📖 Loading lesson with orderedActivities (exact order preserved)');
+      } else {
+        // Fallback to old method using categoryOrder
+        const categoryOrder = lessonData.categoryOrder || Object.keys(lessonData.grouped);
+        activities = categoryOrder
+          .filter(category => lessonData.grouped[category])
+          .flatMap(category => lessonData.grouped[category] || [])
+          .map((activity: any, index: number) => ({
+            ...activity,
+            _editId: `${lessonNumber}-${index}-${Date.now()}`
+          }));
+        console.log('📖 Loading lesson with categoryOrder (legacy method)');
+      }
+      
+      console.log('📖 Loading lesson for editing:', {
+        lessonNumber,
+        activityCount: activities.length,
+        activitiesOrder: activities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`)
+      });
+      
+      // Load custom header and footer if they exist
+      setCustomHeader(lessonData.customHeader || '');
+      setCustomFooter(lessonData.customFooter || '');
+      setShowHeaderFooterEdit(!!(lessonData.customHeader || lessonData.customFooter));
+      
+      setEditingLessonActivities(activities);
     setEditingLessonNumber(lessonNumber);
     setShowEditModal(true);
+    }
   };
 
-  // Handle completing lesson edit
-  const handleEditComplete = () => {
-    console.log('✅ Lesson edit completed');
-    setEditingLessonNumber(null);
-    setShowEditModal(false);
+  // Save edited lesson
+  const handleSaveEditing = async () => {
+    console.log('💾 SAVE BUTTON CLICKED - Current state:', {
+      lessonNumber: editingLessonNumber,
+      activitiesCount: editingLessonActivities.length,
+      currentOrder: editingLessonActivities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`)
+    });
+    
+    if (editingLessonNumber && editingLessonActivities.length >= 0) {
+      // Clean activities by removing temporary edit IDs
+      const cleanedActivities = editingLessonActivities.map(activity => {
+        const { _editId, ...cleanActivity } = activity;
+        return cleanActivity;
+      });
+
+      // Group activities back by category while preserving order
+      const grouped: Record<string, any[]> = {};
+      const categoryOrder: string[] = [];
+      
+      cleanedActivities.forEach(activity => {
+        const category = activity.category || 'Other';
+        if (!grouped[category]) {
+          grouped[category] = [];
+          categoryOrder.push(category);
+        }
+        grouped[category].push(activity);
+      });
+
+      // Update lesson data - IMPORTANT: Save orderedActivities to preserve exact order
+      const updatedLessonData = {
+        ...allLessonsData[editingLessonNumber],
+        grouped,
+        categoryOrder,
+        orderedActivities: cleanedActivities, // Store flat ordered array
+        totalTime: cleanedActivities.reduce((sum: number, act: any) => sum + (act.time || 0), 0),
+        customHeader: customHeader || undefined, // Only save if not empty
+        customFooter: customFooter || undefined  // Only save if not empty
+      };
+
+      console.log('💾 Saving lesson with order:', {
+        lessonNumber: editingLessonNumber,
+        categoryOrder,
+        activityCount: cleanedActivities.length,
+        categories: Object.keys(grouped).map(cat => `${cat}: ${grouped[cat].length} activities`),
+        orderedActivities: cleanedActivities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`),
+        customHeader: customHeader || '(using default)',
+        customFooter: customFooter || '(using default)'
+      });
+
+      // Update in context and wait for it to complete
+      if (updateLessonData) {
+        await updateLessonData(editingLessonNumber, updatedLessonData);
+        console.log('✅ Lesson save complete');
+      }
+      
+      cancelEditing();
+    }
   };
+
+  // Cancel editing
+  const cancelEditing = () => {
+    setEditingLessonNumber(null);
+    setEditingLessonActivities([]);
+    setShowEditModal(false);
+    setShowActivityPicker(false);
+    setActivitySearchQuery('');
+    setSelectedCategory('all');
+    setShowHeaderFooterEdit(false);
+    setCustomHeader('');
+    setCustomFooter('');
+  };
+
+  // Delete activity
+  const handleDeleteActivity = (activityIndex: number) => {
+    setEditingLessonActivities(prev => prev.filter((_, index) => index !== activityIndex));
+  };
+
+  // Reorder activities
+  const handleReorderActivity = (fromIndex: number, toIndex: number) => {
+    console.log(`🔄 Reordering activity: from index ${fromIndex} to ${toIndex}`);
+    setEditingLessonActivities(prev => {
+      const newActivities = [...prev];
+      const [movedActivity] = newActivities.splice(fromIndex, 1);
+      newActivities.splice(toIndex, 0, movedActivity);
+      console.log('📝 New activity order:', newActivities.map((a, i) => `${i + 1}. ${a.activity}`));
+      return newActivities;
+    });
+  };
+
+  // Add activity to editing lesson
+  const handleAddActivity = (activity: any) => {
+    const newActivity = {
+      ...activity,
+      _editId: `new-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+    };
+    setEditingLessonActivities(prev => [...prev, newActivity]);
+    setShowActivityPicker(false);
+    setActivitySearchQuery('');
+    setSelectedCategory('all');
+  };
+
+  // Filter activities for the picker
+  const filteredActivities = React.useMemo(() => {
+    if (!allActivities) return [];
+    
+    return allActivities.filter((activity: any) => {
+      const matchesSearch = !activitySearchQuery || 
+        activity.activity.toLowerCase().includes(activitySearchQuery.toLowerCase()) ||
+        getPlainTextFromHtml(activity.description).toLowerCase().includes(activitySearchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || activity.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [allActivities, activitySearchQuery, selectedCategory]);
 
   // If a unit is selected, show its details
   if (selectedUnit) {
@@ -596,14 +761,220 @@ export function UnitViewer() {
           />
         )}
 
+        {/* Activity Picker Modal */}
+        {showActivityPicker && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
+              <div className="p-4 border-b border-gray-200 text-white"
+style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Add Activity to Lesson</h3>
+                  <button
+                    onClick={() => setShowActivityPicker(false)}
+                    className="p-1 hover:bg-white hover:bg-opacity-20 rounded"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                {/* Search and Filter */}
+                <div className="flex space-x-3 mt-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search activities..."
+                      value={activitySearchQuery}
+                      onChange={(e) => setActivitySearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="relative" style={{ minWidth: '250px' }}>
+                    <SimpleNestedCategoryDropdown
+                      selectedCategory={selectedCategory === 'all' ? '' : selectedCategory}
+                      onCategoryChange={(category) => setSelectedCategory(category || 'all')}
+                      placeholder="All Categories"
+                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-teal-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 max-h-96 overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredActivities.map((activity: any, index: number) => (
+                    <button
+                      key={`${activity.id || index}-${activity.activity}`}
+                      onClick={() => handleAddActivity(activity)}
+                      className="text-left p-4 bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 text-sm mb-1">
+                            {activity.activity}
+                          </h4>
+                          <div className="flex items-center space-x-2 mb-2">
+                            <span className="text-xs px-2 py-1 bg-gray-200 rounded-full text-gray-600">
+                              {activity.category}
+                            </span>
+                            {activity.time > 0 && (
+                              <span className="text-xs text-gray-500 flex items-center">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {activity.time}m
+                              </span>
+                            )}
+                          </div>
+                          <div 
+                            className="text-xs text-gray-600 line-clamp-2"
+                            dangerouslySetInnerHTML={{ __html: activity.description || '' }}
+                          />
+                        </div>
+                        <Plus className="h-5 w-5 text-blue-600 ml-2 flex-shrink-0" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                
+                {filteredActivities.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No activities found</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Lesson Edit Modal */}
         {showEditModal && editingLessonNumber && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden">
-              <LessonPlanBuilder
-                editingLessonNumber={editingLessonNumber}
-                onEditComplete={handleEditComplete}
-              />
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+              {/* Edit Header */}
+              <div className="p-4 border-b border-gray-200 text-white"
+style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Edit3 className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">
+                      Editing: {allLessonsData[editingLessonNumber]?.title || `Lesson ${editingLessonNumber}`}
+                    </h3>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handleSaveEditing}
+                      className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium rounded-lg flex items-center space-x-2 transition-colors"
+                    >
+                      <Check className="h-4 w-4" />
+                      <span>Save Changes</span>
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      className="px-4 py-2 bg-transparent hover:bg-white hover:bg-opacity-10 text-white font-medium rounded-lg flex items-center space-x-2 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Header/Footer Toggle */}
+              <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showHeaderFooterEdit}
+                    onChange={(e) => setShowHeaderFooterEdit(e.target.checked)}
+                    className="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Edit header and footer text
+                  </span>
+                </label>
+              </div>
+
+              {/* Header/Footer Edit Section - Collapsible */}
+              {showHeaderFooterEdit && (
+                <div className="border-b border-gray-200 bg-blue-50 px-6 py-4">
+                  <div className="space-y-4">
+                    {/* Header Input */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Custom Header
+                      </label>
+                      <input
+                        type="text"
+                        value={customHeader}
+                        onChange={(e) => setCustomHeader(e.target.value)}
+                        placeholder={`Leave blank for default: "Lesson ${editingLessonNumber}"`}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        Default: Lesson {editingLessonNumber}
+                      </p>
+                    </div>
+
+                    {/* Footer Input */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Custom Footer
+                      </label>
+                      <input
+                        type="text"
+                        value={customFooter}
+                        onChange={(e) => setCustomFooter(e.target.value)}
+                        placeholder="Leave blank for default footer"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        Default: Creative Curriculum Designer • Lesson {editingLessonNumber} • {currentSheetInfo.display} • © Rhythmstix 2025
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Activities List - Editable with Drag & Drop */}
+              <div className="flex-1 overflow-hidden">
+                <div className="p-6 max-h-[55vh] overflow-y-auto">
+                  <DndProvider backend={HTML5Backend}>
+                    <div className="space-y-3">
+                      {editingLessonActivities.map((activity: any, activityIndex: number) => (
+                        <MinimizableActivityCard
+                          key={activity._editId || `activity-${activityIndex}`}
+                          activity={activity}
+                          index={activityIndex}
+                          onRemove={handleDeleteActivity}
+                          onReorder={handleReorderActivity}
+                          onActivityClick={(activity) => {
+                            // Optional: Could open activity details modal here
+                            console.log('Activity clicked:', activity.activity);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </DndProvider>
+                  
+                  {editingLessonActivities.length === 0 && (
+                    <div className="text-center py-12 text-gray-500">
+                      <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-lg">No activities in this lesson</p>
+                      <p className="text-sm">Add activities to build your lesson</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Add Activity Button */}
+                <div className="border-t border-gray-200 p-4 bg-gray-50">
+                  <button
+                    onClick={() => setShowActivityPicker(true)}
+                    className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span>Add Activity to Lesson</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

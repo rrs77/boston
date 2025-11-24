@@ -713,86 +713,23 @@ export function LessonPlanBuilder({
                         const isSelected = selectedActivities.includes(activityId);
                         
                         return (
-                          <div 
+                          <ActivityCard
                             key={`${activity._id || activity.id || activityId}-${index}`}
-                            className={`relative bg-white rounded-lg border-2 p-3 transition-all duration-200 hover:shadow-md ${
-                              isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200'
-                            } cursor-pointer`}
-                            onClick={(e) => {
-                              // Check if the click was on the checkbox area (right side)
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const clickX = e.clientX - rect.left;
-                              const isCheckboxClick = clickX > rect.width - 60; // Last 60px is checkbox area
-                              
-                              if (isCheckboxClick) {
+                            activity={activity}
+                            draggable={true}
+                            selectable={true}
+                            isSelected={isSelected}
+                            onSelectionChange={(id, selected) => {
+                              if (selected) {
                                 toggleActivitySelection(activityId);
                               } else {
-                                // Click on main area opens preview
-                                handleActivityPreview(activity);
+                                toggleActivitySelection(activityId);
                               }
                             }}
-                          >
-                            {/* Checkbox */}
-                            <div 
-                              className="absolute top-3 right-3 z-10 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleActivitySelection(activityId);
-                              }}
-                            >
-                              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                                isSelected ? 'bg-teal-600' : 'border-2 border-gray-300'
-                              }`}>
-                                {isSelected && <Check className="h-3 w-3 text-white" />}
-                              </div>
-                            </div>
-                            
-                            <div className="pr-6">
-                              <div className="flex items-start">
-                                <div 
-                                  className="w-1 h-full rounded-full flex-shrink-0 mr-2"
-                                  style={{ 
-                                    backgroundColor: activity.category ? 
-                                      categories.find(cat => cat.name === activity.category)?.color || '#6B7280'
-                                    : '#6B7280',
-                                    minHeight: '40px'
-                                  }}
-                                />
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-gray-900 text-sm">{activity.activity}</h4>
-                                  <div className="flex items-center space-x-2 mt-1">
-                                    <span className="text-xs text-gray-500">{activity.category}</span>
-                                    {activity.level && (
-                                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                                        {activity.level}
-                                      </span>
-                                    )}
-                                    {activity.time > 0 && (
-                                      <span className="text-xs text-gray-500 flex items-center">
-                                        <Clock className="h-3 w-3 mr-1" />
-                                        {activity.time}m
-                                      </span>
-                                    )}
-                                  </div>
-                                  {/* Show description preview with proper HTML rendering */}
-                                  {activity.description && (
-                                    <div 
-                                      className="text-xs text-gray-600 mt-1 line-clamp-2"
-                                      dangerouslySetInnerHTML={{ 
-                                        __html: activity.description.length > 100 
-                                          ? activity.description.substring(0, 100) + '...'
-                                          : activity.description
-                                      }}
-                                    />
-                                  )}
-                                  {/* Click to preview indicator */}
-                                  <div className="text-xs text-blue-600 italic mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Click to preview • Check to select
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                            onActivityClick={handleActivityPreview}
+                            viewMode="compact"
+                            categoryColor={categories.find(cat => cat.name === activity.category)?.color}
+                          />
                         );
                       })}
                     </div>
