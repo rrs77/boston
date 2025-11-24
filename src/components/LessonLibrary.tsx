@@ -1228,7 +1228,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
             <div className="flex-1 overflow-hidden">
               <div className="p-6 max-h-[55vh] overflow-y-auto">
                 <DndProvider backend={HTML5Backend}>
-                  <div className="space-y-3">
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     {editingLessonActivities.map((activity: any, activityIndex: number) => (
                       <MinimizableActivityCard
                         key={activity._editId || `activity-${activityIndex}`}

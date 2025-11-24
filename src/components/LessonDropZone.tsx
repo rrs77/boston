@@ -9,7 +9,8 @@ import {
   Trash2,
   Edit3,
   Save,
-  X
+  X,
+  ChevronRight
 } from 'lucide-react';
 import { ActivityDetails } from './ActivityDetails'; // Import the modal component
 import { useData } from '../contexts/DataContext'; // Import to access updateActivity
@@ -137,74 +138,66 @@ function DraggableActivity({
       ref={ref}
       style={{ opacity }}
       data-handler-id={handlerId}
-      className="bg-white rounded-lg border border-gray-200 p-4 transition-all duration-200 hover:shadow-md group cursor-pointer"
-      onClick={handleActivityClick} // NEW: Add click handler
+      className="relative bg-white border-b border-gray-200 transition-all duration-200 hover:bg-gray-50 group"
+      onClick={handleActivityClick}
     >
-      <div className="flex items-start space-x-3">
+      <div className="flex items-center py-3 px-4">
+        {/* Colored left border */}
+        <div 
+          className="w-1 h-full absolute left-0 top-0 bottom-0 flex-shrink-0"
+          style={{ backgroundColor: categoryColor }}
+        />
+        
+        {/* Drag handle */}
         {isEditing && (
-          <div className="flex flex-col space-y-1 pt-1">
-            <div className="cursor-move text-gray-400 hover:text-gray-600">
-              <GripVertical className="h-5 w-5" />
-            </div>
+          <div className="flex items-center mr-3 cursor-move text-gray-400 hover:text-gray-600">
+            <GripVertical className="h-5 w-5" />
           </div>
         )}
         
-        <div 
-          className="w-1 h-full rounded-full flex-shrink-0"
-          style={{ backgroundColor: categoryColor, minHeight: '60px' }}
-        />
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 text-base leading-tight">
-                {activity.activity}
-              </h4>
-              <div className="flex items-center space-x-3 mt-1">
-                <span className="text-sm text-gray-600">{activity.category}</span>
-                {activity.level && (
-                  <span 
-                    className="px-2 py-1 text-white text-xs font-medium rounded-full"
-                    style={{ backgroundColor: categoryColor }}
-                  >
-                    {activity.level}
-                  </span>
-                )}
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2 ml-3">
-              {activity.time > 0 && (
-                <div className="flex items-center space-x-1 text-gray-500">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm font-medium">{activity.time}m</span>
-                </div>
-              )}
-              
-
-              
-              {isEditing && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove();
-                  }}
-                  className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200 opacity-0 group-hover:opacity-100"
-                  title="Remove Activity"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </div>
-          
-          {activity.description && (
-            <div 
-              className="text-sm text-gray-600 leading-relaxed line-clamp-2"
-              dangerouslySetInnerHTML={{ __html: activity.description }}
-            />
-          )}
+        {/* Chevron icon */}
+        <div className="flex items-center mr-3 text-gray-400">
+          <ChevronRight className="h-5 w-5" />
         </div>
+        
+        {/* Activity content */}
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-gray-900 text-base leading-tight mb-1">
+            {activity.activity}
+          </h4>
+        </div>
+        
+        {/* Category tag */}
+        <div className="mx-3">
+          <span 
+            className="px-3 py-1 text-white text-xs font-medium rounded-full whitespace-nowrap"
+            style={{ backgroundColor: categoryColor }}
+          >
+            {activity.category}
+          </span>
+        </div>
+        
+        {/* Duration */}
+        {activity.time > 0 && (
+          <div className="flex items-center space-x-1 text-gray-500 mr-3">
+            <Clock className="h-4 w-4" />
+            <span className="text-sm font-medium">{activity.time}m</span>
+          </div>
+        )}
+        
+        {/* Remove button */}
+        {isEditing && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors duration-200"
+            title="Remove Activity"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -357,7 +350,7 @@ export function LessonDropZone({
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               {lessonPlan.activities.map((activity, index) => (
                 <DraggableActivity
                   key={activity._uniqueId || `${activity._id || activity.id || activity.activity}-${index}`}
@@ -366,22 +359,22 @@ export function LessonDropZone({
                   onRemove={() => onActivityRemove(index)}
                   onReorder={onActivityReorder}
                   isEditing={isEditing}
-                  onActivityClick={handleViewActivityDetails} // NEW: Pass click handler
+                  onActivityClick={handleViewActivityDetails}
                 />
               ))}
               
               {isEditing && (
-                <div className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors duration-200 ${
-                  isOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-                }`}>
-                  <Plus className={`h-8 w-8 mx-auto mb-2 transition-colors duration-200 ${
-                    isOver ? 'text-blue-600' : 'text-gray-400'
-                  }`} />
-                  <p className={`font-medium transition-colors duration-200 ${
-                    isOver ? 'text-blue-600' : 'text-gray-600'
-                  }`}>
-                    {isOver ? 'Drop to add activity' : 'Select more activities to add to your lesson.'}
-                  </p>
+                <div className="p-4 border-t border-gray-200">
+                  <button
+                    className={`w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg font-medium transition-colors duration-200 ${
+                      isOver 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span>Add Activity to Lesson</span>
+                  </button>
                 </div>
               )}
             </div>

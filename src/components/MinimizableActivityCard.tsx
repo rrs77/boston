@@ -113,73 +113,77 @@ export function MinimizableActivityCard({
   return (
     <div
       ref={ref}
-      className={`bg-white rounded-lg border-l-4 shadow-sm transition-all duration-200 hover:shadow-md ${
+      className={`relative bg-white border-b border-gray-200 transition-all duration-200 hover:bg-gray-50 ${
         isDragging ? 'opacity-50' : ''
       }`}
-      style={{ borderLeftColor: categoryColor, opacity }}
+      style={{ opacity }}
     >
-      {/* Minimized Header */}
+      {/* Colored left border */}
       <div 
-        className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="w-1 h-full absolute left-0 top-0 bottom-0 flex-shrink-0"
+        style={{ backgroundColor: categoryColor }}
+      />
+      
+      {/* Activity Row */}
+      <div 
+        className="flex items-center py-3 px-4"
         onClick={handleActivityClick}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
-            {/* Drag Handle */}
-            <div className="flex-shrink-0 text-gray-400 hover:text-gray-600 cursor-move">
-              <GripVertical className="h-5 w-5" />
-            </div>
-            
-            {/* Expand/Collapse Icon */}
-            <div className="flex-shrink-0">
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-500" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500" />
-              )}
-            </div>
-            
-            {/* Activity Info */}
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 text-base truncate">
-                {activity.activity}
-              </h4>
-              <div className="flex items-center space-x-3 mt-1">
-                <span 
-                  className="text-sm px-2 py-1 rounded-full font-medium text-white"
-                  style={{ backgroundColor: categoryColor }}
-                >
-                  {activity.category}
-                </span>
-                {activity.time > 0 && (
-                  <span className="text-sm text-gray-600 flex items-center">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {activity.time}m
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Delete Button */}
-          <div className="flex items-center ml-4">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove(index);
-              }}
-              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-              title="Delete activity"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+        {/* Drag handle */}
+        <div className="flex items-center mr-3 cursor-move text-gray-400 hover:text-gray-600">
+          <GripVertical className="h-5 w-5" />
         </div>
+        
+        {/* Chevron icon */}
+        <div className="flex items-center mr-3 text-gray-400">
+          {isExpanded ? (
+            <ChevronDown className="h-5 w-5" />
+          ) : (
+            <ChevronRight className="h-5 w-5" />
+          )}
+        </div>
+        
+        {/* Activity content */}
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-gray-900 text-base leading-tight mb-1">
+            {activity.activity}
+          </h4>
+        </div>
+        
+        {/* Category tag */}
+        <div className="mx-3">
+          <span 
+            className="px-3 py-1 text-white text-xs font-medium rounded-full whitespace-nowrap"
+            style={{ backgroundColor: categoryColor }}
+          >
+            {activity.category}
+          </span>
+        </div>
+        
+        {/* Duration */}
+        {activity.time > 0 && (
+          <div className="flex items-center space-x-1 text-gray-500 mr-3">
+            <Clock className="h-4 w-4" />
+            <span className="text-sm font-medium">{activity.time}m</span>
+          </div>
+        )}
+        
+        {/* Remove button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(index);
+          }}
+          className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors duration-200"
+          title="Remove Activity"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="px-4 pb-4 border-t border-gray-100">
+        <div className="px-4 pb-4 border-t border-gray-100 bg-gray-50">
           <div className="pt-4">
             <div 
               className="text-sm text-gray-700 prose prose-sm max-w-none"
