@@ -581,7 +581,6 @@ export function LessonPlanBuilder({
                   isEditing={true}
                   onActivityClick={(activity) => setSelectedActivity(activity)}
                   onSave={handleSaveLessonPlan}
-                  onSaveAndCreate={handleCreateNewAfterSave}
                 />
               </div>
             </div>
@@ -608,22 +607,22 @@ export function LessonPlanBuilder({
                     />
                   </div>
                   
-                  {/* Filters */}
+                  {/* Filters - Simplified to match StandaloneLessonCreator */}
                   <div className="flex space-x-2">
-        <SimpleNestedCategoryDropdown
-          selectedCategory={selectedCategory === 'all' ? '' : selectedCategory}
-          onCategoryChange={(category) => setSelectedCategory(category || 'all')}
-          placeholder="All Categories"
-          className="w-full flex-1 px-3 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent text-sm truncate font-semibold"
-          dropdownBackgroundColor="#D6F2EE"
-        />
+                    <SimpleNestedCategoryDropdown
+                      selectedCategory={selectedCategory === 'all' ? '' : selectedCategory}
+                      onCategoryChange={(category) => setSelectedCategory(category || 'all')}
+                      placeholder="All Categories"
+                      className="w-full flex-1 px-3 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent text-sm truncate font-semibold"
+                      dropdownBackgroundColor="#D6F2EE"
+                    />
                     
                     <select
                       value={selectedLevel}
                       onChange={(e) => setSelectedLevel(e.target.value)}
                       className="w-full flex-1 px-3 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent text-sm truncate font-semibold"
                     >
-                      <option value="all" className="text-gray-900">All</option>
+                      <option value="all" className="text-gray-900">All Levels</option>
                       {customYearGroups.map(group => (
                         <option key={group.name} value={group.name} className="text-gray-900">{group.name}</option>
                       ))}
@@ -708,7 +707,7 @@ export function LessonPlanBuilder({
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {filteredAndSortedActivities.map((activity, index) => {
+                      {filteredAndSortedActivities.slice(0, 20).map((activity, index) => {
                         const activityId = `${activity.activity}-${activity.category}`;
                         const isSelected = selectedActivities.includes(activityId);
                         
@@ -732,6 +731,11 @@ export function LessonPlanBuilder({
                           />
                         );
                       })}
+                      {filteredAndSortedActivities.length > 20 && (
+                        <div className="text-center py-2 text-gray-500 text-xs">
+                          <p>Showing first 20 results. Refine search to see more.</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
