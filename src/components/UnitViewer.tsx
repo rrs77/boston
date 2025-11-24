@@ -1191,6 +1191,58 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                   // Total lesson count includes both individual lessons and lessons from stacks
                   const totalLessonCount = validLessons.length + stackLessons;
                   
+                  // Group lessons by unit name for this half-term
+                  const lessonsByUnit: Record<string, Array<{ lessonNumber: string; lessonData: any }>> = {};
+                  
+                  validLessons.forEach((lessonNumber) => {
+                    const lessonData = allLessonsData[lessonNumber];
+                    if (!lessonData) return;
+                    
+                    // Extract unit names from activities
+                    const unitNames = new Set<string>();
+                    
+                    // Check all activities in the lesson
+                    Object.values(lessonData.grouped || {}).forEach((activities: any[]) => {
+                      activities.forEach((activity: any) => {
+                        if (activity.unitName && activity.unitName.trim()) {
+                          unitNames.add(activity.unitName.trim());
+                        }
+                      });
+                    });
+                    
+                    // Also check orderedActivities if available
+                    if (lessonData.orderedActivities) {
+                      lessonData.orderedActivities.forEach((activity: any) => {
+                        if (activity.unitName && activity.unitName.trim()) {
+                          unitNames.add(activity.unitName.trim());
+                        }
+                      });
+                    }
+                    
+                    // Add lesson to each unit it belongs to
+                    unitNames.forEach(unitName => {
+                      if (!lessonsByUnit[unitName]) {
+                        lessonsByUnit[unitName] = [];
+                      }
+                      lessonsByUnit[unitName].push({ lessonNumber, lessonData });
+                    });
+                  });
+                  
+                  // Sort lessons within each unit
+                  Object.keys(lessonsByUnit).forEach(unitName => {
+                    lessonsByUnit[unitName].sort((a, b) => {
+                      const numA = parseInt(a.lessonNumber.replace(/^lesson/i, '')) || 0;
+                      const numB = parseInt(b.lessonNumber.replace(/^lesson/i, '')) || 0;
+                      return numA - numB;
+                    });
+                  });
+                  
+                  // Convert to array format for IndexCard
+                  const indexCards = Object.keys(lessonsByUnit).sort().map(unitName => ({
+                    unitName,
+                    lessons: lessonsByUnit[unitName]
+                  }));
+                  
                   // DEBUG: Log lesson count calculation
                   console.log(`📊 HalfTerm ${halfTerm.id} (${halfTerm.name}):`, {
                     lessons: validLessons.length,
@@ -1198,6 +1250,8 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                     stackLessons: stackLessons,
                     totalLessonCount: totalLessonCount,
                     validStacksCount: validStacks.length,
+                    indexCardsCount: indexCards.length,
+                    indexCards: indexCards.map(ic => ({ unitName: ic.unitName, lessonCount: ic.lessons.length })),
                     loading: loading,
                     halfTermData: halfTermData,
                     stackIds: stackIds,
@@ -1215,6 +1269,11 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                       stackCount={validStacks.length}
                       onClick={() => handleHalfTermClick(halfTerm.id)}
                       isComplete={isComplete}
+                      indexCards={indexCards}
+                      theme={theme}
+                      onLessonClick={handleViewLessonDetails}
+                      onLessonEdit={handleEditLesson}
+                      halfTerms={halfTerms}
                     />
                   );
                 })}

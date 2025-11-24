@@ -248,14 +248,23 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-gray-50">
+        <div className="flex bg-gray-50 border-0" style={{ border: 'none', borderBottom: 'none', outline: 'none' }}>
           <button
             onClick={() => setActiveTab('activities')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none ${
               activeTab === 'activities'
                 ? 'text-white bg-teal-600'
                 : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
+            style={{ 
+              border: 'none', 
+              borderBottom: 'none', 
+              borderTop: 'none',
+              borderLeft: 'none',
+              borderRight: 'none',
+              outline: 'none',
+              boxShadow: 'none'
+            }}
           >
             <div className="flex items-center justify-center space-x-2">
               <Plus className="h-4 w-4" />
@@ -264,11 +273,20 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
           </button>
           <button
             onClick={() => setActiveTab('main')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none ${
               activeTab === 'main'
                 ? 'text-white bg-teal-600'
                 : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
+            style={{ 
+              border: 'none', 
+              borderBottom: 'none', 
+              borderTop: 'none',
+              borderLeft: 'none',
+              borderRight: 'none',
+              outline: 'none',
+              boxShadow: 'none'
+            }}
           >
             <div className="flex items-center justify-center space-x-2">
               <Target className="h-4 w-4" />
@@ -277,11 +295,20 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
           </button>
           <button
             onClick={() => setActiveTab('extended')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none ${
               activeTab === 'extended'
                 ? 'text-white bg-teal-600'
                 : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
+            style={{ 
+              border: 'none', 
+              borderBottom: 'none', 
+              borderTop: 'none',
+              borderLeft: 'none',
+              borderRight: 'none',
+              outline: 'none',
+              boxShadow: 'none'
+            }}
           >
             <div className="flex items-center justify-center space-x-2">
               <BookOpen className="h-4 w-4" />

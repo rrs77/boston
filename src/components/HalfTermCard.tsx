@@ -1,5 +1,7 @@
 import React from 'react';
 import { Calendar, BookOpen, ChevronRight, CheckCircle, Plus } from 'lucide-react';
+import { IndexCard } from './IndexCard';
+import type { LessonData } from '../contexts/DataContext';
 
 interface HalfTermCardProps {
   id: string;
@@ -10,6 +12,19 @@ interface HalfTermCardProps {
   stackCount?: number;
   onClick: () => void;
   isComplete: boolean;
+  indexCards?: Array<{
+    unitName: string;
+    lessons: Array<{ lessonNumber: string; lessonData: LessonData }>;
+  }>;
+  theme?: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    gradient: string;
+  };
+  onLessonClick?: (lessonNumber: string) => void;
+  onLessonEdit?: (lessonNumber: string) => void;
+  halfTerms?: Array<{ id: string; name: string; lessons: string[] }>;
 }
 
 export function HalfTermCard({
@@ -20,7 +35,12 @@ export function HalfTermCard({
   lessonCount,
   stackCount = 0,
   onClick,
-  isComplete
+  isComplete,
+  indexCards = [],
+  theme,
+  onLessonClick,
+  onLessonEdit,
+  halfTerms = []
 }: HalfTermCardProps) {
   // Determine progress state and colors
   const getProgressState = () => {
@@ -142,6 +162,23 @@ export function HalfTermCard({
         </div>
 
       </div>
+
+      {/* Index Cards Section - Show units grouped by unit name */}
+      {indexCards && indexCards.length > 0 && theme && (
+        <div className="border-t border-gray-200 bg-white p-4 space-y-3">
+          {indexCards.map((indexCard, idx) => (
+            <IndexCard
+              key={`${indexCard.unitName}-${idx}`}
+              unitName={indexCard.unitName}
+              lessons={indexCard.lessons}
+              theme={theme}
+              onLessonClick={onLessonClick || (() => {})}
+              onLessonEdit={onLessonEdit}
+              halfTerms={halfTerms}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
