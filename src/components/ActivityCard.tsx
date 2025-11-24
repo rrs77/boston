@@ -261,6 +261,21 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
                 )}
               </div>
               <div className="flex items-center space-x-1">
+                {selectable && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onSelectionChange) {
+                        onSelectionChange(activity._id || activity.id || '', !isSelected);
+                      }
+                    }}
+                    className={`w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
+                      isSelected ? 'bg-teal-600' : 'border-2 border-gray-300 hover:border-teal-400'
+                    }`}
+                  >
+                    {isSelected && <Check className="h-3 w-3 text-white" />}
+                  </div>
+                )}
                 {onEditToggle && (
                   <button
                     onClick={(e) => {

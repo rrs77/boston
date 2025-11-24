@@ -1,6 +1,14 @@
-import React, { useState } from 'react';
-import { X, Plus, Trash2, Eye, BookOpen, Target, Link2, Clock } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { X, Plus, Trash2, Eye, BookOpen, Target, Link2, Clock, Search, GripVertical } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
+import { ActivityCard } from './ActivityCard';
+import { LessonDropZone } from './LessonDropZone';
+import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
+import { useData } from '../contexts/DataContext';
+import { useSettings } from '../contexts/SettingsContextNew';
+import type { Activity, LessonPlan } from '../contexts/DataContext';
 
 interface StandaloneLessonCreatorProps {
   onSave: (lessonData: any) => void;
@@ -8,7 +16,10 @@ interface StandaloneLessonCreatorProps {
 }
 
 export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = ({ onSave, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'main' | 'extended'>('main');
+  const { allActivities } = useData();
+  const { categories, customYearGroups } = useSettings();
+  
+  const [activeTab, setActiveTab] = useState<'main' | 'extended' | 'activities'>('main');
   const [showPreview, setShowPreview] = useState(false);
   
   const [lesson, setLesson] = useState({
@@ -32,6 +43,12 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Activity library state
+  const [selectedActivities, setSelectedActivities] = useState<Activity[]>([]);
+  const [activitySearchQuery, setActivitySearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedLevel, setSelectedLevel] = useState('all');
 
   // Auto-resize textareas on mount and when values change
   React.useEffect(() => {
@@ -100,6 +117,61 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
     return Object.keys(newErrors).length === 0;
   };
 
+  // Filter activities for the library
+  const filteredActivities = useMemo(() => {
+    if (!allActivities) return [];
+    
+    return allActivities.filter((activity: Activity) => {
+      const matchesSearch = !activitySearchQuery || 
+        activity.activity.toLowerCase().includes(activitySearchQuery.toLowerCase()) ||
+        (activity.description && activity.description.toLowerCase().includes(activitySearchQuery.toLowerCase()));
+      const matchesCategory = selectedCategory === 'all' || activity.category === selectedCategory;
+      const matchesLevel = selectedLevel === 'all' || 
+                          activity.level === selectedLevel || 
+                          (activity.yearGroups && activity.yearGroups.includes(selectedLevel));
+      
+      return matchesSearch && matchesCategory && matchesLevel;
+    });
+  }, [allActivities, activitySearchQuery, selectedCategory, selectedLevel]);
+
+  // Handle adding activity from library
+  const handleActivityAdd = (activity: Activity) => {
+    const activityCopy = JSON.parse(JSON.stringify(activity));
+    const uniqueActivity = {
+      ...activityCopy,
+      _uniqueId: Date.now() + Math.random().toString(36).substring(2, 9)
+    };
+    setSelectedActivities(prev => [...prev, uniqueActivity]);
+    
+    // Update duration
+    setLesson(prev => ({
+      ...prev,
+      duration: prev.duration + (uniqueActivity.time || 0)
+    }));
+  };
+
+  // Handle removing activity
+  const handleActivityRemove = (index: number) => {
+    const removedActivity = selectedActivities[index];
+    setSelectedActivities(prev => prev.filter((_, i) => i !== index));
+    
+    // Update duration
+    setLesson(prev => ({
+      ...prev,
+      duration: Math.max(0, prev.duration - (removedActivity.time || 0))
+    }));
+  };
+
+  // Handle reordering activities
+  const handleActivityReorder = (dragIndex: number, hoverIndex: number) => {
+    setSelectedActivities(prev => {
+      const newActivities = [...prev];
+      const [movedActivity] = newActivities.splice(dragIndex, 1);
+      newActivities.splice(hoverIndex, 0, movedActivity);
+      return newActivities;
+    });
+  };
+
   const handleSubmit = () => {
     console.log('📝 Submit button clicked');
     console.log('📊 Current lesson data:', lesson);
@@ -110,6 +182,19 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
     }
 
     console.log('✅ Validation passed');
+
+    // Group activities by category
+    const grouped: Record<string, Activity[]> = {};
+    const categoryOrder: string[] = [];
+    
+    selectedActivities.forEach(activity => {
+      const category = activity.category || 'Other';
+      if (!grouped[category]) {
+        grouped[category] = [];
+        categoryOrder.push(category);
+      }
+      grouped[category].push(activity);
+    });
 
     const lessonData = {
       title: lesson.lessonTitle,
@@ -131,9 +216,12 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
       resourceLink: lesson.resourceLink,
       imageLink: lesson.imageLink,
       additionalLinks: lesson.additionalLinks,
-      grouped: {},
-      categoryOrder: [],
-      orderedActivities: []
+      grouped: grouped,
+      categoryOrder: categoryOrder,
+      orderedActivities: selectedActivities.map(a => {
+        const { _uniqueId, ...cleanActivity } = a;
+        return cleanActivity;
+      })
     };
 
     console.log('💾 Calling onSave with:', lessonData);
@@ -185,6 +273,19 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
             <div className="flex items-center justify-center space-x-2">
               <BookOpen className="h-4 w-4" />
               <span>Extended Details</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('activities')}
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-b ${
+              activeTab === 'activities'
+                ? 'text-teal-600 border-teal-600 bg-white'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-transparent'
+            }`}
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <Plus className="h-4 w-4" />
+              <span>Activities ({selectedActivities.length})</span>
             </div>
           </button>
         </div>
@@ -557,6 +658,97 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                 </button>
               </div>
             </div>
+          ) : (
+            <DndProvider backend={HTML5Backend}>
+              <div className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Activity Library */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-4 flex flex-col max-h-[calc(100vh-300px)]">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Library</h3>
+                    
+                    {/* Search and Filters */}
+                    <div className="space-y-3 mb-4">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search activities..."
+                          value={activitySearchQuery}
+                          onChange={(e) => setActivitySearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <SimpleNestedCategoryDropdown
+                          selectedCategory={selectedCategory === 'all' ? '' : selectedCategory}
+                          onCategoryChange={(category) => setSelectedCategory(category || 'all')}
+                          placeholder="All Categories"
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        />
+                        <select
+                          value={selectedLevel}
+                          onChange={(e) => setSelectedLevel(e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        >
+                          <option value="all">All Levels</option>
+                          {customYearGroups.map(group => (
+                            <option key={group.name} value={group.name}>{group.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    {/* Activity List */}
+                    <div className="flex-1 overflow-y-auto space-y-2">
+                      {filteredActivities.map((activity, index) => (
+                        <ActivityCard
+                          key={`${activity._id || activity.id || index}-${activity.activity}`}
+                          activity={activity}
+                          draggable={true}
+                          viewMode="compact"
+                          onActivityClick={() => {}}
+                        />
+                      ))}
+                      {filteredActivities.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <p>No activities found</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Selected Activities */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-4 flex flex-col max-h-[calc(100vh-300px)]">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Selected Activities ({selectedActivities.length})
+                    </h3>
+                    
+                    <LessonDropZone
+                      lessonPlan={{
+                        id: '',
+                        date: new Date(),
+                        week: 1,
+                        className: '',
+                        activities: selectedActivities,
+                        duration: selectedActivities.reduce((sum, a) => sum + (a.time || 0), 0),
+                        notes: '',
+                        status: 'draft',
+                        title: lesson.lessonTitle,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                      }}
+                      onActivityAdd={handleActivityAdd}
+                      onActivityRemove={handleActivityRemove}
+                      onActivityReorder={handleActivityReorder}
+                      onLessonPlanFieldUpdate={() => {}}
+                      isEditing={true}
+                      onActivityClick={() => {}}
+                      onSave={() => {}}
+                    />
+                  </div>
+                </div>
+              </div>
+            </DndProvider>
           )}
         </div>
 
