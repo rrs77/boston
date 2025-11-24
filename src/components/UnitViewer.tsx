@@ -23,6 +23,7 @@ import {
 import { UnitCard } from './UnitCard';
 import { LessonLibraryCard } from './LessonLibraryCard';
 import { ActivityDetails } from './ActivityDetails';
+import { IndexCard } from './IndexCard';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { LessonExporter } from './LessonExporter';
