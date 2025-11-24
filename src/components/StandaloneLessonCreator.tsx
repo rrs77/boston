@@ -40,6 +40,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
     resourceLink: '',
     imageLink: '',
     additionalLinks: [] as Array<{ url: string; label: string }>,
+    activityNotes: '', // Notes about the activities/lesson
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -216,6 +217,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
       resourceLink: lesson.resourceLink,
       imageLink: lesson.imageLink,
       additionalLinks: lesson.additionalLinks,
+      activityNotes: lesson.activityNotes,
       grouped: grouped,
       categoryOrder: categoryOrder,
       orderedActivities: selectedActivities.map(a => {
@@ -438,30 +440,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                 ) : null}
               </div>
 
-              {/* Plenary Card */}
-              <div className={`bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg transition-all duration-300 ${lesson.plenary ? 'p-5' : 'p-4'}`}>
-                <div className="flex items-center space-x-2 mb-3">
-                  <Target className="h-5 w-5 text-orange-600" />
-                  <h3 className="text-base font-semibold text-gray-900">Plenary/Conclusion</h3>
-                </div>
-                {lesson.plenary || true ? (
-                  <textarea
-                    name="plenary"
-                    value={lesson.plenary}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
-                    style={{ height: lesson.plenary ? 'auto' : '60px', minHeight: '60px' }}
-                    onInput={(e) => {
-                      const target = e.target as HTMLTextAreaElement;
-                      target.style.height = 'auto';
-                      target.style.height = target.scrollHeight + 'px';
-                    }}
-                    placeholder="Performance: Groups perform their pieces at chosen tempos, class discusses effectiveness"
-                  />
-                ) : null}
-              </div>
-
-              {/* Activities Section - Minimal with search */}
+              {/* Activities Section - Below Main Activity */}
               <DndProvider backend={HTML5Backend}>
                 <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-5">
                   <div className="flex items-center justify-between mb-4">
@@ -482,6 +461,26 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white"
                       />
                     </div>
+                  </div>
+
+                  {/* Activity Notes Section */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Lesson Notes & Additional Information
+                    </label>
+                    <textarea
+                      name="activityNotes"
+                      value={lesson.activityNotes}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
+                      style={{ minHeight: '80px' }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = target.scrollHeight + 'px';
+                      }}
+                      placeholder="Add notes, instructions, or additional information about these activities and how they work together in this lesson..."
+                    />
                   </div>
                   
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -538,6 +537,29 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                   </div>
                 </div>
               </DndProvider>
+
+              {/* Plenary Card */}
+              <div className={`bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg transition-all duration-300 ${lesson.plenary ? 'p-5' : 'p-4'}`}>
+                <div className="flex items-center space-x-2 mb-3">
+                  <Target className="h-5 w-5 text-orange-600" />
+                  <h3 className="text-base font-semibold text-gray-900">Plenary/Conclusion</h3>
+                </div>
+                {lesson.plenary || true ? (
+                  <textarea
+                    name="plenary"
+                    value={lesson.plenary}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
+                    style={{ height: lesson.plenary ? 'auto' : '60px', minHeight: '60px' }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = target.scrollHeight + 'px';
+                    }}
+                    placeholder="Performance: Groups perform their pieces at chosen tempos, class discusses effectiveness"
+                  />
+                ) : null}
+              </div>
             </div>
           ) : activeTab === 'extended' ? (
             <div className="p-6 space-y-5">
