@@ -555,6 +555,10 @@ export function UnitViewer() {
               setSelectedLessonForExport(selectedLessonForDetails);
               setSelectedLessonForDetails(null);
             }}
+            onEdit={() => {
+              handleEditLesson(selectedLessonForDetails);
+              setSelectedLessonForDetails(null);
+            }}
             unitId={selectedUnit.id}
             unitName={selectedUnit.name}
           />
