@@ -334,7 +334,7 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
           
           {activity.yearGroups && activity.yearGroups.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
-              {activity.yearGroups.map(yearGroup => {
+              {activity.yearGroups.filter(yearGroup => yearGroup && yearGroup.toLowerCase() !== 'all').map(yearGroup => {
                 // Create abbreviation: "Lower Kindergarten Music" → "LKG M"
                 // Also handles old labels like "EYFS U", "EYFS L", etc.
                 // Handles comma-separated values like "EYFS U, Reception"
@@ -391,12 +391,12 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
                 };
                 
                 return (
-                  <span 
-                    key={yearGroup} 
+                <span 
+                  key={yearGroup} 
                     className="px-2 py-1 bg-[#D4F1EF] text-[#17A697] text-xs font-medium rounded-full whitespace-nowrap"
-                  >
+                >
                     {abbreviate(yearGroup)}
-                  </span>
+                </span>
                 );
               })}
             </div>
@@ -503,8 +503,8 @@ return (
               )}
               
               <div className="flex items-center space-x-2 mt-2 flex-wrap">
-                {activity.yearGroups && activity.yearGroups.length > 0 ? (
-                  activity.yearGroups.map(yearGroup => {
+                {activity.yearGroups && activity.yearGroups.filter(yg => yg && yg.toLowerCase() !== 'all').length > 0 ? (
+                  activity.yearGroups.filter(yearGroup => yearGroup && yearGroup.toLowerCase() !== 'all').map(yearGroup => {
                     // Create abbreviation: "Lower Kindergarten Music" → "LKG M"
                     // Also handles old labels like "EYFS U", "EYFS L", etc.
                     // Handles comma-separated values like "EYFS U, Reception"
@@ -563,12 +563,12 @@ return (
                     };
                     
                     return (
-                      <span 
-                        key={yearGroup} 
+                    <span 
+                      key={yearGroup} 
                         className="px-2 py-1 bg-white bg-opacity-20 text-white text-xs font-medium rounded-full whitespace-nowrap"
-                      >
+                    >
                         {abbreviate(yearGroup)}
-                      </span>
+                    </span>
                     );
                   })
                 ) : activity.level && (

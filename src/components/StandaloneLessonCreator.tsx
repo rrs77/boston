@@ -6,6 +6,7 @@ import { RichTextEditor } from './RichTextEditor';
 import { ActivityCard } from './ActivityCard';
 import { LessonDropZone } from './LessonDropZone';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
+import { ActivitySearchModal } from './ActivitySearchModal';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import type { Activity, LessonPlan } from '../contexts/DataContext';
@@ -47,9 +48,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
   
   // Activity library state
   const [selectedActivities, setSelectedActivities] = useState<Activity[]>([]);
-  const [activitySearchQuery, setActivitySearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedLevel, setSelectedLevel] = useState('all');
+  const [showActivityModal, setShowActivityModal] = useState(false);
 
   // Auto-resize textareas on mount and when values change
   React.useEffect(() => {
@@ -118,22 +117,29 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
     return Object.keys(newErrors).length === 0;
   };
 
-  // Filter activities for the library
-  const filteredActivities = useMemo(() => {
-    if (!allActivities) return [];
+  // Handle activity selection from modal
+  const handleSelectActivity = (activity: Activity) => {
+    const activityCopy = JSON.parse(JSON.stringify(activity));
+    const uniqueActivity = {
+      ...activityCopy,
+      _uniqueId: Date.now() + Math.random().toString(36).substring(2, 9)
+    };
     
-    return allActivities.filter((activity: Activity) => {
-      const matchesSearch = !activitySearchQuery || 
-        activity.activity.toLowerCase().includes(activitySearchQuery.toLowerCase()) ||
-        (activity.description && activity.description.toLowerCase().includes(activitySearchQuery.toLowerCase()));
-      const matchesCategory = selectedCategory === 'all' || activity.category === selectedCategory;
-      const matchesLevel = selectedLevel === 'all' || 
-                          activity.level === selectedLevel || 
-                          (activity.yearGroups && activity.yearGroups.includes(selectedLevel));
+    // Check if already added
+    const isAlreadyAdded = selectedActivities.some(
+      a => (a._id || a.id) === (activity._id || activity.id)
+    );
+    
+    if (!isAlreadyAdded) {
+      setSelectedActivities(prev => [...prev, uniqueActivity]);
       
-      return matchesSearch && matchesCategory && matchesLevel;
-    });
-  }, [allActivities, activitySearchQuery, selectedCategory, selectedLevel]);
+      // Update duration
+      setLesson(prev => ({
+        ...prev,
+        duration: prev.duration + (uniqueActivity.time || 0)
+      }));
+    }
+  };
 
   // Handle adding activity from library
   const handleActivityAdd = (activity: Activity) => {
@@ -440,10 +446,31 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                 ) : null}
               </div>
 
-              {/* Activities Section - Below Main Activity */}
+              {/* Lesson Notes Section - Full Width */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Lesson Notes & Additional Information
+                </label>
+                <textarea
+                  name="activityNotes"
+                  value={lesson.activityNotes}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
+                  style={{ minHeight: '80px' }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = target.scrollHeight + 'px';
+                  }}
+                  placeholder="Add notes, instructions, or additional information about these activities and how they work together in this lesson..."
+                />
+              </div>
+
+              {/* Activities Section - Lesson Plan Builder */}
               <DndProvider backend={HTML5Backend}>
-                <div className="bg-gradient-to-br from-teal-50 to-teal-50 border border-teal-200 rounded-lg p-5">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  {/* Header with Add Activities Button */}
+                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Plus className="h-5 w-5 text-teal-600" />
                       <h3 className="text-lg font-semibold text-gray-900">Activities</h3>
@@ -451,89 +478,39 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                         <span className="text-sm text-gray-600">({selectedActivities.length} selected)</span>
                       )}
                     </div>
-                    <div className="relative w-64">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search activities..."
-                        value={activitySearchQuery}
-                        onChange={(e) => setActivitySearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                      />
-                    </div>
+                    <button
+                      onClick={() => setShowActivityModal(true)}
+                      className="flex items-center space-x-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Add Activities</span>
+                    </button>
                   </div>
 
-                  {/* Activity Notes Section */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Lesson Notes & Additional Information
-                    </label>
-                    <textarea
-                      name="activityNotes"
-                      value={lesson.activityNotes}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
-                      style={{ minHeight: '80px' }}
-                      onInput={(e) => {
-                        const target = e.target as HTMLTextAreaElement;
-                        target.style.height = 'auto';
-                        target.style.height = target.scrollHeight + 'px';
+                  {/* Lesson Plan Drop Zone */}
+                  <div className="p-4">
+                    <LessonDropZone
+                      lessonPlan={{
+                        id: '',
+                        date: new Date(),
+                        week: 1,
+                        className: '',
+                        activities: selectedActivities,
+                        duration: selectedActivities.reduce((sum, a) => sum + (a.time || 0), 0),
+                        notes: lesson.activityNotes,
+                        status: 'draft',
+                        title: lesson.lessonTitle,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
                       }}
-                      placeholder="Add notes, instructions, or additional information about these activities and how they work together in this lesson..."
+                      onActivityAdd={handleActivityAdd}
+                      onActivityRemove={handleActivityRemove}
+                      onActivityReorder={handleActivityReorder}
+                      onLessonPlanFieldUpdate={() => {}}
+                      isEditing={true}
+                      onActivityClick={() => {}}
+                      onSave={() => {}}
                     />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Activity Library - Minimal */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-3 flex flex-col max-h-[400px]">
-                      <div className="flex-1 overflow-y-auto space-y-2">
-                        {filteredActivities.slice(0, 10).map((activity, index) => (
-                          <ActivityCard
-                            key={`${activity._id || activity.id || index}-${activity.activity}`}
-                            activity={activity}
-                            draggable={true}
-                            viewMode="compact"
-                            onActivityClick={() => {}}
-                          />
-                        ))}
-                        {filteredActivities.length === 0 && (
-                          <div className="text-center py-6 text-gray-500 text-sm">
-                            <p>No activities found</p>
-                          </div>
-                        )}
-                        {filteredActivities.length > 10 && (
-                          <div className="text-center py-2 text-gray-500 text-xs">
-                            <p>Showing first 10 results. Refine search to see more.</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Selected Activities */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-3 flex flex-col max-h-[400px]">
-                      <LessonDropZone
-                        lessonPlan={{
-                          id: '',
-                          date: new Date(),
-                          week: 1,
-                          className: '',
-                          activities: selectedActivities,
-                          duration: selectedActivities.reduce((sum, a) => sum + (a.time || 0), 0),
-                          notes: '',
-                          status: 'draft',
-                          title: lesson.lessonTitle,
-                          createdAt: new Date(),
-                          updatedAt: new Date()
-                        }}
-                        onActivityAdd={handleActivityAdd}
-                        onActivityRemove={handleActivityRemove}
-                        onActivityReorder={handleActivityReorder}
-                        onLessonPlanFieldUpdate={() => {}}
-                        isEditing={true}
-                        onActivityClick={() => {}}
-                        onSave={() => {}}
-                      />
-                    </div>
                   </div>
                 </div>
               </DndProvider>
@@ -1011,6 +988,14 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
           </div>
         </div>
       )}
+
+      {/* Activity Search Modal */}
+      <ActivitySearchModal
+        isOpen={showActivityModal}
+        onClose={() => setShowActivityModal(false)}
+        onSelectActivity={handleSelectActivity}
+        selectedActivities={selectedActivities}
+      />
     </>
   );
 };
