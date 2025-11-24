@@ -16,7 +16,9 @@ import {
   Eye,
   EyeOff,
   Tag,
-  Edit3
+  Edit3,
+  BookOpen,
+  FolderOpen
 } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { useDrag } from 'react-dnd';
@@ -38,6 +40,8 @@ interface ActivityCardProps {
   selectable?: boolean;
   isSelected?: boolean;
   onSelectionChange?: (activityId: string, selected: boolean) => void;
+  onViewUnit?: (unitName: string) => void;
+  onViewLesson?: (lessonNumber: string) => void;
 }
 
 // Character limit for truncated description
@@ -57,7 +61,9 @@ export function ActivityCard({
   draggable = false,
   selectable = false,
   isSelected = false,
-  onSelectionChange
+  onSelectionChange,
+  onViewUnit,
+  onViewLesson
 }: ActivityCardProps) {
   const { getCategoryColor, categories } = useSettings();
   const [editedActivity, setEditedActivity] = useState<Activity>(activity);
@@ -647,7 +653,57 @@ return (
                 dir="ltr"
               />
             ) : (
-              <p className="text-sm text-gray-700 font-medium" dir="ltr">{activity.unitName}</p>
+              <div className="flex items-center space-x-2">
+                <p className="text-sm text-gray-700 font-medium" dir="ltr">{activity.unitName}</p>
+                {onViewUnit && activity.unitName && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewUnit(activity.unitName);
+                    }}
+                    className="p-1 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded transition-colors"
+                    title="View Unit"
+                  >
+                    <FolderOpen className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Lesson Number */}
+        {(activity.lessonNumber || isEditing) && (
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+              Lesson
+            </label>
+            {isEditing ? (
+              <input
+                type="text"
+                value={editedActivity.lessonNumber}
+                onChange={(e) => setEditedActivity(prev => ({ ...prev, lessonNumber: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
+                placeholder="Lesson number"
+                onClick={(e) => e.stopPropagation()}
+                dir="ltr"
+              />
+            ) : (
+              <div className="flex items-center space-x-2">
+                <p className="text-sm text-gray-700 font-medium" dir="ltr">Lesson {activity.lessonNumber}</p>
+                {onViewLesson && activity.lessonNumber && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewLesson(activity.lessonNumber);
+                    }}
+                    className="p-1 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded transition-colors"
+                    title="View Lesson"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Clock, Video, Music, FileText, Link as LinkIcon, Image, Volume2, Maximize2, Minimize2, ExternalLink, Tag, Plus, Save, Upload, Edit3, Check, Trash2, Info } from 'lucide-react';
+import { X, Clock, Video, Music, FileText, Link as LinkIcon, Image, Volume2, Maximize2, Minimize2, ExternalLink, Tag, Plus, Save, Upload, Edit3, Check, Trash2, Info, BookOpen, FolderOpen } from 'lucide-react';
 import { EditableText } from './EditableText';
 import { RichTextEditor } from './RichTextEditor';
 import { LinkViewer } from './LinkViewer';
@@ -20,6 +20,8 @@ interface ActivityDetailsProps {
   onAddActivityToLesson?: (activity: Activity, isModified?: boolean) => void;
   isLessonBuilderContext?: boolean;
   initialEditMode?: boolean;
+  onViewUnit?: (unitName: string) => void;
+  onViewLesson?: (lessonNumber: string) => void;
 }
 
 export function ActivityDetails({ 
@@ -32,7 +34,9 @@ export function ActivityDetails({
   onDelete,
   onAddActivityToLesson,
   isLessonBuilderContext = false,
-  initialEditMode = false
+  initialEditMode = false,
+  onViewUnit,
+  onViewLesson
 }: ActivityDetailsProps) {
   const { nestedStandards, lessonStandards, addStandardToLesson, removeStandardFromLesson, updateActivity: updateActivityGlobal } = useData();
   const { customYearGroups, mapActivityLevelToYearGroup } = useSettings();
@@ -618,7 +622,53 @@ export function ActivityDetails({
                     dir="ltr"
                   />
                 ) : (
-                  <p className="text-gray-700" dir="ltr">{activity.unitName}</p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-gray-700" dir="ltr">{activity.unitName}</p>
+                    {onViewUnit && activity.unitName && (
+                      <button
+                        onClick={() => onViewUnit(activity.unitName)}
+                        className="p-1.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded transition-colors"
+                        title="View Unit"
+                      >
+                        <FolderOpen className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Lesson Number */}
+            {(activity.lessonNumber || (isEditMode && !isReadOnly)) && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  <EditableText 
+                    id="activity-lesson-heading" 
+                    fallback="Lesson"
+                  />
+                </h3>
+                {isEditMode && !isReadOnly ? (
+                  <input
+                    type="text"
+                    value={editedActivity.lessonNumber}
+                    onChange={(e) => setEditedActivity(prev => ({ ...prev, lessonNumber: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter lesson number"
+                    dir="ltr"
+                  />
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <p className="text-gray-700" dir="ltr">Lesson {activity.lessonNumber}</p>
+                    {onViewLesson && activity.lessonNumber && (
+                      <button
+                        onClick={() => onViewLesson(activity.lessonNumber)}
+                        className="p-1.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded transition-colors"
+                        title="View Lesson"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             )}

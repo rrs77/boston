@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { DndProvider } from 'react-dnd';
+import React, { useState, useMemo, useRef } from 'react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { X, Plus, Trash2, Eye, BookOpen, Target, Link2, Clock, Search, GripVertical } from 'lucide-react';
+import { X, Plus, Trash2, Eye, BookOpen, Target, Link2, Clock, Search, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { ActivityCard } from './ActivityCard';
-import { LessonDropZone } from './LessonDropZone';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { ActivitySearchModal } from './ActivitySearchModal';
 import { useData } from '../contexts/DataContext';
@@ -14,41 +13,180 @@ import type { Activity, LessonPlan } from '../contexts/DataContext';
 interface StandaloneLessonCreatorProps {
   onSave: (lessonData: any) => void;
   onClose: () => void;
+  editingLesson?: {
+    lessonNumber: string;
+    lessonData: any;
+  };
 }
 
-export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = ({ onSave, onClose }) => {
-  const { allActivities } = useData();
+// Compact Draggable Activity Item Component
+interface CompactDraggableActivityProps {
+  activity: Activity;
+  index: number;
+  onRemove: () => void;
+  onReorder: (dragIndex: number, hoverIndex: number) => void;
+}
+
+function CompactDraggableActivity({ activity, index, onRemove, onReorder }: CompactDraggableActivityProps) {
+  const { getCategoryColor } = useSettings();
+  const ref = useRef<HTMLDivElement>(null);
+  const categoryColor = getCategoryColor(activity.category);
+
+  const [{ handlerId }, drop] = useDrop({
+    accept: 'compact-activity',
+    collect(monitor) {
+      return { handlerId: monitor.getHandlerId() };
+    },
+    hover(item: { index: number }, monitor) {
+      if (!ref.current) return;
+      const dragIndex = item.index;
+      const hoverIndex = index;
+      if (dragIndex === hoverIndex) return;
+
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
+
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
+
+      onReorder(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    },
+  });
+
+  const [{ isDragging }, drag] = useDrag({
+    type: 'compact-activity',
+    item: () => ({ index }),
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+  });
+
+  const opacity = isDragging ? 0.4 : 1;
+  drag(drop(ref));
+
+  return (
+    <div
+      ref={ref}
+      style={{ opacity }}
+      data-handler-id={handlerId}
+      className="flex items-center py-2 px-3 hover:bg-gray-50 group cursor-move"
+    >
+      <GripVertical className="h-4 w-4 text-gray-400 mr-2" />
+      <div 
+        className="w-1 h-6 rounded-full mr-2 flex-shrink-0"
+        style={{ backgroundColor: categoryColor }}
+      />
+      <div className="flex-1 min-w-0">
+        <span className="text-sm text-gray-900">{activity.activity}</span>
+      </div>
+      <span 
+        className="px-2 py-0.5 text-white text-xs font-medium rounded-full mr-2"
+        style={{ backgroundColor: categoryColor }}
+      >
+        {activity.category}
+      </span>
+      {activity.time > 0 && (
+        <div className="flex items-center space-x-1 text-gray-500 mr-2">
+          <Clock className="h-3 w-3" />
+          <span className="text-xs">{activity.time}m</span>
+        </div>
+      )}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors opacity-0 group-hover:opacity-100"
+        title="Remove Activity"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
+export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = ({ onSave, onClose, editingLesson }) => {
+  const { allActivities, updateLessonData } = useData();
   const { categories, customYearGroups } = useSettings();
   
   const [activeTab, setActiveTab] = useState<'main' | 'extended'>('main');
   const [showPreview, setShowPreview] = useState(false);
   
-  const [lesson, setLesson] = useState({
-    lessonTitle: '',
-    lessonName: '',
-    duration: 60,
-    learningOutcome: '',
-    successCriteria: '',
-    introduction: '',
-    mainActivity: '',
-    plenary: '',
-    vocabulary: '',
-    keyQuestions: '',
-    resources: '',
-    differentiation: '',
-    assessment: '',
-    videoLink: '',
-    resourceLink: '',
-    imageLink: '',
-    additionalLinks: [] as Array<{ url: string; label: string }>,
-    activityNotes: '', // Notes about the activities/lesson
+  // Initialize lesson state - populate if editing
+  const [lesson, setLesson] = useState(() => {
+    if (editingLesson?.lessonData) {
+      const lessonData = editingLesson.lessonData;
+      return {
+        lessonTitle: lessonData.title || '',
+        lessonName: lessonData.lessonName || '',
+        duration: lessonData.totalTime || 60,
+        learningOutcome: lessonData.learningOutcome || '',
+        successCriteria: lessonData.successCriteria || '',
+        introduction: lessonData.introduction || '',
+        mainActivity: lessonData.mainActivity || '',
+        plenary: lessonData.plenary || '',
+        vocabulary: lessonData.vocabulary || '',
+        keyQuestions: lessonData.keyQuestions || '',
+        resources: lessonData.resources || '',
+        differentiation: lessonData.differentiation || '',
+        assessment: lessonData.assessment || '',
+        videoLink: lessonData.videoLink || '',
+        resourceLink: lessonData.resourceLink || '',
+        imageLink: lessonData.imageLink || '',
+        additionalLinks: lessonData.additionalLinks || [] as Array<{ url: string; label: string }>,
+      };
+    }
+    return {
+      lessonTitle: '',
+      lessonName: '',
+      duration: 60,
+      learningOutcome: '',
+      successCriteria: '',
+      introduction: '',
+      mainActivity: '',
+      plenary: '',
+      vocabulary: '',
+      keyQuestions: '',
+      resources: '',
+      differentiation: '',
+      assessment: '',
+      videoLink: '',
+      resourceLink: '',
+      imageLink: '',
+      additionalLinks: [] as Array<{ url: string; label: string }>,
+    };
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  // Activity library state
-  const [selectedActivities, setSelectedActivities] = useState<Activity[]>([]);
+  // Activity library state - populate if editing
+  const [selectedActivities, setSelectedActivities] = useState<Activity[]>(() => {
+    if (editingLesson?.lessonData) {
+      const lessonData = editingLesson.lessonData;
+      // Use orderedActivities if available, otherwise flatten grouped
+      let activities: Activity[] = [];
+      if (lessonData.orderedActivities && Array.isArray(lessonData.orderedActivities)) {
+        activities = lessonData.orderedActivities.map((activity: Activity) => ({
+          ...activity,
+          _uniqueId: Date.now() + Math.random().toString(36).substring(2, 9)
+        }));
+      } else if (lessonData.grouped) {
+        const categoryOrder = lessonData.categoryOrder || Object.keys(lessonData.grouped);
+        activities = categoryOrder
+          .filter(category => lessonData.grouped[category])
+          .flatMap(category => lessonData.grouped[category] || [])
+          .map((activity: Activity) => ({
+            ...activity,
+            _uniqueId: Date.now() + Math.random().toString(36).substring(2, 9)
+          }));
+      }
+      return activities;
+    }
+    return [];
+  });
   const [showActivityModal, setShowActivityModal] = useState(false);
+  const [showActivitiesSection, setShowActivitiesSection] = useState(editingLesson ? true : false);
 
   // Auto-resize textareas on mount and when values change
   React.useEffect(() => {
@@ -141,6 +279,25 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
     }
   };
 
+  // Handle activity removal from modal
+  const handleRemoveActivity = (activity: Activity) => {
+    const activityToRemove = selectedActivities.find(
+      a => (a._id || a.id) === (activity._id || activity.id)
+    );
+    
+    if (activityToRemove) {
+      setSelectedActivities(prev => prev.filter(
+        a => (a._id || a.id) !== (activity._id || activity.id)
+      ));
+      
+      // Update duration
+      setLesson(prev => ({
+        ...prev,
+        duration: Math.max(0, prev.duration - (activityToRemove.time || 0))
+      }));
+    }
+  };
+
   // Handle adding activity from library
   const handleActivityAdd = (activity: Activity) => {
     const activityCopy = JSON.parse(JSON.stringify(activity));
@@ -179,7 +336,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     console.log('📝 Submit button clicked');
     console.log('📊 Current lesson data:', lesson);
     
@@ -208,7 +365,8 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
       lessonName: lesson.lessonName,
       totalTime: lesson.duration,
       type: 'standalone',
-      createdAt: new Date().toISOString(),
+      createdAt: editingLesson?.lessonData?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       learningOutcome: lesson.learningOutcome,
       successCriteria: lesson.successCriteria,
       introduction: lesson.introduction,
@@ -223,7 +381,6 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
       resourceLink: lesson.resourceLink,
       imageLink: lesson.imageLink,
       additionalLinks: lesson.additionalLinks,
-      activityNotes: lesson.activityNotes,
       grouped: grouped,
       categoryOrder: categoryOrder,
       orderedActivities: selectedActivities.map(a => {
@@ -232,20 +389,30 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
       })
     };
 
-    console.log('💾 Calling onSave with:', lessonData);
-    onSave(lessonData);
+    // If editing, use updateLessonData
+    if (editingLesson && updateLessonData) {
+      console.log('💾 Updating existing lesson:', editingLesson.lessonNumber);
+      await updateLessonData(editingLesson.lessonNumber, lessonData);
+      console.log('✅ Lesson updated successfully');
+      onClose();
+    } else {
+      console.log('💾 Creating new lesson');
+      onSave(lessonData);
+    }
   };
 
   return (
     <>
       {/* Main Create Lesson Modal */}
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[100]">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[98vh] sm:max-h-[95vh] flex flex-col">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[98vh] sm:max-h-[95vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white flex-shrink-0" />
-            <h2 className="text-base sm:text-xl font-bold text-white truncate">Create Lesson Plan</h2>
+            <h2 className="text-base sm:text-xl font-bold text-white truncate">
+              {editingLesson ? `Editing: ${editingLesson.lessonData?.title || `Lesson ${editingLesson.lessonNumber}`}` : 'Create Lesson Plan'}
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -304,7 +471,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {activeTab === 'main' ? (
             <div className="p-6 space-y-6">
               {/* Basic Information Card */}
@@ -444,76 +611,72 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                     />
                   </div>
                 ) : null}
-              </div>
 
-              {/* Lesson Notes Section - Full Width */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lesson Notes & Additional Information
-                </label>
-                <textarea
-                  name="activityNotes"
-                  value={lesson.activityNotes}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white resize-none"
-                  style={{ minHeight: '80px' }}
-                  onInput={(e) => {
-                    const target = e.target as HTMLTextAreaElement;
-                    target.style.height = 'auto';
-                    target.style.height = target.scrollHeight + 'px';
-                  }}
-                  placeholder="Add notes, instructions, or additional information about these activities and how they work together in this lesson..."
-                />
-              </div>
-
-              {/* Activities Section - Lesson Plan Builder */}
-              <DndProvider backend={HTML5Backend}>
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  {/* Header with Add Activities Button */}
-                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                {/* Activities Section - Collapsible at bottom of Main Activity */}
+                <div className="mt-4 pt-4 border-t border-green-200">
+                  <button
+                    onClick={() => setShowActivitiesSection(!showActivitiesSection)}
+                    className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                  >
                     <div className="flex items-center space-x-2">
-                      <Plus className="h-5 w-5 text-teal-600" />
-                      <h3 className="text-lg font-semibold text-gray-900">Activities</h3>
+                      <Plus className="h-4 w-4 text-teal-600" />
+                      <span className="text-sm font-medium text-gray-900">Activities</span>
                       {selectedActivities.length > 0 && (
-                        <span className="text-sm text-gray-600">({selectedActivities.length} selected)</span>
+                        <span className="text-xs text-gray-500">({selectedActivities.length} selected)</span>
                       )}
                     </div>
-                    <button
-                      onClick={() => setShowActivityModal(true)}
-                      className="flex items-center space-x-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Add Activities</span>
-                    </button>
-                  </div>
+                    {showActivitiesSection ? (
+                      <ChevronUp className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-gray-500" />
+                    )}
+                  </button>
 
-                  {/* Lesson Plan Drop Zone */}
-                  <div className="p-4">
-                    <LessonDropZone
-                      lessonPlan={{
-                        id: '',
-                        date: new Date(),
-                        week: 1,
-                        className: '',
-                        activities: selectedActivities,
-                        duration: selectedActivities.reduce((sum, a) => sum + (a.time || 0), 0),
-                        notes: lesson.activityNotes,
-                        status: 'draft',
-                        title: lesson.lessonTitle,
-                        createdAt: new Date(),
-                        updatedAt: new Date()
-                      }}
-                      onActivityAdd={handleActivityAdd}
-                      onActivityRemove={handleActivityRemove}
-                      onActivityReorder={handleActivityReorder}
-                      onLessonPlanFieldUpdate={() => {}}
-                      isEditing={true}
-                      onActivityClick={() => {}}
-                      onSave={() => {}}
-                    />
-                  </div>
+                  {/* Collapsible Activities Content */}
+                  {showActivitiesSection && (
+                    <DndProvider backend={HTML5Backend}>
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between mb-3">
+                          <button
+                            onClick={() => setShowActivityModal(true)}
+                            className="flex items-center space-x-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded transition-colors"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            <span>Add Activities</span>
+                          </button>
+                        </div>
+                        
+                        {selectedActivities.length === 0 ? (
+                          <p className="text-sm text-gray-600 py-4 text-center">
+                            Click "Add Activities" to select activities for this lesson plan.
+                          </p>
+                        ) : (
+                          <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+                            {selectedActivities.map((activity, index) => (
+                              <CompactDraggableActivity
+                                key={activity._uniqueId || `${activity._id || activity.id || activity.activity}-${index}`}
+                                activity={activity}
+                                index={index}
+                                onRemove={() => handleActivityRemove(index)}
+                                onReorder={handleActivityReorder}
+                              />
+                            ))}
+                            <div className="p-3 border-t border-gray-200">
+                              <button
+                                onClick={() => setShowActivityModal(true)}
+                                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                              >
+                                <Plus className="h-4 w-4" />
+                                <span>Add Activity to Lesson</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </DndProvider>
+                  )}
                 </div>
-              </DndProvider>
+              </div>
 
               {/* Plenary Card */}
               <div className={`bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg transition-all duration-300 ${lesson.plenary ? 'p-5' : 'p-4'}`}>
@@ -767,7 +930,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
               onClick={handleSubmit}
               className="px-5 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 text-sm font-medium transition-all shadow-sm"
             >
-              Create Lesson
+              {editingLesson ? 'Save Changes' : 'Create Lesson'}
             </button>
           </div>
         </div>
@@ -994,6 +1157,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         isOpen={showActivityModal}
         onClose={() => setShowActivityModal(false)}
         onSelectActivity={handleSelectActivity}
+        onRemoveActivity={handleRemoveActivity}
         selectedActivities={selectedActivities}
       />
     </>

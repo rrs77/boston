@@ -36,6 +36,9 @@ interface LessonDropZoneProps {
   onLessonPlanFieldUpdate: (field: string, value: any) => void; // NEW: Add this for lesson naming
   isEditing: boolean;
   onSave?: () => void; // NEW: Add save lesson functionality
+  onAddActivitiesClick?: () => void; // NEW: Callback for opening activity modal
+  notes?: string; // NEW: Lesson notes
+  onNotesChange?: (notes: string) => void; // NEW: Callback for notes change
 }
 
 interface DraggableActivityProps {
@@ -122,8 +125,9 @@ function DraggableActivity({
       return;
     }
 
-    // Prevent click if target is a button
-    if ((e.target as HTMLElement).closest('button')) {
+    // Prevent click if target is a button or drag handle
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('[data-drag-handle]')) {
       return;
     }
 
@@ -138,10 +142,10 @@ function DraggableActivity({
       ref={ref}
       style={{ opacity }}
       data-handler-id={handlerId}
-      className="relative bg-white border-b border-gray-200 transition-all duration-200 hover:bg-gray-50 group"
+      className="relative bg-white transition-all duration-200 hover:bg-gray-50 group cursor-move"
       onClick={handleActivityClick}
     >
-      <div className="flex items-center py-3 px-4">
+      <div className="flex items-center py-2.5 px-4">
         {/* Colored left border */}
         <div 
           className="w-1 h-full absolute left-0 top-0 bottom-0 flex-shrink-0"
@@ -150,27 +154,26 @@ function DraggableActivity({
         
         {/* Drag handle */}
         {isEditing && (
-          <div className="flex items-center mr-3 cursor-move text-gray-400 hover:text-gray-600">
-            <GripVertical className="h-5 w-5" />
+          <div 
+            data-drag-handle
+            className="flex items-center mr-2 cursor-move text-gray-400 hover:text-gray-600"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-4 w-4" />
           </div>
         )}
         
-        {/* Chevron icon */}
-        <div className="flex items-center mr-3 text-gray-400">
-          <ChevronRight className="h-5 w-5" />
-        </div>
-        
         {/* Activity content */}
         <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-gray-900 text-base leading-tight mb-1">
+          <h4 className="font-semibold text-gray-900 text-sm leading-tight">
             {activity.activity}
           </h4>
         </div>
         
         {/* Category tag */}
-        <div className="mx-3">
+        <div className="mx-2">
           <span 
-            className="px-3 py-1 text-white text-xs font-medium rounded-full whitespace-nowrap"
+            className="px-2 py-0.5 text-white text-xs font-medium rounded-full whitespace-nowrap"
             style={{ backgroundColor: categoryColor }}
           >
             {activity.category}
@@ -179,9 +182,9 @@ function DraggableActivity({
         
         {/* Duration */}
         {activity.time > 0 && (
-          <div className="flex items-center space-x-1 text-gray-500 mr-3">
-            <Clock className="h-4 w-4" />
-            <span className="text-sm font-medium">{activity.time}m</span>
+          <div className="flex items-center space-x-1 text-gray-500 mr-2">
+            <Clock className="h-3.5 w-3.5" />
+            <span className="text-xs font-medium">{activity.time}m</span>
           </div>
         )}
         
@@ -192,10 +195,10 @@ function DraggableActivity({
               e.stopPropagation();
               onRemove();
             }}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors duration-200"
+            className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors duration-200 opacity-0 group-hover:opacity-100"
             title="Remove Activity"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
@@ -210,7 +213,10 @@ export function LessonDropZone({
   onActivityReorder,
   onLessonPlanFieldUpdate, // NEW: Add this prop
   isEditing,
-  onSave // NEW: Add save functionality
+  onSave, // NEW: Add save functionality
+  onAddActivitiesClick, // NEW: Add activities button callback
+  notes, // NEW: Lesson notes
+  onNotesChange // NEW: Notes change callback
 }: LessonDropZoneProps) {
   // NEW: Add modal state management and activity editing
   const { updateActivity, deleteActivity } = useData(); // Access data context functions
@@ -278,12 +284,16 @@ export function LessonDropZone({
     setInitialResource({url, title, type});
   };
 
+  const hasActivities = lessonPlan.activities.length > 0;
+  const headerPadding = hasActivities ? 'p-4' : 'p-6';
+  const headerCompact = hasActivities;
+
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200 text-white h-[180px] flex flex-col justify-between" style={{ backgroundColor: '#109D90' }}>
-          <div className="flex items-center justify-between mb-4">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden" style={{ backgroundColor: '#109D90' }}>
+        {/* Header - Thinner when activities are present */}
+        <div className={`${headerPadding} text-white transition-all duration-200`}>
+          <div className={`flex items-start justify-between ${headerCompact ? 'mb-2' : 'mb-4'}`}>
             <div className="flex-1">
               {/* Lesson Name Input */}
               <input
@@ -291,94 +301,119 @@ export function LessonDropZone({
                 value={lessonPlan.title || ''}
                 onChange={(e) => onLessonPlanFieldUpdate('title', e.target.value)}
                 placeholder="Lesson Name"
-                className="w-full text-2xl font-bold text-white border-b border-white border-opacity-30 focus:border-opacity-100 focus:outline-none bg-transparent placeholder-green-100"
+                className={`w-full font-bold text-white border-b border-white border-opacity-30 focus:border-opacity-100 focus:outline-none bg-transparent placeholder-green-100 ${headerCompact ? 'text-xl mb-1.5' : 'text-2xl mb-3'}`}
               />
-              <div className="flex items-center flex-wrap gap-3 mt-2">
-                <div className="flex items-center space-x-2 text-white">
-                  <span>{lessonPlan.className}</span>
-                </div>
-                
-                <div className="flex items-center space-x-2 text-white">
+              <div className={`flex items-center flex-wrap gap-4 ${headerCompact ? 'mt-1.5' : 'mt-2'}`}>
+                <div className="flex items-center space-x-2 text-white text-sm">
                   <Clock className="h-4 w-4" />
                   <span>{lessonPlan.duration} minutes</span>
                 </div>
                 
-                <div className="flex items-center space-x-2 text-white">
+                <div className="flex items-center space-x-2 text-white text-sm">
                   <Users className="h-4 w-4" />
                   <span>{lessonPlan.activities.length} activities</span>
                 </div>
               </div>
             </div>
             
-            {/* NEW: Save Lesson Button */}
+            {/* Save Lesson Button */}
             {onSave && (
               <button
                 onClick={onSave}
-                className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white text-sm font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md ml-4"
+                className={`${headerCompact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md ml-4`}
               >
-                <Save className="h-4 w-4" />
+                <Save className={headerCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
                 <span>Save Lesson</span>
               </button>
             )}
           </div>
-        </div>
 
-        {/* Drop Zone */}
-        <div
-          ref={drop}
-          className={`p-6 min-h-[400px] transition-colors duration-200 ${
-            isOver ? 'bg-gray-50 border-gray-300' : ''
-          }`}
-        >
-          {lessonPlan.activities.length === 0 ? (
-            <div className="text-center py-16">
-              <div className={`mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-4 transition-colors duration-200 ${
-                isOver ? 'bg-gray-200' : 'bg-gray-100'
-              }`}>
-                <Plus className={`h-12 w-12 transition-colors duration-200 ${
-                  isOver ? 'text-gray-600' : 'text-gray-400'
-                }`} />
-              </div>
-              <h3 className="text-lg font-medium text-teal-800 mb-2">
-                {isOver ? 'Drop activity here' : 'No activities planned'}
-              </h3>
-              <p className="text-teal-600">
-                {isOver 
-                  ? 'Release to add this activity to your lesson plan'
-                  : 'Select activities from the library to build your lesson plan'
-                }
-              </p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              {lessonPlan.activities.map((activity, index) => (
-                <DraggableActivity
-                  key={activity._uniqueId || `${activity._id || activity.id || activity.activity}-${index}`}
-                  activity={activity}
-                  index={index}
-                  onRemove={() => onActivityRemove(index)}
-                  onReorder={onActivityReorder}
-                  isEditing={isEditing}
-                  onActivityClick={handleViewActivityDetails}
-                />
-              ))}
-              
-              {isEditing && (
-                <div className="p-4 border-t border-gray-200">
-                  <button
-                    className={`w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg font-medium transition-colors duration-200 ${
-                      isOver 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
-                  >
-                    <Plus className="h-5 w-5" />
-                    <span>Add Activity to Lesson</span>
-                  </button>
-                </div>
-              )}
+          {/* Lesson Notes - Integrated into header - Only show when no activities or explicitly requested */}
+          {onNotesChange !== undefined && (!hasActivities || notes) && (
+            <div className={headerCompact ? 'mt-2' : 'mt-4'}>
+              <label className={`block font-medium text-white opacity-90 ${headerCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
+                Lesson Notes & Additional Information
+              </label>
+              <textarea
+                value={notes || ''}
+                onChange={(e) => onNotesChange(e.target.value)}
+                className={`w-full px-3 py-2 border border-white border-opacity-30 rounded-lg bg-white bg-opacity-10 backdrop-blur-sm text-white placeholder-green-100 resize-none ${headerCompact ? 'text-xs' : 'text-sm'}`}
+                style={{ minHeight: headerCompact ? '40px' : '60px' }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = target.scrollHeight + 'px';
+                }}
+                placeholder="Add notes, instructions, or additional information about these activities and how they work together in this lesson..."
+              />
             </div>
           )}
+        </div>
+
+        {/* Activities Section - Integrated */}
+        <div className="bg-white">
+          {/* Add Activities Button - Slim */}
+          {isEditing && onAddActivitiesClick && (
+            <div className={`${hasActivities ? 'px-4 py-2' : 'px-6 py-3'} border-b border-gray-200 flex items-center justify-between`}>
+              <div className="flex items-center space-x-2">
+                <Plus className={`${hasActivities ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-teal-600`} />
+                <span className={`${hasActivities ? 'text-xs' : 'text-sm'} font-medium text-gray-700`}>Activities</span>
+                {lessonPlan.activities.length > 0 && (
+                  <span className="text-xs text-gray-500">({lessonPlan.activities.length})</span>
+                )}
+              </div>
+              <button
+                onClick={onAddActivitiesClick}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Activities</span>
+              </button>
+            </div>
+          )}
+
+          {/* Drop Zone */}
+          <div
+            ref={drop}
+            className={`transition-colors duration-200 ${
+              isOver ? 'bg-gray-50' : ''
+            }`}
+          >
+            {lessonPlan.activities.length === 0 ? (
+              <div className="text-center py-12 px-6">
+                <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-3 transition-colors duration-200 ${
+                  isOver ? 'bg-gray-200' : 'bg-gray-100'
+                }`}>
+                  <Plus className={`h-8 w-8 transition-colors duration-200 ${
+                    isOver ? 'text-gray-600' : 'text-gray-400'
+                  }`} />
+                </div>
+                <h3 className="text-base font-medium text-gray-700 mb-1">
+                  {isOver ? 'Drop activity here' : 'No activities added'}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {isOver 
+                    ? 'Release to add this activity'
+                    : 'Click "Add Activities" to get started'
+                  }
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {lessonPlan.activities.map((activity, index) => (
+                  <DraggableActivity
+                    key={activity._uniqueId || `${activity._id || activity.id || activity.activity}-${index}`}
+                    activity={activity}
+                    index={index}
+                    onRemove={() => onActivityRemove(index)}
+                    onReorder={onActivityReorder}
+                    isEditing={isEditing}
+                    onActivityClick={handleViewActivityDetails}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
       </div>
