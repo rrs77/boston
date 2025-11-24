@@ -456,7 +456,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                 ) : null}
               </div>
             </div>
-          ) : (
+          ) : activeTab === 'extended' ? (
             <div className="p-6 space-y-5">
               {/* Extended Details Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -658,7 +658,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                 </button>
               </div>
             </div>
-          ) : (
+          ) : activeTab === 'activities' ? (
             <DndProvider backend={HTML5Backend}>
               <div className="p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -747,10 +747,10 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                     />
                   </div>
                 </div>
-              </div>
-            </DndProvider>
-          )}
-        </div>
+                </div>
+              </DndProvider>
+            ) : null}
+          </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
