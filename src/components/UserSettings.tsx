@@ -509,7 +509,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'thin',
             scrollbarColor: '#9CA3AF #F3F4F6',
-            minHeight: '48px'
+            minHeight: '48px',
+            gap: 0
           }}
         >
           {/* Year Groups */}
@@ -533,7 +534,19 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                 ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
             }`}
-            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif', border: 'none', borderLeft: 'none', borderRight: 'none' }}
+            style={{ 
+              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif', 
+              border: 'none', 
+              borderLeft: 'none', 
+              borderRight: 'none',
+              borderTop: 'none',
+              borderBottom: 'none',
+              outline: 'none',
+              boxShadow: 'none',
+              marginLeft: activeTab === 'categories' ? '-1px' : '0',
+              marginRight: activeTab === 'categories' ? '-1px' : '0',
+              zIndex: activeTab === 'categories' ? 1 : 0
+            }}
           >
             Categories
           </button>

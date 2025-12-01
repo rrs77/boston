@@ -296,6 +296,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                     placeholder="Select a category"
                     className="px-4 py-3 text-sm font-medium w-full bg-white"
                     dropdownBackgroundColor="#F0FDFA"
+                    showAllCategories={true}
                   />
                 </div>
                 {errors.category && (

@@ -56,6 +56,50 @@ export function LessonPlanBuilder({
   const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks } = useData();
   const { categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   
+  // Get categories assigned to current year group
+  const getCurrentYearGroupKeys = (): string[] => {
+    const sheetId = currentSheetInfo?.sheet;
+    if (!sheetId) return [];
+    
+    const yearGroup = customYearGroups.find(yg => yg.id === sheetId);
+    if (yearGroup) {
+      const primaryKey = yearGroup.id || 
+        (yearGroup.name.toLowerCase().includes('lower') || yearGroup.name.toLowerCase().includes('lkg') ? 'LKG' :
+         yearGroup.name.toLowerCase().includes('upper') || yearGroup.name.toLowerCase().includes('ukg') ? 'UKG' :
+         yearGroup.name.toLowerCase().includes('reception') ? 'Reception' : yearGroup.name);
+      return [primaryKey];
+    }
+    return [];
+  };
+  
+  // Get categories available for current year group
+  const availableCategoriesForYearGroup = React.useMemo(() => {
+    const yearGroupKeys = getCurrentYearGroupKeys();
+    if (yearGroupKeys.length === 0) {
+      // If no year group selected, show all categories
+      return categories.map(c => c.name);
+    }
+    
+    const primaryKey = yearGroupKeys[0];
+    return categories
+      .filter(category => {
+        if (!category.yearGroups || Object.keys(category.yearGroups).length === 0) {
+          return false;
+        }
+        // Check for old defaults
+        const hasOldDefaults = 
+          category.yearGroups.LKG === true && 
+          category.yearGroups.UKG === true && 
+          category.yearGroups.Reception === true &&
+          Object.keys(category.yearGroups).length === 3;
+        if (hasOldDefaults) {
+          return false;
+        }
+        return category.yearGroups[primaryKey] === true;
+      })
+      .map(c => c.name);
+  }, [categories, currentSheetInfo, customYearGroups]);
+  
   // Initialize currentLessonPlan with a default value instead of null
   const [currentLessonPlan, setCurrentLessonPlan] = useState<LessonPlan>(() => {
     // If editing an existing lesson
@@ -105,7 +149,6 @@ export function LessonPlanBuilder({
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedLevel, setSelectedLevel] = useState('all');
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'time' | 'level'>('category');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
@@ -436,14 +479,17 @@ export function LessonPlanBuilder({
     let filtered = allActivities.filter(activity => {
       const matchesSearch = activity.activity.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            activity.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || activity.category === selectedCategory;
-      const matchesLevel = selectedLevel === 'all' || 
-                          activity.level === selectedLevel || 
-                          activity.level === 'All' ||
-                          mapActivityLevelToYearGroup(activity.level) === selectedLevel ||
-                          (activity.yearGroups && activity.yearGroups.includes(selectedLevel));
       
-      return matchesSearch && matchesCategory && matchesLevel;
+      // Filter by category assignment to year group
+      const matchesYearGroupCategory = availableCategoriesForYearGroup.includes(activity.category);
+      
+      // Filter by selected category if one is chosen
+      const matchesCategory = selectedCategory === 'all' || activity.category === selectedCategory;
+      
+      // Level filtering removed - show all levels
+      const matchesLevel = true;
+      
+      return matchesSearch && matchesYearGroupCategory && matchesCategory && matchesLevel;
     });
 
     // Sort activities
@@ -469,7 +515,7 @@ export function LessonPlanBuilder({
     });
 
     return filtered;
-  }, [allActivities, searchQuery, selectedCategory, selectedLevel, sortBy, sortOrder]);
+  }, [allActivities, searchQuery, selectedCategory, sortBy, sortOrder, availableCategoriesForYearGroup]);
 
   const toggleSort = (field: typeof sortBy) => {
     if (sortBy === field) {
@@ -592,41 +638,31 @@ export function LessonPlanBuilder({
                 <div className="p-6 border-b border-gray-200 text-white h-[180px] flex flex-col justify-between" style={{ background: 'linear-gradient(to right, #14B8A6, #0D9488)' }}>
                   <h3 className="text-lg font-semibold mb-4">Activity Library</h3>
                   
-                  {/* Search */}
-                  <div className="relative mb-3">
-                    <Search 
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" 
-                      style={{ color: '#FFFFFF' }}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Search activities..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-sm font-semibold text-white placeholder:text-white placeholder:opacity-90"
-                    />
-                  </div>
-                  
-                  {/* Filters - Simplified to match StandaloneLessonCreator */}
+                  {/* Search and Category Filter - On one line */}
                   <div className="flex space-x-2">
+                    {/* Search */}
+                    <div className="relative flex-1">
+                      <Search 
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" 
+                        style={{ color: '#FFFFFF' }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Search activities..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-sm font-semibold text-white placeholder:text-white placeholder:opacity-90"
+                      />
+                    </div>
+                    
+                    {/* Category Filter */}
                     <SimpleNestedCategoryDropdown
                       selectedCategory={selectedCategory === 'all' ? '' : selectedCategory}
                       onCategoryChange={(category) => setSelectedCategory(category || 'all')}
                       placeholder="All Categories"
-                      className="w-full flex-1 px-3 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent text-sm truncate font-semibold"
+                      className="flex-1 px-3 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent text-sm truncate font-semibold"
                       dropdownBackgroundColor="#D6F2EE"
                     />
-                    
-                    <select
-                      value={selectedLevel}
-                      onChange={(e) => setSelectedLevel(e.target.value)}
-                      className="w-full flex-1 px-3 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent text-sm truncate font-semibold"
-                    >
-                      <option value="all" className="text-gray-900">All Levels</option>
-                      {customYearGroups.map(group => (
-                        <option key={group.name} value={group.name} className="text-gray-900">{group.name}</option>
-                      ))}
-                    </select>
                   </div>
                   
                   {/* Add Selected Button */}

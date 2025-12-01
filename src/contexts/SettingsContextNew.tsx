@@ -254,6 +254,7 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
   const dataLoadedFromSupabase = useRef(false);
   const saveQueue = useRef<{ type: string; data: any }[]>([]);
   const saveQueueTimeout = useRef<NodeJS.Timeout | null>(null);
+  const isCurrentlyLoading = useRef(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Centralized save queue processor to prevent race conditions
@@ -619,14 +620,36 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
           console.log('📦 Raw categories from Supabase:', supabaseCategories);
           
           if (supabaseCategories && supabaseCategories.length > 0) {
-            const formattedCategories = supabaseCategories.map(cat => ({
-              name: cat.name,
-              color: cat.color,
-              position: cat.position || 0,
-              group: cat.group, // Single group (backward compatibility)
-              groups: cat.groups || (cat.group ? [cat.group] : []), // Multiple groups
-              yearGroups: cat.yearGroups || {}
-            }));
+            // Set loading flag to prevent save during load
+            isCurrentlyLoading.current = true;
+            
+            const formattedCategories = supabaseCategories.map(cat => {
+              // Clean old default yearGroups assignments
+              let yearGroups = cat.yearGroups || {};
+              
+              // If category has old default assignments (all legacy keys = true), clear them
+              if (yearGroups && typeof yearGroups === 'object') {
+                const hasOldDefaults = 
+                  yearGroups.LKG === true && 
+                  yearGroups.UKG === true && 
+                  yearGroups.Reception === true &&
+                  Object.keys(yearGroups).length === 3;
+                
+                if (hasOldDefaults) {
+                  console.log(`🧹 Cleaning old default yearGroups for category "${cat.name}"`);
+                  yearGroups = {}; // Clear old defaults
+                }
+              }
+              
+              return {
+                name: cat.name,
+                color: cat.color,
+                position: cat.position || 0,
+                group: cat.group, // Single group (backward compatibility)
+                groups: cat.groups || (cat.group ? [cat.group] : []), // Multiple groups
+                yearGroups: yearGroups
+              };
+            });
             
             // Merge with fixed categories, but use Supabase data for any FIXED_CATEGORIES that exist in Supabase
             const mergedCategories = [...FIXED_CATEGORIES];
@@ -636,11 +659,16 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
               const fixedIndex = mergedCategories.findIndex(fixed => fixed.name === supabaseCat.name);
               if (fixedIndex >= 0) {
                 // This is a FIXED_CATEGORY with group assignments from Supabase
+                // Use Supabase yearGroups if they exist and are not empty, otherwise keep empty
+                const yearGroups = (supabaseCat.yearGroups && Object.keys(supabaseCat.yearGroups).length > 0) 
+                  ? supabaseCat.yearGroups 
+                  : {}; // Ensure empty if no assignments
+                
                 mergedCategories[fixedIndex] = {
                   ...mergedCategories[fixedIndex],
                   group: supabaseCat.group,
                   groups: supabaseCat.groups,
-                  yearGroups: supabaseCat.yearGroups
+                  yearGroups: yearGroups
                 };
               } else {
                 // This is a custom category, add it
@@ -652,8 +680,57 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
             console.log('📦 Loaded categories from Supabase:', formattedCategories.length, 'custom categories');
             console.log('📦 Category groups mapping:', formattedCategories.map(cat => ({ name: cat.name, groups: cat.groups })));
             
+            // Check if any categories were cleaned (had old defaults)
+            const cleanedCount = formattedCategories.filter(cat => {
+              const original = supabaseCategories.find(s => s.name === cat.name);
+              if (!original || !original.yearGroups) return false;
+              const hasOldDefaults = 
+                original.yearGroups.LKG === true && 
+                original.yearGroups.UKG === true && 
+                original.yearGroups.Reception === true &&
+                Object.keys(original.yearGroups).length === 3;
+              return hasOldDefaults && (!cat.yearGroups || Object.keys(cat.yearGroups).length === 0);
+            }).length;
+            
+            // If categories were cleaned, save the cleaned state back to Supabase
+            if (cleanedCount > 0) {
+              console.log(`💾 ${cleanedCount} categories were cleaned of old defaults - saving cleaned state to Supabase`);
+              // Save cleaned categories back to Supabase to update the database
+              const categoriesToSave = mergedCategories.filter(cat => {
+                const isCustom = !FIXED_CATEGORIES.some(fixed => fixed.name === cat.name);
+                const hasGroupAssignments = (cat.groups && cat.groups.length > 0) || cat.group;
+                const hasYearGroupAssignments = cat.yearGroups && Object.keys(cat.yearGroups).length > 0 && 
+                  Object.values(cat.yearGroups).some(v => v === true);
+                return isCustom || hasGroupAssignments || hasYearGroupAssignments;
+              });
+              
+              if (categoriesToSave.length > 0) {
+                const categoriesForSupabase = categoriesToSave.map(cat => ({
+                  name: cat.name,
+                  color: cat.color,
+                  position: cat.position,
+                  group: cat.group,
+                  groups: cat.groups || [],
+                  yearGroups: cat.yearGroups || {}
+                }));
+                
+                // Save directly to Supabase (not through queue) to update cleaned state
+                try {
+                  await customCategoriesApi.upsert(categoriesForSupabase);
+                  console.log('✅ Cleaned categories saved to Supabase');
+                } catch (error) {
+                  console.error('❌ Failed to save cleaned categories:', error);
+                }
+              }
+            }
+            
             // Update localStorage to match Supabase data
             localStorage.setItem('saved-categories', JSON.stringify(mergedCategories));
+            
+            // Clear loading flag after a short delay to allow state to settle
+            setTimeout(() => {
+              isCurrentlyLoading.current = false;
+            }, 1000);
           } else {
             // No categories in Supabase, check localStorage and sync to Supabase
             console.log('📦 No categories in Supabase, checking localStorage...');
@@ -981,10 +1058,16 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
     console.log('💾 Categories saved to localStorage');
     
     // Filter categories for Supabase save
+    // Save ALL categories that have:
+    // 1. Custom categories (not in FIXED_CATEGORIES)
+    // 2. Categories with group assignments
+    // 3. Categories with yearGroups assignments (to preserve user's year group assignments)
     const categoriesToSave = categories.filter(cat => {
       const isCustom = !FIXED_CATEGORIES.some(fixed => fixed.name === cat.name);
       const hasGroupAssignments = (cat.groups && cat.groups.length > 0) || cat.group;
-      return isCustom || hasGroupAssignments;
+      const hasYearGroupAssignments = cat.yearGroups && Object.keys(cat.yearGroups).length > 0 && 
+        Object.values(cat.yearGroups).some(v => v === true);
+      return isCustom || hasGroupAssignments || hasYearGroupAssignments;
     });
     
     if (categoriesToSave.length > 0) {
@@ -994,8 +1077,15 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
         position: cat.position,
         group: cat.group,
         groups: cat.groups || [],
-        yearGroups: cat.yearGroups
+        yearGroups: cat.yearGroups || {} // Preserve yearGroups assignments
       }));
+      
+      console.log('💾 Saving categories to Supabase:', {
+        totalCategories: categories.length,
+        categoriesToSave: categoriesToSave.length,
+        categoriesWithYearGroups: categoriesToSave.filter(c => c.yearGroups && Object.keys(c.yearGroups).length > 0).length,
+        sampleYearGroups: categoriesToSave.slice(0, 3).map(c => ({ name: c.name, yearGroups: c.yearGroups }))
+      });
       
       // Queue Supabase save
       queueSave('categories', categoriesForSupabase);
@@ -1504,14 +1594,33 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
       // Refresh categories
       const supabaseCategories = await customCategoriesApi.getAll();
       if (supabaseCategories && supabaseCategories.length > 0) {
-        const formattedCategories = supabaseCategories.map((cat: any) => ({
-          name: cat.name,
-          color: cat.color,
-          position: cat.position || 0,
-          group: cat.group, // Single group (backward compatibility)
-          groups: cat.groups || (cat.group ? [cat.group] : []), // Multiple groups
-          yearGroups: cat.yearGroups || {} // Empty object - categories must be explicitly assigned
-        }));
+        const formattedCategories = supabaseCategories.map((cat: any) => {
+          // Clean old default yearGroups assignments
+          let yearGroups = cat.yearGroups || {};
+          
+          // If category has old default assignments (all legacy keys = true), clear them
+          if (yearGroups && typeof yearGroups === 'object') {
+            const hasOldDefaults = 
+              yearGroups.LKG === true && 
+              yearGroups.UKG === true && 
+              yearGroups.Reception === true &&
+              Object.keys(yearGroups).length === 3;
+            
+            if (hasOldDefaults) {
+              console.log(`🧹 Cleaning old default yearGroups for category "${cat.name}"`);
+              yearGroups = {}; // Clear old defaults
+            }
+          }
+          
+          return {
+            name: cat.name,
+            color: cat.color,
+            position: cat.position || 0,
+            group: cat.group, // Single group (backward compatibility)
+            groups: cat.groups || (cat.group ? [cat.group] : []), // Multiple groups
+            yearGroups: yearGroups // Cleaned yearGroups
+          };
+        });
         
         // Merge with fixed categories, but use Supabase data for any FIXED_CATEGORIES that exist in Supabase
         const mergedCategories = [...FIXED_CATEGORIES];
@@ -1521,11 +1630,16 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
           const fixedIndex = mergedCategories.findIndex(fixed => fixed.name === supabaseCat.name);
           if (fixedIndex >= 0) {
             // This is a FIXED_CATEGORY with group assignments from Supabase
+            // Use Supabase yearGroups if they exist and are not empty, otherwise keep empty
+            const yearGroups = (supabaseCat.yearGroups && Object.keys(supabaseCat.yearGroups).length > 0) 
+              ? supabaseCat.yearGroups 
+              : {}; // Ensure empty if no assignments
+            
             mergedCategories[fixedIndex] = {
               ...mergedCategories[fixedIndex],
               group: supabaseCat.group,
               groups: supabaseCat.groups,
-              yearGroups: supabaseCat.yearGroups
+              yearGroups: yearGroups
             };
           } else {
             // This is a custom category, add it

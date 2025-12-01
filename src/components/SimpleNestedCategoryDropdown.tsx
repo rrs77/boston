@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useSettings, Category } from '../contexts/SettingsContextNew';
 import { useData } from '../contexts/DataContext';
-import { ChevronDown, ChevronRight, Filter, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, X } from 'lucide-react';
 
 interface SimpleNestedCategoryDropdownProps {
   selectedCategory: string;
@@ -10,6 +10,7 @@ interface SimpleNestedCategoryDropdownProps {
   className?: string;
   dropdownBackgroundColor?: string;
   textColor?: string;
+  showAllCategories?: boolean; // If true, show all categories regardless of year group filtering
 }
 
 export function SimpleNestedCategoryDropdown({
@@ -18,7 +19,8 @@ export function SimpleNestedCategoryDropdown({
   placeholder = 'Select Category',
   className = '',
   dropdownBackgroundColor,
-  textColor
+  textColor,
+  showAllCategories = false
 }: SimpleNestedCategoryDropdownProps) {
   const { categories, categoryGroups, customYearGroups } = useSettings();
   const { currentSheetInfo } = useData();
@@ -28,11 +30,11 @@ export function SimpleNestedCategoryDropdown({
 
   // Helper function to get the year group key(s) to check in category.yearGroups
   // This matches the EXACT logic used in UserSettings when saving categories (line 1557-1560)
+  // IMPORTANT: Only return the PRIMARY key used when saving - don't include backward compatibility keys
+  // This ensures we only show categories explicitly assigned to this year group
   const getCurrentYearGroupKeys = (): string[] => {
     const sheetId = currentSheetInfo?.sheet;
     if (!sheetId) return [];
-
-    const keys: string[] = [];
 
     // Find the year group - match by ID first (since currentSheetInfo.sheet is the ID)
     const yearGroup = customYearGroups.find(yg => yg.id === sheetId);
@@ -45,30 +47,15 @@ export function SimpleNestedCategoryDropdown({
          yearGroup.name.toLowerCase().includes('upper') || yearGroup.name.toLowerCase().includes('ukg') ? 'UKG' :
          yearGroup.name.toLowerCase().includes('reception') ? 'Reception' : yearGroup.name);
       
-      // Primary key (what was used when saving) - check this FIRST
-      keys.push(primaryKey);
+      console.log('🔑 Year group PRIMARY key:', {
+        sheetId,
+        yearGroupName: yearGroup.name,
+        yearGroupId: yearGroup.id,
+        primaryKey
+      });
       
-      // Also check yearGroup.id if it's different (for UUIDs)
-      if (yearGroup.id && yearGroup.id !== primaryKey) {
-        keys.push(yearGroup.id);
-      }
-      
-      // Also check yearGroup.name if it's different (for backward compatibility)
-      if (yearGroup.name && yearGroup.name !== primaryKey && yearGroup.name !== yearGroup.id) {
-        keys.push(yearGroup.name);
-      }
-      
-      // Add mapped codes for backward compatibility ONLY if they're different
-      const name = yearGroup.name.toLowerCase().trim();
-      if (name.includes('lower') || name.includes('lkg')) {
-        if (!keys.includes('LKG')) keys.push('LKG');
-      }
-      if (name.includes('upper') || name.includes('ukg')) {
-        if (!keys.includes('UKG')) keys.push('UKG');
-      }
-      if (name.includes('reception')) {
-        if (!keys.includes('Reception')) keys.push('Reception');
-      }
+      // Return ONLY the primary key - this is what was used when saving
+      return [primaryKey];
     } else {
       // If no year group found by ID, try by name
       const yearGroupByName = customYearGroups.find(yg => yg.name === sheetId);
@@ -77,30 +64,19 @@ export function SimpleNestedCategoryDropdown({
           (yearGroupByName.name.toLowerCase().includes('lower') || yearGroupByName.name.toLowerCase().includes('lkg') ? 'LKG' :
            yearGroupByName.name.toLowerCase().includes('upper') || yearGroupByName.name.toLowerCase().includes('ukg') ? 'UKG' :
            yearGroupByName.name.toLowerCase().includes('reception') ? 'Reception' : yearGroupByName.name);
-        keys.push(primaryKey);
-        if (yearGroupByName.id && yearGroupByName.id !== primaryKey) {
-          keys.push(yearGroupByName.id);
-        }
-        if (yearGroupByName.name && yearGroupByName.name !== primaryKey && yearGroupByName.name !== yearGroupByName.id) {
-          keys.push(yearGroupByName.name);
-        }
+        console.log('🔑 Year group PRIMARY key (by name):', {
+          sheetId,
+          yearGroupName: yearGroupByName.name,
+          yearGroupId: yearGroupByName.id,
+          primaryKey
+        });
+        return [primaryKey];
       } else {
         // Fallback: use sheetId as-is
-        keys.push(sheetId);
+        console.log('🔑 Year group PRIMARY key (fallback):', sheetId);
+        return [sheetId];
       }
     }
-
-    // Remove duplicates and log for debugging
-    const uniqueKeys = [...new Set(keys)];
-    console.log('🔑 Year group keys to check:', {
-      sheetId,
-      yearGroupName: yearGroup?.name,
-      yearGroupId: yearGroup?.id,
-      primaryKey: uniqueKeys[0],
-      allKeys: uniqueKeys
-    });
-    
-    return uniqueKeys;
   };
 
   // Get current year group display name for visual indicator
@@ -114,6 +90,12 @@ export function SimpleNestedCategoryDropdown({
 
   // Filter categories based on current year group
   const filteredCategories = useMemo(() => {
+    // If showAllCategories is true, skip filtering and show all categories
+    if (showAllCategories) {
+      console.log('📋 Showing all categories (showAllCategories=true)');
+      return categories;
+    }
+    
     const yearGroupKeys = getCurrentYearGroupKeys();
     
     console.log('🔍 Category filtering:', {
@@ -135,20 +117,32 @@ export function SimpleNestedCategoryDropdown({
         return false;
       }
 
+      // Check if this category has old default assignments (all legacy keys set to true)
+      // This indicates it was never properly assigned and should be ignored
+      const hasOldDefaults = 
+        category.yearGroups.LKG === true && 
+        category.yearGroups.UKG === true && 
+        category.yearGroups.Reception === true &&
+        Object.keys(category.yearGroups).length === 3;
+      
+      if (hasOldDefaults) {
+        // This category has old default values - ignore it unless explicitly assigned to current year group
+        const categoryIndex = categories.indexOf(category);
+        if (categoryIndex < 3) {
+          console.log(`⚠️ Category "${category.name}" has old default assignments (LKG, UKG, Reception all true) - ignoring`);
+        }
+        return false;
+      }
+
       // Get all keys stored in this category's yearGroups
       const storedKeys = Object.keys(category.yearGroups);
       const storedValues = Object.entries(category.yearGroups).map(([k, v]) => `${k}:${v}`);
       
-      // Check if this category is enabled for any of the year group keys
-      const matchingKeys: string[] = [];
-      const isEnabled = yearGroupKeys.some(key => {
-        const value = category.yearGroups[key];
-        if (value === true) {
-          matchingKeys.push(key);
-          return true;
-        }
-        return false;
-      });
+      // Check if this category is enabled for the PRIMARY year group key
+      // We only check the primary key to ensure strict matching
+      const primaryKey = yearGroupKeys[0];
+      const value = category.yearGroups[primaryKey];
+      const isEnabled = value === true;
       
       // Log detailed info for debugging (only first 5 categories to avoid spam)
       const categoryIndex = categories.indexOf(category);
@@ -156,8 +150,8 @@ export function SimpleNestedCategoryDropdown({
         console.log(`📋 Category "${category.name}":`, {
           storedKeys,
           storedValues,
-          checkedKeys: yearGroupKeys,
-          matchingKeys,
+          primaryKey,
+          value,
           isEnabled
         });
       }
@@ -180,7 +174,7 @@ export function SimpleNestedCategoryDropdown({
     });
     
     return filtered;
-  }, [categories, currentSheetInfo, customYearGroups]);
+  }, [categories, currentSheetInfo, customYearGroups, showAllCategories]);
 
   // Check if filtering is active
   const isFilteringActive = useMemo(() => {
@@ -288,8 +282,8 @@ export function SimpleNestedCategoryDropdown({
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="text-current truncate">
-            {currentSelectionName}
-          </span>
+          {currentSelectionName}
+        </span>
         </div>
         <ChevronDown className={`h-4 w-4 transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} style={{ color: textColor }} />
       </button>
@@ -306,26 +300,6 @@ export function SimpleNestedCategoryDropdown({
           onMouseUp={(e) => e.stopPropagation()}
         >
           <ul className="py-1">
-            {/* Filter Status Indicator */}
-            {isFilteringActive && (
-              <li className="px-4 py-2 border-b border-gray-200 bg-teal-50">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-teal-600" />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-gray-700">
-                      Filtered for {currentYearGroupName || 'current year group'}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Showing {filteredCount} of {totalCount} categories
-                      {filteredCount === totalCount && filteredCount > 0 && (
-                        <span className="text-amber-600 ml-1">⚠️ All categories shown - check year group assignments in Settings</span>
-                      )}
-                    </span>
-                  </div>
-                </div>
-              </li>
-            )}
-            
             {/* When filtering is active, show simple flat list */}
             {isFilteringActive ? (
               // Simple flat list of filtered categories
@@ -362,19 +336,40 @@ export function SimpleNestedCategoryDropdown({
               // Original grouped structure when not filtering
               <>
                 {/* Placeholder/All Categories Option */}
-                <li
-                  className={`px-4 py-2 text-sm cursor-pointer transition-colors duration-150 ${
-                    selectedCategory === '' 
-                      ? 'bg-gray-100 font-medium' 
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                  style={{
-                    color: selectedCategory === '' ? '#374151' : undefined
-                  }}
+            <li
+              className={`px-4 py-2 text-sm cursor-pointer transition-colors duration-150 ${
+                selectedCategory === '' 
+                  ? 'bg-gray-100 font-medium' 
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              style={{
+                color: selectedCategory === '' ? '#374151' : undefined
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSelectCategory('');
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onMouseUp={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              {placeholder}
+            </li>
+            {sortedGroups.map(groupName => (
+              <React.Fragment key={groupName}>
+                <li 
+                  className="px-2 py-2 bg-gray-50 border-t border-b border-gray-200 text-sm font-semibold text-gray-800 flex items-center justify-between cursor-pointer hover:bg-teal-50 transition-all duration-150"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleSelectCategory('');
+                    console.log('🖱️ Group clicked:', groupName);
+                    toggleGroupExpansion(groupName);
                   }}
                   onMouseDown={(e) => {
                     e.preventDefault();
@@ -385,69 +380,48 @@ export function SimpleNestedCategoryDropdown({
                     e.stopPropagation();
                   }}
                 >
-                  {placeholder}
+                  <div className="flex items-center gap-2">
+                    <div className="text-gray-500">
+                      {expandedGroups.has(groupName) ? 
+                        <ChevronDown className="h-4 w-4" /> : 
+                        <ChevronRight className="h-4 w-4" />
+                      }
+                    </div>
+                    {groupName}
+                  </div>
+                  <span className="text-xs text-gray-500">{groupedCategories[groupName].length}</span>
                 </li>
-                {sortedGroups.map(groupName => (
-                  <React.Fragment key={groupName}>
-                    <li 
-                      className="px-2 py-2 bg-gray-50 border-t border-b border-gray-200 text-sm font-semibold text-gray-800 flex items-center justify-between cursor-pointer hover:bg-teal-50 transition-all duration-150"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('🖱️ Group clicked:', groupName);
-                        toggleGroupExpansion(groupName);
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onMouseUp={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="text-gray-500">
-                          {expandedGroups.has(groupName) ? 
-                            <ChevronDown className="h-4 w-4" /> : 
-                            <ChevronRight className="h-4 w-4" />
-                          }
-                        </div>
-                        {groupName}
-                      </div>
-                      <span className="text-xs text-gray-500">{groupedCategories[groupName].length}</span>
-                    </li>
-                    {expandedGroups.has(groupName) && groupedCategories[groupName].map(category => (
-                      <li
-                        key={category.name}
-                        className={`flex items-center gap-2 px-6 py-2 text-sm cursor-pointer transition-colors duration-150 ${
-                          selectedCategory === category.name 
-                            ? 'bg-teal-100 font-medium' 
-                            : 'text-gray-700 hover:bg-teal-50'
-                        }`}
-                        style={{
-                          color: selectedCategory === category.name ? '#374151' : undefined
-                        }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleSelectCategory(category.name);
-                        }}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        onMouseUp={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                      >
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
-                        {category.name}
-                      </li>
-                    ))}
-                  </React.Fragment>
+                {expandedGroups.has(groupName) && groupedCategories[groupName].map(category => (
+                  <li
+                    key={category.name}
+                    className={`flex items-center gap-2 px-6 py-2 text-sm cursor-pointer transition-colors duration-150 ${
+                      selectedCategory === category.name 
+                        ? 'bg-teal-100 font-medium' 
+                        : 'text-gray-700 hover:bg-teal-50'
+                    }`}
+                    style={{
+                      color: selectedCategory === category.name ? '#374151' : undefined
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSelectCategory(category.name);
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onMouseUp={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
+                    {category.name}
+                  </li>
                 ))}
+              </React.Fragment>
+            ))}
               </>
             )}
           </ul>

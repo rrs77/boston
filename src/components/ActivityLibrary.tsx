@@ -25,7 +25,6 @@ import { ActivityDetailsModal } from './ActivityDetailsModal';
 import { ActivityImporter } from './ActivityImporter';
 import { ActivityCreator } from './ActivityCreator';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
-import { LevelDropdown } from './LevelDropdown';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { useAuth } from '../hooks/useAuth';
@@ -66,7 +65,6 @@ export function ActivityLibrary({
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [localSelectedCategory, setLocalSelectedCategory] = useState(selectedCategory);
-  const [selectedLevel, setSelectedLevel] = useState('all');
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'time' | 'level'>('category');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -150,8 +148,8 @@ export function ActivityLibrary({
       // Filter by category if one is selected
       const matchesCategory = localSelectedCategory === 'all' || activity.category === localSelectedCategory;
       
-      // Filter by level if one is selected
-      const matchesLevel = selectedLevel === 'all' || activity.level === selectedLevel;
+      // Level filtering removed - show all levels
+      const matchesLevel = true;
       
       // Show ALL activities regardless of year group
       // Remove year group filtering to show all 328 activities
@@ -239,7 +237,7 @@ export function ActivityLibrary({
     });
 
     return { filteredAndSortedActivities: filteredActivities, filteredAndSortedStacks: filteredStacks };
-  }, [allActivities, activityStacks, searchQuery, localSelectedCategory, selectedLevel, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup, userOwnedPacks]);
+  }, [allActivities, activityStacks, searchQuery, localSelectedCategory, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup, userOwnedPacks]);
 
   const toggleSort = (field: 'name' | 'category' | 'time' | 'level') => {
     if (sortBy === field) {
@@ -500,8 +498,9 @@ export function ActivityLibrary({
         </div>
 
         {/* Search and Sort Controls */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-          <div className="relative flex-1 sm:max-w-md">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Search - Shorter width */}
+          <div className="relative" style={{ width: '200px', minWidth: '180px' }}>
             <Search 
               className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" 
               style={{ color: '#FFFFFF' }}
@@ -522,7 +521,7 @@ export function ActivityLibrary({
           </div>
 
           {/* Category Filter Dropdown */}
-          <div className="relative" style={{ minWidth: '250px' }}>
+          <div className="relative" style={{ width: '200px', minWidth: '180px' }}>
             <SimpleNestedCategoryDropdown
               selectedCategory={localSelectedCategory === 'all' ? '' : localSelectedCategory}
               onCategoryChange={(category) => handleCategoryChange(category === '' ? 'all' : category)}
@@ -531,56 +530,46 @@ export function ActivityLibrary({
             />
           </div>
 
-          {/* Level Filter Dropdown */}
-          <div className="relative" style={{ minWidth: '200px' }}>
-            <LevelDropdown
-              selectedLevel={selectedLevel}
-              onLevelChange={setSelectedLevel}
-              placeholder="All Levels"
-              className="px-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent font-semibold"
-            />
-          </div>
-          
-          <div className="flex space-x-2">
+          {/* Sort and View Icons - Properly spaced */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => toggleSort('category')}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors duration-200 ${
+              className={`flex items-center justify-center p-2 rounded-lg transition-colors duration-200 ${
                 sortBy === 'category' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
               }`}
+              title="Sort by Category"
             >
               <Tag className="h-4 w-4" />
-              {sortBy === 'category' && (sortOrder === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4" />)}
+              {sortBy === 'category' && (sortOrder === 'asc' ? <ArrowUpDown className="h-3 w-3 ml-1" /> : <ArrowDownUp className="h-3 w-3 ml-1" />)}
             </button>
             <button
               onClick={() => toggleSort('time')}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors duration-200 ${
+              className={`flex items-center justify-center p-2 rounded-lg transition-colors duration-200 ${
                 sortBy === 'time' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
               }`}
+              title="Sort by Time"
             >
               <Clock className="h-4 w-4" />
-              {sortBy === 'time' && (sortOrder === 'asc' ? <ArrowUpDown className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4" />)}
+              {sortBy === 'time' && (sortOrder === 'asc' ? <ArrowUpDown className="h-3 w-3 ml-1" /> : <ArrowDownUp className="h-3 w-3 ml-1" />)}
             </button>
-            
-            <div className="flex items-center space-x-2 ml-auto">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-colors duration-200 ${
-                  viewMode === 'grid' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
-                }`}
-                title="Grid View - Normal sized activity cards"
-              >
-                <Grid className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-colors duration-200 ${
-                  viewMode === 'list' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
-                }`}
-                title="List View - 4-column table layout with horizontal rows"
-              >
-                <List className="h-5 w-5" />
-              </button>
-            </div>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition-colors duration-200 ${
+                viewMode === 'grid' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
+              }`}
+              title="Grid View"
+            >
+              <Grid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-colors duration-200 ${
+                viewMode === 'list' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
+              }`}
+              title="List View"
+            >
+              <List className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -598,24 +587,23 @@ export function ActivityLibrary({
             <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No activities found</h3>
             <p className="text-gray-600">
-              {searchQuery || localSelectedCategory !== 'all' || selectedLevel !== 'all'
+              {searchQuery || localSelectedCategory !== 'all'
                 ? 'Try adjusting your search or filters'
                 : 'No activities available in the library. Create a new activity or import activities to get started.'
               }
             </p>
-            {(searchQuery || localSelectedCategory !== 'all' || selectedLevel !== 'all') && (
+            {(searchQuery || localSelectedCategory !== 'all') && (
               <button 
                 onClick={() => {
                   setSearchQuery('');
                   handleCategoryChange('all');
-                  setSelectedLevel('all');
                 }}
                 className="mt-4 px-4 py-2 btn-primary text-white rounded-lg text-sm"
               >
                 Clear Filters
               </button>
             )}
-            {!searchQuery && localSelectedCategory === 'all' && selectedLevel === 'all' && (
+            {!searchQuery && localSelectedCategory === 'all' && (
               <button 
                 onClick={() => setShowCreator(true)}
                 className="mt-4 px-4 py-2 btn-primary text-white rounded-lg text-sm flex items-center space-x-2 mx-auto"
