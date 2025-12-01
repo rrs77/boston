@@ -326,41 +326,24 @@ export function SimpleNestedCategoryDropdown({
               </li>
             )}
             
-            {/* Placeholder/All Categories Option */}
-            <li
-              className={`px-4 py-2 text-sm cursor-pointer transition-colors duration-150 ${
-                selectedCategory === '' 
-                  ? 'bg-gray-100 font-medium' 
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-              style={{
-                color: selectedCategory === '' ? '#374151' : undefined
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleSelectCategory('');
-              }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onMouseUp={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              {placeholder}
-            </li>
-            {sortedGroups.map(groupName => (
-              <React.Fragment key={groupName}>
-                <li 
-                  className="px-2 py-2 bg-gray-50 border-t border-b border-gray-200 text-sm font-semibold text-gray-800 flex items-center justify-between cursor-pointer hover:bg-teal-50 transition-all duration-150"
+            {/* When filtering is active, show simple flat list */}
+            {isFilteringActive ? (
+              // Simple flat list of filtered categories
+              filteredCategories.map(category => (
+                <li
+                  key={category.name}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm cursor-pointer transition-colors duration-150 ${
+                    selectedCategory === category.name 
+                      ? 'bg-teal-100 font-medium' 
+                      : 'text-gray-700 hover:bg-teal-50'
+                  }`}
+                  style={{
+                    color: selectedCategory === category.name ? '#374151' : undefined
+                  }}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('🖱️ Group clicked:', groupName);
-                    toggleGroupExpansion(groupName);
+                    handleSelectCategory(category.name);
                   }}
                   onMouseDown={(e) => {
                     e.preventDefault();
@@ -371,48 +354,102 @@ export function SimpleNestedCategoryDropdown({
                     e.stopPropagation();
                   }}
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="text-gray-500">
-                      {expandedGroups.has(groupName) ? 
-                        <ChevronDown className="h-4 w-4" /> : 
-                        <ChevronRight className="h-4 w-4" />
-                      }
-                    </div>
-                    {groupName}
-                  </div>
-                  <span className="text-xs text-gray-500">{groupedCategories[groupName].length}</span>
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: category.color }} />
+                  <span className="truncate">{category.name}</span>
                 </li>
-                {expandedGroups.has(groupName) && groupedCategories[groupName].map(category => (
-                  <li
-                    key={category.name}
-                    className={`flex items-center gap-2 px-6 py-2 text-sm cursor-pointer transition-colors duration-150 ${
-                      selectedCategory === category.name 
-                        ? 'bg-teal-100 font-medium' 
-                        : 'text-gray-700 hover:bg-teal-50'
-                    }`}
-                    style={{
-                      color: selectedCategory === category.name ? '#374151' : undefined
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleSelectCategory(category.name);
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onMouseUp={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                  >
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
-                    {category.name}
-                  </li>
+              ))
+            ) : (
+              // Original grouped structure when not filtering
+              <>
+                {/* Placeholder/All Categories Option */}
+                <li
+                  className={`px-4 py-2 text-sm cursor-pointer transition-colors duration-150 ${
+                    selectedCategory === '' 
+                      ? 'bg-gray-100 font-medium' 
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                  style={{
+                    color: selectedCategory === '' ? '#374151' : undefined
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSelectCategory('');
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onMouseUp={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  {placeholder}
+                </li>
+                {sortedGroups.map(groupName => (
+                  <React.Fragment key={groupName}>
+                    <li 
+                      className="px-2 py-2 bg-gray-50 border-t border-b border-gray-200 text-sm font-semibold text-gray-800 flex items-center justify-between cursor-pointer hover:bg-teal-50 transition-all duration-150"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🖱️ Group clicked:', groupName);
+                        toggleGroupExpansion(groupName);
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onMouseUp={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="text-gray-500">
+                          {expandedGroups.has(groupName) ? 
+                            <ChevronDown className="h-4 w-4" /> : 
+                            <ChevronRight className="h-4 w-4" />
+                          }
+                        </div>
+                        {groupName}
+                      </div>
+                      <span className="text-xs text-gray-500">{groupedCategories[groupName].length}</span>
+                    </li>
+                    {expandedGroups.has(groupName) && groupedCategories[groupName].map(category => (
+                      <li
+                        key={category.name}
+                        className={`flex items-center gap-2 px-6 py-2 text-sm cursor-pointer transition-colors duration-150 ${
+                          selectedCategory === category.name 
+                            ? 'bg-teal-100 font-medium' 
+                            : 'text-gray-700 hover:bg-teal-50'
+                        }`}
+                        style={{
+                          color: selectedCategory === category.name ? '#374151' : undefined
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSelectCategory(category.name);
+                        }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onMouseUp={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
+                        {category.name}
+                      </li>
+                    ))}
+                  </React.Fragment>
                 ))}
-              </React.Fragment>
-            ))}
+              </>
+            )}
           </ul>
         </div>
       )}
