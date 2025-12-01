@@ -38,9 +38,10 @@ export interface Category {
   group?: string; // Optional single group name (for backward compatibility)
   groups?: string[]; // Optional multiple group names
   yearGroups: {
-    LKG: boolean;
-    UKG: boolean;
-    Reception: boolean;
+    LKG?: boolean;
+    UKG?: boolean;
+    Reception?: boolean;
+    [key: string]: boolean | undefined; // Allow dynamic year group IDs
   };
 }
 
@@ -110,91 +111,91 @@ const FIXED_CATEGORIES: Category[] = [
     name: 'Welcome',
     color: '#10b981',
     position: 0,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Kodaly Songs',
     color: '#3b82f6',
     position: 1,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Kodaly Action Songs',
     color: '#f97316',
     position: 2,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Action/Games Songs',
     color: '#f59e0b',
     position: 3,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Rhythm Sticks',
     color: '#d97706',
     position: 4,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Scarf Songs',
     color: '#10b981',
     position: 5,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'General Game',
     color: '#06b6d4',
     position: 6,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Core Songs',
     color: '#84cc16',
     position: 7,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Parachute Games',
     color: '#ef4444',
     position: 8,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Percussion Games',
     color: '#06b6d4',
     position: 9,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Teaching Units',
     color: '#6366f1',
     position: 10,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Goodbye',
     color: '#14b8a6',
     position: 11,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Kodaly Rhythms',
     color: '#8b5cf6',
     position: 12,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'Kodaly Games',
     color: '#ec4899',
     position: 13,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
   {
     name: 'IWB Games',
     color: '#f59e0b',
     position: 14,
-    yearGroups: { LKG: true, UKG: true, Reception: true },
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
 ];
 
@@ -624,7 +625,7 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
               position: cat.position || 0,
               group: cat.group, // Single group (backward compatibility)
               groups: cat.groups || (cat.group ? [cat.group] : []), // Multiple groups
-              yearGroups: cat.yearGroups || { LKG: true, UKG: true, Reception: true }
+              yearGroups: cat.yearGroups || {}
             }));
             
             // Merge with fixed categories, but use Supabase data for any FIXED_CATEGORIES that exist in Supabase
@@ -673,7 +674,7 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
                     position: cat.position || 0,
                     group: cat.group, // Single group (backward compatibility)
                     groups: cat.groups || (cat.group ? [cat.group] : []), // Multiple groups
-                    yearGroups: cat.yearGroups || { LKG: true, UKG: true, Reception: true }
+                    yearGroups: cat.yearGroups || {}
                   }));
                   
                   try {
@@ -1313,7 +1314,7 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
         name,
         color,
         position: categories.length,
-        yearGroups: { LKG: true, UKG: true, Reception: true },
+        yearGroups: {}, // Empty - must be explicitly assigned in settings
       };
 
       // Update state
@@ -1509,7 +1510,7 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
           position: cat.position || 0,
           group: cat.group, // Single group (backward compatibility)
           groups: cat.groups || (cat.group ? [cat.group] : []), // Multiple groups
-          yearGroups: cat.yearGroups || { LKG: true, UKG: true, Reception: true }
+          yearGroups: cat.yearGroups || {} // Empty object - categories must be explicitly assigned
         }));
         
         // Merge with fixed categories, but use Supabase data for any FIXED_CATEGORIES that exist in Supabase

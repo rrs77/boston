@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Palette, RotateCcw, X, Plus, Trash2, GripVertical, Edit3, Save, Users, Database, AlertTriangle, GraduationCap, Package } from 'lucide-react';
+import { Settings, Palette, RotateCcw, X, Plus, Trash2, GripVertical, Edit3, Save, Users, Database, AlertTriangle, GraduationCap, Package, Filter } from 'lucide-react';
 import { useSettings, Category } from '../contexts/SettingsContextNew';
 import { DataSourceSettings } from './DataSourceSettings';
 import { CustomObjectivesAdmin } from './CustomObjectivesAdmin';
@@ -20,16 +20,20 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [tempYearGroups, setTempYearGroups] = useState(customYearGroups);
   const [activeTab, setActiveTab] = useState<'yeargroups' | 'categories' | 'purchases' | 'manage-packs' | 'data' | 'admin'>('yeargroups');
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [editingCategoryYearGroups, setEditingCategoryYearGroups] = useState<string | null>(null); // Track which category's year groups are being edited
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState('#6B7280');
   const [newCategoryGroup, setNewCategoryGroup] = useState<string | undefined>(undefined);
   const [newCategoryGroups, setNewCategoryGroups] = useState<string[]>([]);
   const [newCategoryYearGroups, setNewCategoryYearGroups] = useState<{[key: string]: boolean}>({
-    LKG: true,
-    UKG: true,
-    Reception: true
+    LKG: false,
+    UKG: false,
+    Reception: false
   });
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
+  const [bulkYearGroupMode, setBulkYearGroupMode] = useState(false); // Bulk assignment mode
+  const [selectedCategoriesForBulk, setSelectedCategoriesForBulk] = useState<Set<string>>(new Set()); // Selected categories for bulk assignment
+  const [selectedYearGroupsForBulk, setSelectedYearGroupsForBulk] = useState<Set<string>>(new Set()); // Selected year groups for bulk assignment
   const [newYearGroupId, setNewYearGroupId] = useState('');
   const [newYearGroupName, setNewYearGroupName] = useState('');
   const [newYearGroupColor, setNewYearGroupColor] = useState('#3B82F6');
@@ -40,6 +44,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [editingGroupName, setEditingGroupName] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showCustomObjectivesAdmin, setShowCustomObjectivesAdmin] = useState(false);
+  const [showYearGroupsModal, setShowYearGroupsModal] = useState(false);
 
   // Check if user is admin
   const isAdmin = user?.email === 'rob.reichstorer@gmail.com' || 
@@ -139,11 +144,23 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     }
   };
 
-  const handleYearGroupChange = (yearGroup: string, checked: boolean) => {
-    setNewCategoryYearGroups(prev => ({
-      ...prev,
-      [yearGroup]: checked
-    }));
+  // Helper function to map year group name to code
+  const getYearGroupCode = (yearGroupName: string): string | null => {
+    const name = yearGroupName.toLowerCase();
+    if (name.includes('lower') || name.includes('lkg')) return 'LKG';
+    if (name.includes('upper') || name.includes('ukg')) return 'UKG';
+    if (name.includes('reception')) return 'Reception';
+    return null;
+  };
+
+  const handleYearGroupChange = (yearGroupName: string, checked: boolean) => {
+    const code = getYearGroupCode(yearGroupName);
+    if (code) {
+      setNewCategoryYearGroups(prev => ({
+        ...prev,
+        [code]: checked
+      }));
+    }
   };
 
   const handleAddCategory = async () => {
@@ -186,7 +203,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     setNewCategoryColor('#6B7280');
       setNewCategoryGroup(undefined);
       setNewCategoryGroups([]);
-      setNewCategoryYearGroups({ LKG: true, UKG: true, Reception: true });
+      setNewCategoryYearGroups({ LKG: false, UKG: false, Reception: false });
       
       console.log('✅ Category added and persisted:', newCategory.name);
       
@@ -500,8 +517,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             onClick={() => setActiveTab('yeargroups')}
             className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
               activeTab === 'yeargroups' 
-                ? 'text-white bg-teal-500' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
+                ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -513,8 +530,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             onClick={() => setActiveTab('categories')}
             className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
               activeTab === 'categories' 
-                ? 'text-white bg-teal-500' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
+                ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -526,8 +543,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             onClick={() => setActiveTab('admin')}
             className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
               activeTab === 'admin' 
-                ? 'text-white bg-teal-500' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
+                ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -539,8 +556,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
               onClick={() => setActiveTab('data')}
             className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
                 activeTab === 'data' 
-                ? 'text-white bg-teal-500' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
+                ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
               }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
@@ -552,8 +569,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             onClick={() => setActiveTab('purchases')}
             className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
               activeTab === 'purchases' 
-                ? 'text-white bg-amber-500' 
-                : 'text-gray-600 hover:text-gray-900 bg-amber-50 hover:bg-amber-200'
+                ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
             }`}
             style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
           >
@@ -566,8 +583,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
               onClick={() => setActiveTab('manage-packs')}
               className={`px-3 sm:px-6 py-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
                 activeTab === 'manage-packs' 
-                  ? 'text-white bg-amber-500' 
-                  : 'text-gray-600 hover:text-gray-900 bg-amber-50 hover:bg-amber-200'
+                  ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
               }`}
               style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
             >
@@ -929,22 +946,105 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Available for Year Groups
                       </label>
-                      <div className="flex flex-wrap gap-4">
-                        {customYearGroups.map(yearGroup => (
-                          <label key={yearGroup.name} className="flex items-center space-x-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={newCategoryYearGroups[yearGroup.name] || false}
-                              onChange={(e) => handleYearGroupChange(yearGroup.name, e.target.checked)}
-                              className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
-                            />
-                            <span className="text-sm text-gray-700">{yearGroup.name}</span>
-                          </label>
-                        ))}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowYearGroupsModal(true)}
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm text-gray-700 transition-colors flex items-center space-x-2"
+                      >
+                        <Users className="h-4 w-4" />
+                        <span>
+                          {Object.values(newCategoryYearGroups).some(v => v) 
+                            ? `${Object.values(newCategoryYearGroups).filter(v => v).length} year group(s) selected`
+                            : 'Select year groups'}
+                        </span>
+                      </button>
                     </div>
                   </div>
                 </div>
+
+                {/* Year Groups Selection Modal */}
+                {showYearGroupsModal && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+                      {/* Header - Teal gradient matching other modals */}
+                      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+                            <Users className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h2 className="text-xl font-bold">Available for Year Groups</h2>
+                            <p className="text-sm text-white/90 mt-0.5">
+                              Select which year groups this category should be available for
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setShowYearGroupsModal(false)}
+                          className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-6 overflow-y-auto flex-1">
+                        <div className="space-y-3">
+                          {customYearGroups && Array.isArray(customYearGroups) && customYearGroups.length > 0 ? (
+                            customYearGroups.map(yearGroup => {
+                              const code = getYearGroupCode(yearGroup.name);
+                              const isChecked = code ? (newCategoryYearGroups[code] || false) : false;
+                              
+                              return (
+                                <label 
+                                  key={yearGroup.id || yearGroup.name} 
+                                  className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      if (code) {
+                                        handleYearGroupChange(yearGroup.name, e.target.checked);
+                                      }
+                                    }}
+                                    className="h-5 w-5 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                                  />
+                                  <span className="text-sm font-medium text-gray-700 flex-1">{yearGroup.name}</span>
+                                </label>
+                              );
+                            })
+                          ) : (
+                            <p className="text-sm text-gray-500 text-center py-4">No year groups available</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="p-4 border-t border-gray-200 flex justify-end space-x-3">
+                        <button
+                          onClick={() => {
+                            // Clear all selections
+                            setNewCategoryYearGroups({
+                              LKG: false,
+                              UKG: false,
+                              Reception: false
+                            });
+                          }}
+                          className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          Clear All
+                        </button>
+                        <button
+                          onClick={() => setShowYearGroupsModal(false)}
+                          className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Category List */}
                 <div className="bg-white rounded-lg border border-teal-200 p-4">
@@ -1094,193 +1194,526 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                     </div>
                   </div>
                   
+                  {/* Bulk Year Group Assignment Section */}
+                  {bulkYearGroupMode && (
+                    <div className="mb-6 p-5 bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-300 rounded-xl shadow-sm">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h4 className="text-lg font-bold text-gray-900 mb-1">Bulk Assign Year Groups</h4>
+                          <p className="text-sm text-gray-600">
+                            Select categories below, then choose year groups to assign them to
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setBulkYearGroupMode(false);
+                            setSelectedCategoriesForBulk(new Set());
+                            setSelectedYearGroupsForBulk(new Set());
+                          }}
+                          className="ml-4 p-1.5 text-gray-500 hover:text-gray-700 hover:bg-white rounded-lg transition-colors"
+                          title="Close bulk assignment"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+
+                      {/* Step 1: Year Groups Selection */}
+                      <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                          Step 1: Select Year Groups
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-3">
+                          {customYearGroups && Array.isArray(customYearGroups) && customYearGroups.length > 0 ? customYearGroups.map(yearGroup => {
+                            // Use year group ID as the key, or map to code for legacy support
+                            const yearGroupKey = yearGroup.id || 
+                              (yearGroup.name.toLowerCase().includes('lower') || yearGroup.name.toLowerCase().includes('lkg') ? 'LKG' :
+                               yearGroup.name.toLowerCase().includes('upper') || yearGroup.name.toLowerCase().includes('ukg') ? 'UKG' :
+                               yearGroup.name.toLowerCase().includes('reception') ? 'Reception' : yearGroup.name);
+                            
+                            const isSelected = selectedYearGroupsForBulk.has(yearGroupKey);
+                            
+                            return (
+                              <button
+                                key={yearGroup.id}
+                                onClick={() => {
+                                  // Toggle year group selection
+                                  const newSelected = new Set(selectedYearGroupsForBulk);
+                                  if (isSelected) {
+                                    newSelected.delete(yearGroupKey);
+                                  } else {
+                                    newSelected.add(yearGroupKey);
+                                  }
+                                  setSelectedYearGroupsForBulk(newSelected);
+                                }}
+                                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                                  isSelected 
+                                    ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-md' 
+                                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
+                                }`}
+                                title={`${isSelected ? 'Deselect' : 'Select'} ${yearGroup.name}`}
+                              >
+                                {yearGroup.name}
+                              </button>
+                            );
+                          }) : null}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs text-gray-500">
+                            {selectedYearGroupsForBulk.size > 0 ? (
+                              <span className="text-teal-600 font-semibold">
+                                {selectedYearGroupsForBulk.size} year group{selectedYearGroupsForBulk.size !== 1 ? 's' : ''} selected
+                              </span>
+                            ) : (
+                              <span>No year groups selected</span>
+                            )}
+                          </div>
+                          {selectedYearGroupsForBulk.size > 0 && (
+                            <button
+                              onClick={() => {
+                                setSelectedYearGroupsForBulk(new Set());
+                              }}
+                              className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                            >
+                              Clear Selection
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Step 2: Category Selection Status */}
+                      <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Step 2: Select Categories Below
+                        </label>
+                        <div className="text-sm text-gray-600">
+                          {selectedCategoriesForBulk.size > 0 ? (
+                            <span className="text-teal-600 font-semibold">
+                              {selectedCategoriesForBulk.size} categor{selectedCategoriesForBulk.size !== 1 ? 'ies' : 'y'} selected
+                            </span>
+                          ) : (
+                            <span>Click on categories below to select them</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Step 3: Action Buttons */}
+                      {selectedCategoriesForBulk.size > 0 && selectedYearGroupsForBulk.size > 0 && (
+                        <div className="p-4 bg-white rounded-lg border-2 border-teal-300">
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Step 3: Apply Changes
+                          </label>
+                          <div className="flex flex-wrap gap-3">
+                            <button
+                              onClick={() => {
+                                // Apply selected year groups to selected categories
+                                const updatedCategories = tempCategories.map(cat => {
+                                  if (selectedCategoriesForBulk.has(cat.name)) {
+                                    const newYearGroups = { ...(cat.yearGroups || {}) };
+                                    selectedYearGroupsForBulk.forEach(yearGroupKey => {
+                                      newYearGroups[yearGroupKey] = true;
+                                    });
+                                    return {
+                                      ...cat,
+                                      yearGroups: newYearGroups
+                                    };
+                                  }
+                                  return cat;
+                                });
+                                
+                                setTempCategories(updatedCategories);
+                                updateCategories(updatedCategories);
+                                setSelectedCategoriesForBulk(new Set());
+                                setSelectedYearGroupsForBulk(new Set());
+                                setBulkYearGroupMode(false);
+                              }}
+                              className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                            >
+                              <Plus className="h-4 w-4" />
+                              Assign Selected Year Groups
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm('Remove all selected year groups from selected categories?')) {
+                                  const updatedCategories = tempCategories.map(cat => {
+                                    if (selectedCategoriesForBulk.has(cat.name)) {
+                                      const newYearGroups = { ...(cat.yearGroups || {}) };
+                                      selectedYearGroupsForBulk.forEach(yearGroupKey => {
+                                        newYearGroups[yearGroupKey] = false;
+                                      });
+                                      return {
+                                        ...cat,
+                                        yearGroups: newYearGroups
+                                      };
+                                    }
+                                    return cat;
+                                  });
+                                  
+                                  setTempCategories(updatedCategories);
+                                  updateCategories(updatedCategories);
+                                  setSelectedCategoriesForBulk(new Set());
+                                  setSelectedYearGroupsForBulk(new Set());
+                                  setBulkYearGroupMode(false);
+                                }
+                              }}
+                              className="px-5 py-2.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                            >
+                              <X className="h-4 w-4" />
+                              Remove Selected Year Groups
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Bulk Assignment Toggle Button */}
+                  {!bulkYearGroupMode && (
+                    <div className="mb-4 flex gap-2">
+                      <button
+                        onClick={() => setBulkYearGroupMode(true)}
+                        className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <Filter className="h-4 w-4" />
+                        Bulk Assign Year Groups
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Are you sure you want to remove ALL year group assignments (LKG, UKG, Reception) from ALL categories? This cannot be undone.')) {
+                            const updatedCategories = tempCategories.map(cat => ({
+                              ...cat,
+                              yearGroups: { LKG: false, UKG: false, Reception: false }
+                            }));
+                            setTempCategories(updatedCategories);
+                            updateCategories(updatedCategories);
+                          }
+                        }}
+                        className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                        title="Remove all year group assignments from all categories"
+                      >
+                        <X className="h-4 w-4" />
+                        Clear All Year Groups
+                      </button>
+                    </div>
+                  )}
+
                   <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                    {tempCategories.map((category, index) => (
+                    {tempCategories.map((category, index) => {
+                      // Use index as stable identifier for editing state (not name, which changes)
+                      const isEditing = editingCategory === `category-index-${index}`;
+                      
+                      return (
                       <div 
-                        key={category.name}
-                        draggable
-                        onDragStart={() => handleDragStart(category.name)}
-                        onDragOver={(e) => handleDragOver(e, category.name)}
-                        onDrop={(e) => handleDrop(e, category.name)}
-                        className={`p-3  rounded-lg transition-colors duration-200 ${
-                          draggedCategory === category.name ? 'bg-teal-50 border-teal-300' : 'bg-gray-50 hover:bg-gray-100'
+                        key={`category-${index}-${category.position || index}`}
+                        draggable={!bulkYearGroupMode}
+                        onDragStart={() => !bulkYearGroupMode && handleDragStart(category.name)}
+                        onDragOver={(e) => !bulkYearGroupMode && handleDragOver(e, category.name)}
+                        onDrop={(e) => !bulkYearGroupMode && handleDrop(e, category.name)}
+                        className={`p-3 rounded-lg transition-colors duration-200 ${
+                          draggedCategory === category.name ? 'bg-teal-50 border-teal-300' : 
+                          bulkYearGroupMode && selectedCategoriesForBulk.has(category.name) ? 'bg-teal-100 border-teal-300 border-2' :
+                          'bg-gray-50 hover:bg-gray-100'
                         }`}
                       >
-                        {editingCategory === category.name ? (
-                          <div className="flex items-center space-x-3">
-                            <div className="flex-shrink-0 cursor-move">
-                              <GripVertical className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <div className="flex-1 flex items-center space-x-3 min-w-0">
-                              <input
-                                id={`editCategoryName-${index}`}
-                                name={`editCategoryName-${index}`}
-                                type="text"
-                                value={editingCategory === category.name ? category.name : ''}
-                                onChange={(e) => {
-                                  const updatedCategories = [...tempCategories];
-                                  updatedCategories[index] = { ...updatedCategories[index], name: e.target.value };
-                                  setTempCategories(updatedCategories);
-                                }}
-                                onBlur={async () => {
-                                  try {
+                        {isEditing ? (
+                          <div className="flex flex-col space-y-3">
+                            {/* Name and Color Row */}
+                            <div className="flex items-center space-x-3">
+                              <div className="flex-shrink-0 cursor-move">
+                                <GripVertical className="h-5 w-5 text-gray-400" />
+                              </div>
+                              <div className="flex-1 flex items-center space-x-3 min-w-0">
+                                <input
+                                  id={`editCategoryName-${index}`}
+                                  name={`editCategoryName-${index}`}
+                                  type="text"
+                                  value={tempCategories[index]?.name || ''}
+                                  onChange={(e) => {
                                     const updatedCategories = [...tempCategories];
-                                    updatedCategories[index] = { ...updatedCategories[index], name: updatedCategories[index].name };
+                                    updatedCategories[index] = { ...updatedCategories[index], name: e.target.value };
                                     setTempCategories(updatedCategories);
-                                    await updateCategories(updatedCategories);
-                                    setEditingCategory(null);
-                                  } catch (error: unknown) {
-                                    console.error('Failed to save category changes:', error);
-                                  }
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
+                                    // Keep edit mode open by maintaining the index-based identifier
+                                  }}
+                                  onBlur={async () => {
+                                    try {
+                                      const updatedCategories = [...tempCategories];
+                                      updatedCategories[index] = { ...updatedCategories[index], name: updatedCategories[index].name };
+                                      setTempCategories(updatedCategories);
+                                      await updateCategories(updatedCategories);
+                                    } catch (error: unknown) {
+                                      console.error('Failed to save category changes:', error);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      const updatedCategories = [...tempCategories];
+                                      updatedCategories[index] = { ...updatedCategories[index], name: updatedCategories[index].name };
+                                      setTempCategories(updatedCategories);
+                                      updateCategories(updatedCategories);
+                                    } else if (e.key === 'Escape') {
+                                      e.preventDefault();
+                                      setEditingCategory(null);
+                                      setTempCategories(categories);
+                                    }
+                                  }}
+                                  className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
+                                  dir="ltr"
+                                />
+                                <div className="relative">
+                                  <div className="flex flex-wrap gap-1 min-h-[32px] px-2 py-1 border border-gray-300 rounded text-sm bg-white focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500">
+                                    {(tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : [])).map((groupName, groupIndex) => (
+                                      <span
+                                        key={groupIndex}
+                                        className="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-md"
+                                      >
+                                        {groupName}
+                                        <button
+                                          onClick={() => {
+                                            const updatedCategories = [...tempCategories];
+                                            const currentGroups = tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : []);
+                                            const newGroups = currentGroups.filter(g => g !== groupName);
+                                            updatedCategories[index] = { 
+                                              ...updatedCategories[index], 
+                                              groups: newGroups.length > 0 ? newGroups : undefined,
+                                              group: undefined
+                                            };
+                                            setTempCategories(updatedCategories);
+                                            updateCategories(updatedCategories);
+                                          }}
+                                          className="text-teal-600 hover:text-teal-800"
+                                        >
+                                          ×
+                                        </button>
+                                      </span>
+                                    ))}
+                                    <select
+                                      id={`editCategoryGroupSelect-${index}`}
+                                      name={`editCategoryGroupSelect-${index}`}
+                                      onChange={(e) => {
+                                        if (e.target.value) {
+                                          startUserChange();
+                                          const updatedCategories = [...tempCategories];
+                                          const currentGroups = tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : []);
+                                          if (!currentGroups.includes(e.target.value)) {
+                                            const newGroups = [...currentGroups, e.target.value];
+                                            updatedCategories[index] = { 
+                                              ...updatedCategories[index], 
+                                              groups: newGroups,
+                                              group: undefined
+                                            };
+                                            setTempCategories(updatedCategories);
+                                            endUserChange();
+                                          }
+                                          e.target.value = '';
+                                        }
+                                      }}
+                                      className="border border-gray-300 rounded outline-none text-sm bg-white text-gray-900 w-24 px-2 py-1 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                                      defaultValue=""
+                                    >
+                                      <option value="" disabled>Add group...</option>
+                                      {categoryGroups && categoryGroups.groups && Array.isArray(categoryGroups.groups) ? categoryGroups.groups.filter(group => 
+                                        !(tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : [])).includes(group)
+                                      ).map(group => (
+                                        <option key={group} value={group}>{group}</option>
+                                      )) : null}
+                                    </select>
+                                  </div>
+                                </div>
+                                <input
+                                  id={`editCategoryColor-${index}`}
+                                  name={`editCategoryColor-${index}`}
+                                  type="color"
+                                  value={tempCategories[index]?.color || category.color}
+                                  onChange={(e) => {
                                     const updatedCategories = [...tempCategories];
-                                    updatedCategories[index] = { ...updatedCategories[index], name: updatedCategories[index].name };
+                                    updatedCategories[index] = { ...updatedCategories[index], color: e.target.value };
                                     setTempCategories(updatedCategories);
                                     updateCategories(updatedCategories);
+                                  }}
+                                  className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                                />
+                                <button
+                                  onClick={() => {
+                                    updateCategories(tempCategories);
                                     setEditingCategory(null);
-                                  } else if (e.key === 'Escape') {
-                                    e.preventDefault();
-                                    setEditingCategory(null);
-                                    // Reset temp categories to original state
-                                    setTempCategories(categories);
-                                  }
-                                }}
-                                className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
-                                dir="ltr"
-                              />
-                              <div className="relative">
-                                <div className="flex flex-wrap gap-1 min-h-[32px] px-2 py-1 border border-gray-300 rounded text-sm bg-white focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500">
-                                  {(category.groups || (category.group ? [category.group] : [])).map((groupName, groupIndex) => (
-                                    <span
-                                      key={groupIndex}
-                                      className="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-md"
-                                    >
-                                      {groupName}
-                                      <button
-                                        onClick={() => {
+                                  }}
+                                  className="p-1.5 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded-lg transition-colors duration-200"
+                                  title="Save changes"
+                                >
+                                  <Save className="h-5 w-5" />
+                                </button>
+                              </div>
+                            </div>
+                            
+                            {/* Year Groups Editing Section */}
+                            <div className="ml-8 pl-2 border-l-2 border-gray-200">
+                              <label className="block text-xs font-medium text-gray-700 mb-2">
+                                Available for Year Groups
+                              </label>
+                              <div className="flex flex-wrap gap-3">
+                                {customYearGroups && Array.isArray(customYearGroups) && customYearGroups.length > 0 ? customYearGroups.map(yearGroup => {
+                                  // Use year group ID as the key, or map to code for legacy support
+                                  const yearGroupKey = yearGroup.id || 
+                                    (yearGroup.name.toLowerCase().includes('lower') || yearGroup.name.toLowerCase().includes('lkg') ? 'LKG' :
+                                     yearGroup.name.toLowerCase().includes('upper') || yearGroup.name.toLowerCase().includes('ukg') ? 'UKG' :
+                                     yearGroup.name.toLowerCase().includes('reception') ? 'Reception' : yearGroup.name);
+                                  
+                                  const categoryYearGroups = tempCategories[index]?.yearGroups || {};
+                                  const isEnabled = categoryYearGroups[yearGroupKey] || false;
+                                  return (
+                                    <label key={yearGroup.id} className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                                      <input
+                                        type="checkbox"
+                                        checked={isEnabled}
+                                        onChange={(e) => {
                                           const updatedCategories = [...tempCategories];
-                                          const currentGroups = category.groups || (category.group ? [category.group] : []);
-                                          const newGroups = currentGroups.filter(g => g !== groupName);
-                                          updatedCategories[index] = { 
-                                            ...updatedCategories[index], 
-                                            groups: newGroups.length > 0 ? newGroups : undefined,
-                                            group: undefined // Clear single group when using multiple groups
+                                          updatedCategories[index] = {
+                                            ...updatedCategories[index],
+                                            yearGroups: {
+                                              ...(updatedCategories[index].yearGroups || {}),
+                                              [yearGroupKey]: e.target.checked
+                                            }
                                           };
                                           setTempCategories(updatedCategories);
                                           updateCategories(updatedCategories);
                                         }}
-                                        className="text-teal-600 hover:text-teal-800"
-                                      >
-                                        ×
-                                      </button>
-                                    </span>
-                                  ))}
-                                  <select
-                                    id={`editCategoryGroupSelect-${index}`}
-                                    name={`editCategoryGroupSelect-${index}`}
-                                    onChange={(e) => {
-                                      if (e.target.value) {
-                                        console.log('🎯 User selecting group:', e.target.value, 'for category:', category.name);
-                                        
-                                        // Start user change to pause real-time sync
-                                        startUserChange();
-                                        
-                                        const updatedCategories = [...tempCategories];
-                                        const currentGroups = category.groups || (category.group ? [category.group] : []);
-                                        console.log('🎯 Current groups before:', currentGroups);
-                                        
-                                        if (!currentGroups.includes(e.target.value)) {
-                                          const newGroups = [...currentGroups, e.target.value];
-                                          console.log('🎯 New groups after adding:', newGroups);
-                                          
-                                          updatedCategories[index] = { 
-                                            ...updatedCategories[index], 
-                                            groups: newGroups,
-                                            group: undefined // Clear single group when using multiple groups
-                                          };
-                                          
-                                          console.log('🎯 Setting temp categories with updated group:', updatedCategories[index]);
-                                          console.log('🎯 Full updated categories array:', updatedCategories.map(cat => ({
-                                            name: cat.name,
-                                            groups: cat.groups,
-                                            group: cat.group
-                                          })));
-                                          setTempCategories(updatedCategories);
-                                          // Don't call updateCategories immediately - let the useEffect handle it
-                                          // This prevents race conditions when assigning multiple categories quickly
-                                          
-                                          // End user change after a delay to allow persistence
-                                          endUserChange();
-                                        } else {
-                                          console.log('🎯 Group already exists, not adding');
-                                        }
-                                        e.target.value = ''; // Reset select
-                                      }
-                                    }}
-                                    className="border border-gray-300 rounded outline-none text-sm bg-white text-gray-900 w-24 px-2 py-1 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-                                    defaultValue=""
-                                  >
-                                    <option value="" disabled>Add group...</option>
-                                    {categoryGroups.groups.filter(group => 
-                                      !(category.groups || (category.group ? [category.group] : [])).includes(group)
-                                    ).map(group => (
-                                      <option key={group} value={group}>{group}</option>
-                                    ))}
-                                  </select>
-                                </div>
+                                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                      />
+                                      <span className={`text-sm ${isEnabled ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                                        {yearGroup.name}
+                                      </span>
+                                    </label>
+                                  );
+                                }) : <span className="text-sm text-gray-500">No year groups available</span>}
                               </div>
-                              <input
-                                id={`editCategoryColor-${index}`}
-                                name={`editCategoryColor-${index}`}
-                                type="color"
-                                value={category.color}
-                                onChange={(e) => {
-                                  const updatedCategories = [...tempCategories];
-                                  updatedCategories[index] = { ...updatedCategories[index], color: e.target.value };
-                                  setTempCategories(updatedCategories);
-                                  updateCategories(updatedCategories);
-                                }}
-                                className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer"
-                              />
-                              <button
-                                onClick={() => setEditingCategory(null)}
-                                className="p-1.5 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded-lg transition-colors duration-200"
-                              >
-                                <Save className="h-5 w-5" />
-                              </button>
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-center space-x-3">
-                            <div className="flex-shrink-0 cursor-move">
-                              <GripVertical className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <div 
-                              className="w-4 h-4 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: category.color }}
-                            ></div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-900" dir="ltr">{category.name}</div>
-                              {(category.groups && category.groups.length > 0) ? (
-                                <div className="text-xs text-gray-500 break-words">
-                                  Groups: {category.groups.join(', ')}
-                                </div>
-                              ) : category.group ? (
-                                <div className="text-xs text-gray-500 break-words">
-                                  Group: {category.group}
-                                </div>
-                              ) : null}
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {Object.entries(category.yearGroups || {}).map(([yearGroup, isEnabled]) => (
-                                  isEnabled && (
-                                    <span key={yearGroup} className="px-2 py-1 bg-teal-100 text-teal-800 text-xs font-medium rounded-full">
-                                      {yearGroup}
+                          <div className="flex items-start gap-4">
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <div className="flex-shrink-0 cursor-move pt-0.5">
+                                <GripVertical className="h-5 w-5 text-gray-400" />
+                              </div>
+                              <div 
+                                className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5 border border-gray-200"
+                                style={{ backgroundColor: category.color }}
+                              ></div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-gray-900 mb-2" dir="ltr">{category.name}</div>
+                                
+                                {/* Groups Display */}
+                                {(category.groups && category.groups.length > 0) ? (
+                                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                                    <span className="text-xs text-gray-500 font-medium">Groups:</span>
+                                    {category.groups.map((group, idx) => (
+                                      <span key={idx} className="inline-flex items-center px-2 py-0.5 bg-teal-100 text-teal-800 text-xs rounded-md font-medium">
+                                        {group}
+                                      </span>
+                                    ))}
+                                  </div>
+                                ) : category.group ? (
+                                  <div className="flex items-center gap-1.5 mb-2">
+                                    <span className="text-xs text-gray-500 font-medium">Group:</span>
+                                    <span className="inline-flex items-center px-2 py-0.5 bg-teal-100 text-teal-800 text-xs rounded-md font-medium">
+                                      {category.group}
                                     </span>
-                                  )
-                                ))}
+                                  </div>
+                                ) : null}
+                                
+                                {/* Year Groups Display */}
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {editingCategoryYearGroups === `category-index-${index}` ? (
+                                  // Edit mode: show checkboxes for year groups
+                                  <div className="flex flex-wrap gap-2">
+                                    {customYearGroups && Array.isArray(customYearGroups) && customYearGroups.length > 0 ? customYearGroups.map(yearGroup => {
+                                      const yearGroupCode = yearGroup.name.toLowerCase().includes('lower') || yearGroup.name.toLowerCase().includes('lkg') ? 'LKG' :
+                                                           yearGroup.name.toLowerCase().includes('upper') || yearGroup.name.toLowerCase().includes('ukg') ? 'UKG' :
+                                                           yearGroup.name.toLowerCase().includes('reception') ? 'Reception' : null;
+                                      if (!yearGroupCode) return null;
+                                      
+                                      const categoryYearGroups = category.yearGroups || { LKG: false, UKG: false, Reception: false };
+                                      const isEnabled = categoryYearGroups[yearGroupCode as 'LKG' | 'UKG' | 'Reception'] || false;
+                                      return (
+                                        <label key={yearGroup.id} className="flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded hover:bg-gray-50">
+                                          <input
+                                            type="checkbox"
+                                            checked={isEnabled}
+                                            onChange={(e) => {
+                                              const updatedCategories = [...tempCategories];
+                                              updatedCategories[index] = {
+                                                ...updatedCategories[index],
+                                                yearGroups: {
+                                                  ...(updatedCategories[index].yearGroups || { LKG: false, UKG: false, Reception: false }),
+                                                  [yearGroupCode]: e.target.checked
+                                                }
+                                              };
+                                              setTempCategories(updatedCategories);
+                                              updateCategories(updatedCategories);
+                                            }}
+                                            className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                          />
+                                          <span className={`text-xs ${isEnabled ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>{yearGroup.name}</span>
+                                        </label>
+                                      );
+                                    }) : null}
+                                    <div className="flex gap-2 items-center">
+                                      <button
+                                        onClick={() => {
+                                          const updatedCategories = [...tempCategories];
+                                          updatedCategories[index] = {
+                                            ...updatedCategories[index],
+                                            yearGroups: { LKG: false, UKG: false, Reception: false }
+                                          };
+                                          setTempCategories(updatedCategories);
+                                          updateCategories(updatedCategories);
+                                        }}
+                                        className="text-xs text-red-600 hover:text-red-800 px-2 py-1 hover:bg-red-50 rounded"
+                                        title="Remove all year group assignments"
+                                      >
+                                        Clear All
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingCategoryYearGroups(null)}
+                                        className="text-xs text-teal-600 hover:text-teal-800 px-2 py-1 hover:bg-teal-50 rounded font-medium"
+                                      >
+                                        Done
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  // View mode: show year group tags (clickable to edit)
+                                  <>
+                                    {customYearGroups && Array.isArray(customYearGroups) ? customYearGroups
+                                      .filter(yearGroup => {
+                                        const yearGroupKey = yearGroup.id || 
+                                          (yearGroup.name.toLowerCase().includes('lower') || yearGroup.name.toLowerCase().includes('lkg') ? 'LKG' :
+                                           yearGroup.name.toLowerCase().includes('upper') || yearGroup.name.toLowerCase().includes('ukg') ? 'UKG' :
+                                           yearGroup.name.toLowerCase().includes('reception') ? 'Reception' : yearGroup.name);
+                                        return category.yearGroups?.[yearGroupKey] === true;
+                                      })
+                                      .map(yearGroup => (
+                                        <span 
+                                          key={yearGroup.id} 
+                                          className="px-2 py-1 bg-teal-100 text-teal-800 text-xs font-medium rounded-full cursor-pointer hover:bg-teal-200 transition-colors"
+                                          onClick={() => setEditingCategoryYearGroups(`category-index-${index}`)}
+                                          title="Click to edit year group assignments"
+                                        >
+                                          {yearGroup.name}
+                                        </span>
+                                      )) : null}
+                                    {(!category.yearGroups || Object.values(category.yearGroups).every(v => !v)) && (
+                                      <button
+                                        onClick={() => setEditingCategoryYearGroups(`category-index-${index}`)}
+                                        className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full hover:bg-gray-200 transition-colors"
+                                        title="Click to assign year groups"
+                                      >
+                                        + Assign Year Groups
+                                      </button>
+                                    )}
+                                  </>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             <div className="flex items-center justify-end space-x-2 flex-shrink-0">
@@ -1366,24 +1799,46 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center space-x-1 flex-shrink-0">
-                              <button
-                                onClick={() => setEditingCategory(category.name)}
-                                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-                              >
-                                <Edit3 className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteCategory(index)}
-                                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                            
+                            {/* Edit/Delete Actions */}
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {bulkYearGroupMode ? (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedCategoriesForBulk.has(category.name)}
+                                  onChange={(e) => {
+                                    const newSelected = new Set(selectedCategoriesForBulk);
+                                    if (e.target.checked) {
+                                      newSelected.add(category.name);
+                                    } else {
+                                      newSelected.delete(category.name);
+                                    }
+                                    setSelectedCategoriesForBulk(newSelected);
+                                  }}
+                                  className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                />
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => setEditingCategory(`category-index-${index}`)}
+                                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                                  >
+                                    <Edit3 className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteCategory(index)}
+                                    className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                         )}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1491,7 +1946,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
               </div>
 
               {/* Support Section */}
-              <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 mt-6">
+              <div className="rounded-lg bg-teal-50 border border-teal-200 p-4 mt-6">
                 <div className="flex items-start space-x-3">
                   <span className="text-2xl">ℹ️</span>
                   <div className="flex-1">

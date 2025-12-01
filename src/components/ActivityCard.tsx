@@ -654,7 +654,7 @@ return (
               />
             ) : (
               <div className="flex items-center space-x-2">
-                <p className="text-sm text-gray-700 font-medium" dir="ltr">{activity.unitName}</p>
+              <p className="text-sm text-gray-700 font-medium" dir="ltr">{activity.unitName}</p>
                 {onViewUnit && activity.unitName && (
                   <button
                     onClick={(e) => {

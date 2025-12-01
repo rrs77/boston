@@ -31,7 +31,7 @@ export function Header() {
             {/* Logo and Title */}
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
               {/* Teal gradient logo matching app design */}
-              <div className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 relative">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 relative">
                 <svg 
                   viewBox="0 0 80 80" 
                   className="w-full h-full"
@@ -56,7 +56,7 @@ export function Header() {
                     textAnchor="middle"
                     dominantBaseline="central"
                     fill="white"
-                    fontSize="32"
+                    fontSize="36"
                     fontWeight="700"
                     fontFamily="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
                     letterSpacing="-1"
