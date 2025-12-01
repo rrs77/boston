@@ -520,7 +520,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                 ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
             }`}
-            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif', border: 'none', borderLeft: 'none', borderRight: 'none' }}
           >
             Year Groups
           </button>
@@ -533,7 +533,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                 ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
             }`}
-            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif', border: 'none', borderLeft: 'none', borderRight: 'none' }}
           >
             Categories
           </button>
@@ -546,7 +546,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                 ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
             }`}
-            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif', border: 'none', borderLeft: 'none', borderRight: 'none' }}
           >
             Custom Objectives
           </button>
@@ -559,7 +559,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                 ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
               }`}
-            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif', border: 'none', borderLeft: 'none', borderRight: 'none' }}
             >
             Data & Backup
             </button>
@@ -572,7 +572,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                 ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
             }`}
-            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif', border: 'none', borderLeft: 'none', borderRight: 'none' }}
           >
             <span className="hidden sm:inline">🛒</span> Purchases
                           </button>
@@ -586,7 +586,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                   ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
                   : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
               }`}
-              style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+              style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif', border: 'none', borderLeft: 'none', borderRight: 'none' }}
             >
               <div className="flex items-center space-x-2">
                 <Package className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -1849,7 +1849,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           {activeTab === 'purchases' && (
             <div className="space-y-6">
               {/* Purchases Header */}
-              <div className="rounded-lg p-6 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
+              <div className="rounded-lg p-6 bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200">
                 <div className="flex items-center space-x-3 mb-4">
                   <span className="text-3xl">🛒</span>
                   <h3 className="text-xl font-bold text-gray-900">Purchase Activity Card Sets</h3>
@@ -1973,9 +1973,9 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
           {activeTab === 'manage-packs' && (
             <div className="space-y-6">
               {/* Activity Packs Management */}
-              <div className="border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 shadow-sm">
+              <div className="border border-teal-200 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg p-6 shadow-sm">
                 <div className="flex items-center space-x-3 mb-4">
-                  <Package className="h-6 w-6 text-purple-600" />
+                  <Package className="h-6 w-6 text-teal-600" />
                   <h3 className="text-lg font-semibold text-gray-900">Activity Packs Management</h3>
                 </div>
                 <p className="text-sm text-gray-600 mb-6">

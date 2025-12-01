@@ -132,37 +132,52 @@ export function SimpleNestedCategoryDropdown({
     const filtered = categories.filter(category => {
       // If category doesn't have yearGroups property or it's empty, don't show it (must be explicitly assigned)
       if (!category.yearGroups || Object.keys(category.yearGroups).length === 0) {
-        console.log(`❌ Category "${category.name}" has no yearGroups assigned`);
         return false;
       }
 
-      // Debug: Log the category's yearGroups structure (only for first few categories to avoid spam)
-      const categoryIndex = categories.indexOf(category);
-      if (categoryIndex < 3) {
-        console.log(`📋 Category "${category.name}" yearGroups:`, JSON.stringify(category.yearGroups), 'keys:', Object.keys(category.yearGroups || {}));
-      }
+      // Get all keys stored in this category's yearGroups
+      const storedKeys = Object.keys(category.yearGroups);
+      const storedValues = Object.entries(category.yearGroups).map(([k, v]) => `${k}:${v}`);
       
       // Check if this category is enabled for any of the year group keys
+      const matchingKeys: string[] = [];
       const isEnabled = yearGroupKeys.some(key => {
         const value = category.yearGroups[key];
-        const result = value === true;
-        if (result && categoryIndex < 3) {
-          console.log(`✅ Category "${category.name}" enabled for key "${key}"`);
-        } else if (value !== undefined && categoryIndex < 3) {
-          console.log(`⚠️ Category "${category.name}" has key "${key}" but value is:`, value);
+        if (value === true) {
+          matchingKeys.push(key);
+          return true;
         }
-        return result;
+        return false;
       });
       
-      if (!isEnabled && categoryIndex < 3) {
-        console.log(`❌ Category "${category.name}" not enabled. yearGroups keys:`, Object.keys(category.yearGroups || {}), 'keys checked:', yearGroupKeys);
+      // Log detailed info for debugging (only first 5 categories to avoid spam)
+      const categoryIndex = categories.indexOf(category);
+      if (categoryIndex < 5) {
+        console.log(`📋 Category "${category.name}":`, {
+          storedKeys,
+          storedValues,
+          checkedKeys: yearGroupKeys,
+          matchingKeys,
+          isEnabled
+        });
       }
       
       return isEnabled;
     });
     
-    console.log(`📊 Category filtering result: ${filtered.length} of ${categories.length} categories shown for year group "${getCurrentYearGroupName() || currentSheetInfo?.sheet}"`);
-    console.log(`📊 Categories shown:`, filtered.map(c => c.name).slice(0, 10));
+    // Log summary with detailed breakdown
+    const categoriesWithYearGroups = categories.filter(c => c.yearGroups && Object.keys(c.yearGroups).length > 0);
+    const categoriesWithoutYearGroups = categories.filter(c => !c.yearGroups || Object.keys(c.yearGroups).length === 0);
+    
+    console.log(`📊 Category filtering summary:`, {
+      yearGroup: getCurrentYearGroupName() || currentSheetInfo?.sheet,
+      yearGroupKeys,
+      totalCategories: categories.length,
+      categoriesWithYearGroups: categoriesWithYearGroups.length,
+      categoriesWithoutYearGroups: categoriesWithoutYearGroups.length,
+      filteredCount: filtered.length,
+      filteredCategories: filtered.map(c => c.name).slice(0, 10)
+    });
     
     return filtered;
   }, [categories, currentSheetInfo, customYearGroups]);
@@ -301,7 +316,10 @@ export function SimpleNestedCategoryDropdown({
                       Filtered for {currentYearGroupName || 'current year group'}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {filteredCount} of {totalCount} categories
+                      Showing {filteredCount} of {totalCount} categories
+                      {filteredCount === totalCount && filteredCount > 0 && (
+                        <span className="text-amber-600 ml-1">⚠️ All categories shown - check year group assignments in Settings</span>
+                      )}
                     </span>
                   </div>
                 </div>
