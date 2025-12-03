@@ -1039,7 +1039,7 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
 
   // Save categories using queue-based system to prevent race conditions
   useEffect(() => {
-    console.log('🔄 Categories useEffect triggered - dataLoadedFromSupabase:', dataLoadedFromSupabase.current, 'categories length:', categories.length);
+    console.log('🔄 Categories useEffect triggered - dataLoadedFromSupabase:', dataLoadedFromSupabase.current, 'isCurrentlyLoading:', isCurrentlyLoading.current, 'categories length:', categories.length);
     
     // Don't save if data hasn't loaded from Supabase yet
     if (!dataLoadedFromSupabase.current) {
@@ -1050,6 +1050,12 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
     // Don't save while loading from Supabase
     if (loadingFromSupabase.current) {
       console.log('⏭️ Skipping categories save - currently loading from Supabase');
+      return;
+    }
+    
+    // Don't save while currently loading (prevents race conditions during initial load)
+    if (isCurrentlyLoading.current) {
+      console.log('⏭️ Skipping categories save - currently loading categories');
       return;
     }
     
@@ -1067,7 +1073,33 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
       const hasGroupAssignments = (cat.groups && cat.groups.length > 0) || cat.group;
       const hasYearGroupAssignments = cat.yearGroups && Object.keys(cat.yearGroups).length > 0 && 
         Object.values(cat.yearGroups).some(v => v === true);
-      return isCustom || hasGroupAssignments || hasYearGroupAssignments;
+      
+      const shouldSave = isCustom || hasGroupAssignments || hasYearGroupAssignments;
+      
+      // Debug logging for first few categories
+      if (categories.indexOf(cat) < 5) {
+        console.log(`🔍 Category "${cat.name}":`, {
+          isCustom,
+          hasGroupAssignments,
+          hasYearGroupAssignments,
+          yearGroups: cat.yearGroups,
+          shouldSave
+        });
+      }
+      
+      return shouldSave;
+    });
+    
+    console.log('💾 Categories save filter results:', {
+      totalCategories: categories.length,
+      categoriesToSave: categoriesToSave.length,
+      categoriesWithYearGroups: categoriesToSave.filter(c => c.yearGroups && Object.keys(c.yearGroups).length > 0).length,
+      categoriesExcluded: categories.length - categoriesToSave.length,
+      sampleYearGroups: categoriesToSave.slice(0, 5).map(c => ({ 
+        name: c.name, 
+        yearGroups: c.yearGroups,
+        hasYearGroups: !!(c.yearGroups && Object.keys(c.yearGroups).length > 0)
+      }))
     });
     
     if (categoriesToSave.length > 0) {
@@ -1080,15 +1112,15 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
         yearGroups: cat.yearGroups || {} // Preserve yearGroups assignments
       }));
       
-      console.log('💾 Saving categories to Supabase:', {
-        totalCategories: categories.length,
-        categoriesToSave: categoriesToSave.length,
-        categoriesWithYearGroups: categoriesToSave.filter(c => c.yearGroups && Object.keys(c.yearGroups).length > 0).length,
-        sampleYearGroups: categoriesToSave.slice(0, 3).map(c => ({ name: c.name, yearGroups: c.yearGroups }))
+      console.log('💾 Queueing categories save to Supabase:', {
+        count: categoriesForSupabase.length,
+        sample: categoriesForSupabase.slice(0, 3).map(c => ({ name: c.name, yearGroups: c.yearGroups }))
       });
       
       // Queue Supabase save
       queueSave('categories', categoriesForSupabase);
+    } else {
+      console.warn('⚠️ No categories to save - all categories were filtered out!');
     }
   }, [categories]);
 
