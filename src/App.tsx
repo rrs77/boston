@@ -10,6 +10,7 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { Footer } from './components/Footer';
 import { useAuth } from './hooks/useAuth';
 import { HelpGuide } from './components/HelpGuide';
+import { initializeSupabaseKeepAlive } from './utils/supabaseKeepAlive';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -17,6 +18,28 @@ function AppContent() {
   const [helpGuideSection, setHelpGuideSection] = useState<
     'activity' | 'lesson' | 'unit' | 'assign' | undefined
   >(undefined);
+
+  // Initialize Supabase keep-alive service to prevent database sleep
+  useEffect(() => {
+    const cleanup = initializeSupabaseKeepAlive();
+    
+    // Also check when user returns to the app (after tab was inactive)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // User returned to the app - check if ping is needed
+        import('./utils/supabaseKeepAlive').then(({ checkAndPingSupabase }) => {
+          checkAndPingSupabase();
+        });
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      cleanup();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   if (loading) {
     return (
