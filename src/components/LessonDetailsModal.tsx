@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Download, Edit3, Save, Check, Tag, Clock, Users, ExternalLink, FileText, Trash2 } from 'lucide-react';
+import { X, Download, Edit3, Save, Check, Tag, Clock, Users, ExternalLink, FileText, Trash2, Share2 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { ActivityDetails } from './ActivityDetails';
@@ -232,6 +232,16 @@ export function LessonDetailsModal({
               >
                 <Download className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
                 <span className="text-sm font-medium">Export PDF</span>
+              </button>
+              
+              {/* Share Lesson Plan Link Button */}
+              <button
+                onClick={() => setShowPrintModal(true)}
+                className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 group flex items-center space-x-2"
+                title="Share Lesson Plan Link"
+              >
+                <Share2 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                <span className="text-sm font-medium">Share Link</span>
               </button>
               
               <button

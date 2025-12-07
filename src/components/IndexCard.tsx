@@ -69,14 +69,14 @@ export function IndexCard({
       {/* Expanded Lessons */}
       {isExpanded && (
         <div className="border-t border-gray-200 bg-gray-50 p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-2">
             {lessons.map(({ lessonNumber, lessonData }, index) => (
               <LessonLibraryCard
                 key={lessonNumber}
                 lessonNumber={lessonNumber}
                 displayNumber={index + 1}
                 lessonData={lessonData}
-                viewMode="grid"
+                viewMode="compact"
                 onClick={() => onLessonClick(lessonNumber)}
                 onEdit={onLessonEdit ? () => onLessonEdit(lessonNumber) : undefined}
                 theme={theme}

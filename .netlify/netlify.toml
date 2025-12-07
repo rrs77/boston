@@ -1,16 +1,15 @@
+functionsDirectory = "/Users/robreich-storer/Library/Mobile Documents/com~apple~CloudDocs/CC Designer/boston/netlify/functions"
+functionsDirectoryOrigin = "default"
 headersOrigin = "config"
 redirectsOrigin = "config"
 plugins = []
-
-[functions]
-
-[functions."*"]
 
 [build]
 publish = "/Users/robreich-storer/Library/Mobile Documents/com~apple~CloudDocs/CC Designer/boston/dist"
 publishOrigin = "config"
 commandOrigin = "config"
 command = "npm run build"
+functions = "/Users/robreich-storer/Library/Mobile Documents/com~apple~CloudDocs/CC Designer/boston/netlify/functions"
 
 [build.environment]
 NODE_VERSION = "18"
@@ -26,6 +25,10 @@ NODE_VERSION = "18"
 [build.processing.js]
 
 [build.services]
+
+[functions]
+
+[functions."*"]
 
 [[headers]]
 for = "/assets/*"

@@ -55,7 +55,7 @@ import {
 } from 'date-fns';
 import { useDrop, useDrag } from 'react-dnd';
 import { useData } from '../contexts/DataContext';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSettings } from '../contexts/SettingsContextNew';
 import { TimetableModal } from './TimetableModal';
 import { EventModal } from './EventModal';
 import { LessonDetailsModal } from './LessonDetailsModal';
@@ -122,7 +122,7 @@ export function LessonPlannerCalendar({
   onCreateLessonPlan,
   className
 }: LessonPlannerCalendarProps) {
-  const { allLessonsData, units, halfTerms, updateHalfTerm } = useData();
+  const { allLessonsData, units: dataContextUnits, halfTerms, updateHalfTerm } = useData();
   const { getThemeForClass, getCategoryColor } = useSettings();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
@@ -140,10 +140,49 @@ export function LessonPlannerCalendar({
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{day: number, date: Date, hour: number} | null>(null);
   const [dayViewDate, setDayViewDate] = useState<Date>(new Date());
+  const [units, setUnits] = useState<any[]>([]); // Units from UnitViewer
+  const [termTimeConfigs, setTermTimeConfigs] = useState<Array<{termId: string, startDate: Date, endDate: Date, startTime?: string, endTime?: string}>>([]);
+  const [showTermTimeConfig, setShowTermTimeConfig] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
   
   // Get theme colors for current class
   const theme = getThemeForClass(className);
+
+  // Load units from UnitViewer's localStorage
+  useEffect(() => {
+    const savedUnits = localStorage.getItem(`units-${className}`);
+    if (savedUnits) {
+      try {
+        const parsedUnits = JSON.parse(savedUnits).map((unit: any) => ({
+          ...unit,
+          createdAt: new Date(unit.createdAt),
+          updatedAt: new Date(unit.updatedAt),
+        }));
+        setUnits(parsedUnits);
+      } catch (error) {
+        console.error('Error loading units from UnitViewer:', error);
+        setUnits([]);
+      }
+    }
+  }, [className]);
+
+  // Load term time configurations
+  useEffect(() => {
+    const savedConfigs = localStorage.getItem(`term-time-configs-${className}`);
+    if (savedConfigs) {
+      try {
+        const parsed = JSON.parse(savedConfigs).map((config: any) => ({
+          ...config,
+          startDate: new Date(config.startDate),
+          endDate: new Date(config.endDate),
+        }));
+        setTermTimeConfigs(parsed);
+      } catch (error) {
+        console.error('Error loading term time configs:', error);
+        setTermTimeConfigs([]);
+      }
+    }
+  }, [className]);
 
   // Load timetable classes from localStorage
   useEffect(() => {
@@ -1307,13 +1346,13 @@ export function LessonPlannerCalendar({
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden" ref={calendarRef}>
       {/* Calendar Header */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-teal-600 to-cyan-600 text-white">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div className="flex items-center space-x-3">
             <CalendarIcon className="h-6 w-6" />
             <div>
               <h2 className="text-xl font-bold">Calendar</h2>
-              <p className="text-blue-100 text-sm">
+              <p className="text-teal-100 text-sm">
                 {className} • {viewMode === 'month' ? 'Month View' : viewMode === 'week' ? 'Week View' : 'Day View'}
               </p>
             </div>
@@ -1325,7 +1364,7 @@ export function LessonPlannerCalendar({
               <button
                 onClick={() => setViewMode('month')}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
-                  viewMode === 'month' ? 'bg-white text-blue-600' : 'text-white hover:bg-white hover:bg-opacity-10'
+                  viewMode === 'month' ? 'bg-white text-teal-600' : 'text-white hover:bg-white hover:bg-opacity-10'
                 }`}
               >
                 Month
@@ -1333,7 +1372,7 @@ export function LessonPlannerCalendar({
               <button
                 onClick={() => setViewMode('week')}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
-                  viewMode === 'week' ? 'bg-white text-blue-600' : 'text-white hover:bg-white hover:bg-opacity-10'
+                  viewMode === 'week' ? 'bg-white text-teal-600' : 'text-white hover:bg-white hover:bg-opacity-10'
                 }`}
               >
                 Week
@@ -1341,7 +1380,7 @@ export function LessonPlannerCalendar({
               <button
                 onClick={() => setViewMode('day')}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
-                  viewMode === 'day' ? 'bg-white text-blue-600' : 'text-white hover:bg-white hover:bg-opacity-10'
+                  viewMode === 'day' ? 'bg-white text-teal-600' : 'text-white hover:bg-white hover:bg-opacity-10'
                 }`}
               >
                 Day

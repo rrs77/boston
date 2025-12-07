@@ -286,20 +286,15 @@ export function Dashboard() {
                 <span className="sm:hidden">Activities</span>
               </TabsTrigger>
               
-              {/* CALENDAR TAB - TEMPORARILY DISABLED */}
-              {/* To re-enable: uncomment the block below */}
-              {/*
               <TabsTrigger 
                 value="calendar"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-lg px-4 py-2 transition-all duration-200"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white rounded-lg px-4 py-2 transition-all duration-200 flex flex-col lg:flex-row items-center space-y-1 lg:space-y-0 lg:space-x-2 p-2 lg:p-4 text-xs lg:text-sm"
                 data-tab="calendar"
               >
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5" />
-                  <span>Calendar</span>
-                </div>
+                <Calendar className="h-5 w-5 lg:h-6 lg:w-6" />
+                <span className="hidden sm:inline">Calendar</span>
+                <span className="sm:hidden">Calendar</span>
               </TabsTrigger>
-              */}
             </TabsList>
 
 
@@ -330,9 +325,6 @@ export function Dashboard() {
               />
             </TabsContent>
 
-            {/* CALENDAR TAB CONTENT - TEMPORARILY DISABLED */}
-            {/* To re-enable: uncomment the block below */}
-            {/*
             <TabsContent value="calendar" className="mt-6">
               <LessonPlannerCalendar
                 onDateSelect={handleDateSelect}
@@ -343,7 +335,6 @@ export function Dashboard() {
                 className={currentSheetInfo.sheet}
               />
             </TabsContent>
-            */}
           </Tabs>
         </div>
       </div>

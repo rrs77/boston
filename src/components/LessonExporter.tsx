@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, FileText, File, Printer, X, Check, ChevronDown, ChevronUp, Tag } from 'lucide-react';
+import { Download, FileText, File, Printer, X, Check, ChevronDown, ChevronUp, Tag, Share2, Copy } from 'lucide-react';
+import { supabase } from '../config/supabase';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { jsPDF } from 'jspdf';
@@ -18,6 +19,9 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [showStandards, setShowStandards] = useState(true);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareSuccess, setShareSuccess] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
   const lessonData = allLessonsData[lessonNumber];
@@ -138,6 +142,178 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
     window.print();
   };
 
+  // Check and create bucket if it doesn't exist
+  const ensureBucketExists = async () => {
+    const bucketName = 'lesson-pdfs';
+    
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error('Error listing buckets:', listError);
+      return { exists: false, error: listError.message };
+    }
+    
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      console.log('Bucket does not exist, attempting to create...');
+      const { data: newBucket, error: createError } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 52428800,
+        allowedMimeTypes: ['application/pdf']
+      });
+      
+      if (createError) {
+        console.error('Error creating bucket:', createError);
+        return { exists: false, error: createError.message };
+      }
+      
+      console.log('Bucket created successfully:', newBucket);
+      return { exists: true, created: true };
+    }
+    
+    return { exists: true, created: false };
+  };
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    setShareUrl(null);
+    setShareSuccess(false);
+
+    try {
+      // Ensure bucket exists
+      const bucketCheck = await ensureBucketExists();
+      if (!bucketCheck.exists) {
+        throw new Error(
+          `Storage bucket 'lesson-pdfs' does not exist and could not be created automatically. ` +
+          `Please create it manually in Supabase Dashboard: Storage → New bucket → Name: "lesson-pdfs" → Public: Yes. ` +
+          `Error: ${bucketCheck.error || 'Unknown error'}`
+        );
+      }
+
+      // Generate PDF using html2canvas
+      if (!previewRef.current) {
+        throw new Error('Preview not available');
+      }
+
+      const canvas = await html2canvas(previewRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      if (imgHeight > 297) {
+        let remainingHeight = imgHeight;
+        let currentPosition = 0;
+        
+        while (remainingHeight > 0) {
+          currentPosition += 297;
+          remainingHeight -= 297;
+          
+          if (remainingHeight > 0) {
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, -currentPosition, imgWidth, imgHeight);
+          }
+        }
+      }
+
+      // Convert PDF to blob
+      const pdfBlob = pdf.output('blob');
+
+      // Generate filename
+      const getLessonDisplayNumber = (num: string): string => {
+        const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+        return numericPart || num;
+      };
+      const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber);
+      const fileName = `${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
+
+      // Upload to Supabase Storage
+      const timestamp = Date.now();
+      const storageFileName = `shared-pdfs/${timestamp}_${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('lesson-pdfs')
+        .upload(storageFileName, pdfBlob, {
+          contentType: 'application/pdf',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error(`Failed to upload PDF: ${uploadError.message}`);
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('lesson-pdfs')
+        .getPublicUrl(storageFileName);
+
+      const publicUrl = urlData.publicUrl;
+      setShareUrl(publicUrl);
+      setShareSuccess(true);
+
+      // Try to use Web Share API if available, otherwise copy to clipboard
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: fileName,
+            text: `Check out this lesson plan: ${fileName}`,
+            url: publicUrl
+          });
+        } catch (shareError: any) {
+          if (shareError.name !== 'AbortError') {
+            await copyToClipboard(publicUrl);
+          }
+        }
+      } else {
+        await copyToClipboard(publicUrl);
+      }
+    } catch (error: any) {
+      console.error('Share failed:', error);
+      alert(`Share failed: ${error.message}`);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('Shareable URL copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        alert('Shareable URL copied to clipboard!');
+      } catch (err) {
+        alert(`Shareable URL: ${text}`);
+      }
+      document.body.removeChild(textarea);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -205,7 +381,7 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
               </button>
               <button
                 onClick={handleExport}
-                disabled={isExporting}
+                disabled={isExporting || isSharing}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:bg-blue-400"
               >
                 {isExporting ? (
@@ -225,7 +401,46 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
                   </>
                 )}
               </button>
+              <button
+                onClick={handleShare}
+                disabled={isExporting || isSharing}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:bg-teal-400"
+              >
+                {isSharing ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span>Sharing...</span>
+                  </>
+                ) : shareSuccess ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    <span>Shared!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-4 w-4" />
+                    <span>Share Link</span>
+                  </>
+                )}
+              </button>
             </div>
+            {shareUrl && shareSuccess && (
+              <div className="mt-3 p-3 bg-teal-50 border border-teal-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-teal-900 mb-1">Shareable URL:</p>
+                    <p className="text-xs text-teal-700 break-all">{shareUrl}</p>
+                  </div>
+                  <button
+                      onClick={() => copyToClipboard(shareUrl)}
+                      className="ml-3 p-2 text-teal-600 hover:text-teal-800 hover:bg-teal-100 rounded-lg transition-colors"
+                      title="Copy URL"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

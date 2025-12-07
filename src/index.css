@@ -280,7 +280,7 @@ input[type="checkbox"].rounded-full:focus {
   box-shadow: none !important;
 }
 
-/* Print preview page styling */
+/* Print preview page styling - matches PDF export exactly */
 .print-preview-page {
   width: 210mm;
   min-height: 297mm;
@@ -290,15 +290,38 @@ input[type="checkbox"].rounded-full:focus {
   position: relative;
   page-break-after: always;
   break-after: page;
+  padding: 1cm;
+  box-sizing: border-box;
 }
 
 .print-preview-page:last-child {
   margin-bottom: 0;
+  page-break-after: auto;
+  break-after: auto;
 }
 
 .print-preview-container {
   background: #e5e7eb;
   padding: 40px 20px;
+}
+
+/* Ensure lesson-page class matches preview exactly */
+.lesson-page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 1cm;
+  margin: 0 auto 2cm auto;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  page-break-after: always;
+  break-after: always;
+  box-sizing: border-box;
+}
+
+.lesson-page:last-child {
+  margin-bottom: 0;
+  page-break-after: auto;
+  break-after: auto;
 }
 
 /* Print styles for lesson plans */

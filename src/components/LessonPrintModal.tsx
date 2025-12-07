@@ -947,7 +947,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
 
           {/* Options */}
           <div className="p-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-4">
                 <div className="text-sm text-gray-600">
                   Lessons: {lessonsToRender.map((_, index) => index + 1).join(', ')}
@@ -994,29 +994,29 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                   ) : (
                       <>
                         <Share2 className="h-4 w-4" />
-                        <span>Share PDF</span>
+                        <span>Share Lesson Plan Link</span>
                       </>
                   )}
                 </button>
               </div>
-              {shareUrl && shareSuccess && (
-                <div className="mt-3 p-3 bg-teal-50 border border-teal-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-teal-900 mb-1">Shareable URL:</p>
-                      <p className="text-xs text-teal-700 break-all">{shareUrl}</p>
-                    </div>
-                    <button
-                        onClick={() => copyToClipboard(shareUrl)}
-                        className="ml-3 p-2 text-teal-600 hover:text-teal-800 hover:bg-teal-100 rounded-lg transition-colors"
-                        title="Copy URL"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
+            {shareUrl && shareSuccess && (
+              <div className="mt-3 p-3 bg-teal-50 border border-teal-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-teal-900 mb-1">Shareable URL:</p>
+                    <p className="text-xs text-teal-700 break-all">{shareUrl}</p>
+                  </div>
+                  <button
+                      onClick={() => copyToClipboard(shareUrl)}
+                      className="ml-3 p-2 text-teal-600 hover:text-teal-800 hover:bg-teal-100 rounded-lg transition-colors"
+                      title="Copy URL"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Preview - Each lesson as a separate "page" */}
@@ -1054,7 +1054,17 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
               return (
                   <div
                       key={lessonNum}
-                      className="print-preview-page"
+                      className="lesson-page print-preview-page"
+                      style={{
+                        width: '210mm',
+                        minHeight: '297mm',
+                        margin: '0 auto 40px auto',
+                        background: 'white',
+                        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2), 0 0 1px rgba(0, 0, 0, 0.1)',
+                        position: 'relative',
+                        pageBreakAfter: lessonIndex < lessonsToRender.length - 1 ? 'always' : 'auto',
+                        breakAfter: lessonIndex < lessonsToRender.length - 1 ? 'page' : 'auto'
+                      }}
                   >
                       {/* Page Header */}
                       <div className="bg-blue-50 px-6 py-3 border-b border-gray-200">
@@ -1077,8 +1087,8 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         </div>
                       </div>
 
-                      {/* Lesson Content */}
-                      <div className="px-6 pt-3 pb-16">
+                      {/* Lesson Content - Match PDF export structure exactly (no extra padding, .lesson-page already has 1cm padding) */}
+                      <div className="px-6 pt-3 pb-6">
                         {/* Lesson Title */}
                         <div className="mb-3 border-b border-black pb-2">
                           <h3 className="text-xl font-bold text-black">

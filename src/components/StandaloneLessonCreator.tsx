@@ -426,7 +426,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         <div className="flex bg-gray-50 border-0" style={{ border: 'none', borderBottom: 'none', outline: 'none' }}>
           <button
             onClick={() => setActiveTab('main')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ${
               activeTab === 'main'
                 ? 'text-white bg-teal-600'
                 : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
@@ -448,7 +448,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
           </button>
           <button
             onClick={() => setActiveTab('extended')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ${
               activeTab === 'extended'
                 ? 'text-white bg-teal-600'
                 : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
