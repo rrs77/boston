@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, X, Check, Tag, ChevronDown } from 'lucide-react';
+import { Download, X, Check, Tag, ChevronDown, Share2, Copy } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { Activity } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { customObjectivesApi } from '../config/customObjectivesApi';
 import type { CustomObjective, CustomObjectiveArea, CustomObjectiveYearGroup } from '../types/customObjectives';
+import { supabase } from '../config/supabase';
 
 interface LessonPrintModalProps {
   lessonNumber?: string;
@@ -38,6 +39,9 @@ export function LessonPrintModal({
   const { getCategoryColor } = useSettings();
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareSuccess, setShareSuccess] = useState(false);
   const [customObjectives, setCustomObjectives] = useState<CustomObjective[]>([]);
   const [customAreas, setCustomAreas] = useState<CustomObjectiveArea[]>([]);
   const [customYearGroups, setCustomYearGroups] = useState<CustomObjectiveYearGroup[]>([]);
@@ -705,6 +709,186 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
     }
   };
 
+  // Check and create bucket if it doesn't exist
+  const ensureBucketExists = async () => {
+    const bucketName = 'lesson-pdfs';
+    
+    // Check if bucket exists by trying to list it
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error('Error listing buckets:', listError);
+      return { exists: false, error: listError.message };
+    }
+    
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      // Try to create the bucket
+      console.log('Bucket does not exist, attempting to create...');
+      const { data: newBucket, error: createError } = await supabase.storage.createBucket(bucketName, {
+        public: true, // Make it public so URLs are accessible
+        fileSizeLimit: 52428800, // 50 MB
+        allowedMimeTypes: ['application/pdf']
+      });
+      
+      if (createError) {
+        console.error('Error creating bucket:', createError);
+        // If creation fails, it might be due to permissions
+        // Return error but don't throw - we'll show a helpful message
+        return { exists: false, error: createError.message };
+      }
+      
+      console.log('Bucket created successfully:', newBucket);
+      return { exists: true, created: true };
+    }
+    
+    return { exists: true, created: false };
+  };
+
+  const handleShare = async () => {
+    if (!PDFBOLT_API_KEY || PDFBOLT_API_KEY === 'd089165b-e1da-43bb-a7dc-625ce514ed1b') {
+      alert('Please set your PDFBolt API key in the environment variables (VITE_PDFBOLT_API_KEY)');
+      return;
+    }
+
+    setIsSharing(true);
+    setShareUrl(null);
+    setShareSuccess(false);
+
+    try {
+      // Ensure bucket exists before proceeding
+      const bucketCheck = await ensureBucketExists();
+      if (!bucketCheck.exists) {
+        throw new Error(
+          `Storage bucket 'lesson-pdfs' does not exist and could not be created automatically. ` +
+          `Please create it manually in Supabase Dashboard: Storage → New bucket → Name: "lesson-pdfs" → Public: Yes. ` +
+          `Error: ${bucketCheck.error || 'Unknown error'}`
+        );
+      }
+
+      // Generate PDF using PDFBolt API (same as export)
+      const htmlContent = encodeUnicodeBase64(generateHTMLContent()[0]);
+      const footerContent = encodeUnicodeBase64(generateHTMLContent()[1]);
+
+      const response = await fetch(PDFBOLT_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'API_KEY': PDFBOLT_API_KEY
+        },
+        body: JSON.stringify({
+          html: htmlContent,
+          printBackground: true,
+          waitUntil: "networkidle",
+          format: "A4",
+          margin: {
+            "top": "15px",
+            "right": "20px",
+            "left": "20px",
+            "bottom": "55px"
+          },
+          displayHeaderFooter: true,
+          footerTemplate: footerContent,
+          headerTemplate: encodeUnicodeBase64(`<div></div>`)
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`PDFBolt API Error: ${response.status} - ${errorText}`);
+      }
+
+      // Get the PDF as a blob
+      const pdfBlob = await response.blob();
+
+      // Generate filename
+      const getLessonDisplayNumber = (num: string): string => {
+        const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+        return numericPart || num;
+      };
+      
+      const fileName = exportMode === 'single'
+          ? (() => {
+              const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber!);
+              return `${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
+            })()
+          : `${currentSheetInfo.sheet}_${(unitName || halfTermName || 'Unit').replace(/\s+/g, '_')}.pdf`;
+
+      // Upload to Supabase Storage
+      const timestamp = Date.now();
+      const storageFileName = `shared-pdfs/${timestamp}_${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('lesson-pdfs')
+        .upload(storageFileName, pdfBlob, {
+          contentType: 'application/pdf',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error(`Failed to upload PDF: ${uploadError.message}`);
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('lesson-pdfs')
+        .getPublicUrl(storageFileName);
+
+      const publicUrl = urlData.publicUrl;
+      setShareUrl(publicUrl);
+      setShareSuccess(true);
+
+      // Try to use Web Share API if available, otherwise copy to clipboard
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: fileName,
+            text: `Check out this lesson plan: ${fileName}`,
+            url: publicUrl
+          });
+        } catch (shareError: any) {
+          // User cancelled or error occurred, fall back to copying URL
+          if (shareError.name !== 'AbortError') {
+            await copyToClipboard(publicUrl);
+          }
+        }
+      } else {
+        // Fall back to copying URL to clipboard
+        await copyToClipboard(publicUrl);
+      }
+    } catch (error: any) {
+      console.error('Share failed:', error);
+      alert(`Share failed: ${error.message}`);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('Shareable URL copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      // Fallback: create a temporary textarea
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        alert('Shareable URL copied to clipboard!');
+      } catch (err) {
+        alert(`Shareable URL: ${text}`);
+      }
+      document.body.removeChild(textarea);
+    }
+  };
+
   return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
         <div className="bg-white rounded-xl shadow-lg w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -772,7 +956,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
               <div className="flex space-x-3">
                 <button
                     onClick={handleExport}
-                    disabled={isExporting}
+                    disabled={isExporting || isSharing}
                     className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:bg-blue-400"
                 >
                   {isExporting ? (
@@ -792,7 +976,46 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                       </>
                   )}
                 </button>
+                <button
+                    onClick={handleShare}
+                    disabled={isExporting || isSharing}
+                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:bg-teal-400"
+                >
+                  {isSharing ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        <span>Sharing...</span>
+                      </>
+                  ) : shareSuccess ? (
+                      <>
+                        <Check className="h-4 w-4" />
+                        <span>Shared!</span>
+                      </>
+                  ) : (
+                      <>
+                        <Share2 className="h-4 w-4" />
+                        <span>Share PDF</span>
+                      </>
+                  )}
+                </button>
               </div>
+              {shareUrl && shareSuccess && (
+                <div className="mt-3 p-3 bg-teal-50 border border-teal-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-teal-900 mb-1">Shareable URL:</p>
+                      <p className="text-xs text-teal-700 break-all">{shareUrl}</p>
+                    </div>
+                    <button
+                        onClick={() => copyToClipboard(shareUrl)}
+                        className="ml-3 p-2 text-teal-600 hover:text-teal-800 hover:bg-teal-100 rounded-lg transition-colors"
+                        title="Copy URL"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
