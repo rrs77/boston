@@ -67,6 +67,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip hard refresh requests (bypass cache) - let browser handle them directly
+  // Hard refresh sends cache: 'reload' or cache: 'no-store', or specific headers
+  if (
+    request.cache === 'reload' || 
+    request.cache === 'no-store' ||
+    request.headers.get('cache-control') === 'no-cache' ||
+    request.headers.get('pragma') === 'no-cache'
+  ) {
+    return; // Don't intercept, let browser handle directly
+  }
+  
+  // Also skip if it's a navigation request without a referrer (hard refresh indicator)
+  if (request.mode === 'navigate' && !request.referrer && request.headers.get('upgrade-insecure-requests')) {
+    return; // Likely a hard refresh, let browser handle
+  }
+
   // Skip Supabase API calls (always try network)
   if (url.hostname.includes('supabase.co')) {
     event.respondWith(

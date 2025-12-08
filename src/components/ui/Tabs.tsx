@@ -94,20 +94,33 @@ export function TabsTrigger({ value, children, className, style }: TabsTriggerPr
         gap: '8px',
         padding: '16px 24px',
         fontSize: '14px',
-        border: 'none',
-        borderBottom: 'none',
-        borderTop: 'none',
-        borderLeft: 'none',
-        borderRight: 'none',
+        border: 'none !important',
+        borderBottom: 'none !important',
+        borderTop: 'none !important',
+        borderLeft: 'none !important',
+        borderRight: 'none !important',
         cursor: 'pointer',
         transition: 'all 200ms ease',
-                minHeight: '56px',
-                borderRadius: '0',
-                boxShadow: isActive ? '0 2px 8px rgba(20, 184, 166, 0.3)' : 'none',
-                flex: 1,
-                margin: 0,
-                outline: 'none'
-              }}
+        minHeight: '56px',
+        borderRadius: '0',
+        boxShadow: isActive ? '0 2px 8px rgba(20, 184, 166, 0.3)' : 'none',
+        flex: 1,
+        margin: 0,
+        outline: 'none !important',
+        WebkitAppearance: 'none',
+        MozAppearance: 'none',
+        appearance: 'none'
+      }}
+      onFocus={(e) => {
+        e.currentTarget.style.outline = 'none';
+        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.border = 'none';
+      }}
+      onBlur={(e) => {
+        e.currentTarget.style.outline = 'none';
+        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.border = 'none';
+      }}
              onMouseEnter={(e) => {
                if (!isActive) {
                  // Inactive tab hover: light teal

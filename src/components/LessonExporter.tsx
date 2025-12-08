@@ -165,7 +165,8 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
       
       if (createError) {
         console.error('Error creating bucket:', createError);
-        return { exists: false, error: createError.message };
+        // Bucket creation requires admin/service role permissions
+        return { exists: false, error: createError.message, requiresManualSetup: true };
       }
       
       console.log('Bucket created successfully:', newBucket);
@@ -184,11 +185,21 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
       // Ensure bucket exists
       const bucketCheck = await ensureBucketExists();
       if (!bucketCheck.exists) {
-        throw new Error(
-          `Storage bucket 'lesson-pdfs' does not exist and could not be created automatically. ` +
-          `Please create it manually in Supabase Dashboard: Storage → New bucket → Name: "lesson-pdfs" → Public: Yes. ` +
-          `Error: ${bucketCheck.error || 'Unknown error'}`
-        );
+        const setupUrl = 'https://supabase.com/dashboard/project/_/storage/buckets';
+        const errorMsg = bucketCheck.requiresManualSetup
+          ? `The 'lesson-pdfs' storage bucket needs to be created manually in Supabase Dashboard.\n\n` +
+            `This is required because bucket creation needs admin permissions.\n\n` +
+            `Quick Setup:\n` +
+            `1. Go to: ${setupUrl}\n` +
+            `2. Click "New bucket"\n` +
+            `3. Name: "lesson-pdfs"\n` +
+            `4. Enable "Public bucket"\n` +
+            `5. Click "Create bucket"\n\n` +
+            `See SUPABASE_STORAGE_SETUP.md for detailed instructions.`
+          : `Storage bucket 'lesson-pdfs' does not exist. Please create it manually.\n\nError: ${bucketCheck.error || 'Unknown error'}`;
+        
+        alert(errorMsg);
+        throw new Error('Storage bucket not configured');
       }
 
       // Generate PDF using html2canvas

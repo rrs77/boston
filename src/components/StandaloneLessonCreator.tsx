@@ -426,19 +426,32 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         <div className="flex bg-gray-50 border-0" style={{ border: 'none', borderBottom: 'none', outline: 'none' }}>
           <button
             onClick={() => setActiveTab('main')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
               activeTab === 'main'
                 ? 'text-white bg-teal-600'
                 : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
             style={{ 
-              border: 'none', 
-              borderBottom: 'none', 
-              borderTop: 'none',
-              borderLeft: 'none',
-              borderRight: 'none',
-              outline: 'none',
-              boxShadow: 'none'
+              border: 'none !important', 
+              borderBottom: 'none !important', 
+              borderTop: 'none !important',
+              borderLeft: 'none !important',
+              borderRight: 'none !important',
+              outline: 'none !important',
+              boxShadow: 'none !important',
+              WebkitAppearance: 'none',
+              MozAppearance: 'none',
+              appearance: 'none'
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.outline = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.border = 'none';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.outline = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.border = 'none';
             }}
           >
             <div className="flex items-center justify-center space-x-2">
@@ -448,19 +461,32 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
           </button>
           <button
             onClick={() => setActiveTab('extended')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors border-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ${
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
               activeTab === 'extended'
                 ? 'text-white bg-teal-600'
                 : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
-            style={{ 
-              border: 'none', 
-              borderBottom: 'none', 
-              borderTop: 'none',
-              borderLeft: 'none',
-              borderRight: 'none',
-              outline: 'none',
-              boxShadow: 'none'
+            style={{
+              border: 'none !important',
+              borderBottom: 'none !important',
+              borderTop: 'none !important',
+              borderLeft: 'none !important',
+              borderRight: 'none !important',
+              outline: 'none !important',
+              boxShadow: 'none !important',
+              WebkitAppearance: 'none',
+              MozAppearance: 'none',
+              appearance: 'none'
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.outline = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.border = 'none';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.outline = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.border = 'none';
             }}
           >
             <div className="flex items-center justify-center space-x-2">

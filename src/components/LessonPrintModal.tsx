@@ -734,9 +734,10 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       
       if (createError) {
         console.error('Error creating bucket:', createError);
-        // If creation fails, it might be due to permissions
-        // Return error but don't throw - we'll show a helpful message
-        return { exists: false, error: createError.message };
+        // Bucket creation requires admin/service role permissions
+        // The anon key doesn't have permission to create buckets
+        // User must create it manually in Supabase Dashboard
+        return { exists: false, error: createError.message, requiresManualSetup: true };
       }
       
       console.log('Bucket created successfully:', newBucket);
@@ -760,11 +761,21 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       // Ensure bucket exists before proceeding
       const bucketCheck = await ensureBucketExists();
       if (!bucketCheck.exists) {
-        throw new Error(
-          `Storage bucket 'lesson-pdfs' does not exist and could not be created automatically. ` +
-          `Please create it manually in Supabase Dashboard: Storage → New bucket → Name: "lesson-pdfs" → Public: Yes. ` +
-          `Error: ${bucketCheck.error || 'Unknown error'}`
-        );
+        const setupUrl = 'https://supabase.com/dashboard/project/_/storage/buckets';
+        const errorMsg = bucketCheck.requiresManualSetup
+          ? `The 'lesson-pdfs' storage bucket needs to be created manually in Supabase Dashboard.\n\n` +
+            `This is required because bucket creation needs admin permissions.\n\n` +
+            `Quick Setup:\n` +
+            `1. Go to: ${setupUrl}\n` +
+            `2. Click "New bucket"\n` +
+            `3. Name: "lesson-pdfs"\n` +
+            `4. Enable "Public bucket"\n` +
+            `5. Click "Create bucket"\n\n` +
+            `See SUPABASE_STORAGE_SETUP.md for detailed instructions.`
+          : `Storage bucket 'lesson-pdfs' does not exist. Please create it manually in Supabase Dashboard.\n\nError: ${bucketCheck.error || 'Unknown error'}`;
+        
+        alert(errorMsg);
+        throw new Error('Storage bucket not configured');
       }
 
       // Generate PDF using PDFBolt API (same as export)
@@ -837,8 +848,18 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         .getPublicUrl(storageFileName);
 
       const publicUrl = urlData.publicUrl;
+      
+      // Set share URL and success state immediately so it appears right away
       setShareUrl(publicUrl);
       setShareSuccess(true);
+      
+      // Scroll to the share URL display area after a brief delay
+      setTimeout(() => {
+        const shareUrlElement = document.querySelector('[data-share-url]');
+        if (shareUrlElement) {
+          shareUrlElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 100);
 
       // Try to use Web Share API if available, otherwise copy to clipboard
       if (navigator.share) {
@@ -1000,27 +1021,40 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                 </button>
               </div>
             </div>
-            {shareUrl && shareSuccess && (
-              <div className="mt-3 p-3 bg-teal-50 border border-teal-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-teal-900 mb-1">Shareable URL:</p>
-                    <p className="text-xs text-teal-700 break-all">{shareUrl}</p>
-                  </div>
-                  <button
-                      onClick={() => copyToClipboard(shareUrl)}
-                      className="ml-3 p-2 text-teal-600 hover:text-teal-800 hover:bg-teal-100 rounded-lg transition-colors"
-                      title="Copy URL"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
+          {/* Share URL Display - Show immediately when share is successful, moved outside options */}
+          {shareUrl && shareSuccess && (
+            <div 
+              data-share-url
+              className="p-4 border-t border-teal-200 bg-teal-50"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-teal-900 mb-1">Shareable URL:</p>
+                  <p className="text-xs text-teal-700 break-all">{shareUrl}</p>
+                </div>
+                <button
+                    onClick={() => copyToClipboard(shareUrl)}
+                    className="ml-3 p-2 text-teal-600 hover:text-teal-800 hover:bg-teal-100 rounded-lg transition-colors"
+                    title="Copy URL"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Preview - Each lesson as a separate "page" */}
-          <div className="flex-1 overflow-y-auto print-preview-container">
+          <div 
+            className="flex-1 overflow-y-auto print-preview-container"
+            style={{
+              minHeight: 0,
+              maxHeight: 'calc(90vh - 300px)',
+              overflowY: 'auto',
+              overflowX: 'hidden'
+            }}
+          >
             {/* Render each lesson as a separate page-like container */}
             {lessonsToRender.map((lessonNum, lessonIndex) => {
               const lessonData = allLessonsData[lessonNum];

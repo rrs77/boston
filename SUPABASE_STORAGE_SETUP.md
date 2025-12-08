@@ -2,11 +2,35 @@
 
 This guide explains how to set up Supabase Storage to enable PDF sharing functionality.
 
-## Overview
+## ⚠️ IMPORTANT: Manual Setup Required
 
-The PDF sharing feature uploads generated PDFs to Supabase Storage and creates shareable public URLs. This allows users to share lesson plans via a link instead of downloading files.
+**The storage bucket must be created manually** because bucket creation requires admin/service role permissions that the client-side app doesn't have. The app will attempt to create it automatically, but this will fail with a permissions error - this is expected and normal.
 
-## Setup Steps
+## Quick Setup (2 minutes)
+
+1. **Go to your Supabase Dashboard:**
+   - Visit: https://supabase.com/dashboard
+   - Select your project
+
+2. **Navigate to Storage:**
+   - Click **Storage** in the left sidebar
+   - Or go directly to: https://supabase.com/dashboard/project/_/storage/buckets
+
+3. **Create the bucket:**
+   - Click **New bucket** button
+   - **Name:** `lesson-pdfs` (must be exact)
+   - **Public bucket:** ✅ **Enable** (required for public URLs)
+   - **File size limit:** 50 MB (recommended)
+   - **Allowed MIME types:** `application/pdf` (optional, for security)
+   - Click **Create bucket**
+
+4. **Verify:**
+   - You should see `lesson-pdfs` in your buckets list
+   - The bucket should show as "Public"
+
+That's it! The share feature will now work.
+
+## Detailed Setup Steps
 
 ### Step 1: Create Storage Bucket
 
@@ -14,7 +38,7 @@ The PDF sharing feature uploads generated PDFs to Supabase Storage and creates s
 2. Navigate to **Storage** in the left sidebar
 3. Click **New bucket**
 4. Configure the bucket:
-   - **Name:** `lesson-pdfs`
+   - **Name:** `lesson-pdfs` (must match exactly)
    - **Public bucket:** ✅ **Enable** (this allows public URLs)
    - **File size limit:** 50 MB (or your preferred limit)
    - **Allowed MIME types:** `application/pdf` (optional, for security)

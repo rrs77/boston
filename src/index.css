@@ -280,6 +280,29 @@ input[type="checkbox"].rounded-full:focus {
   box-shadow: none !important;
 }
 
+/* Remove all focus outlines and borders from tabs throughout the app */
+button[role="tab"],
+button.nav-tab-button,
+.nav-tab-button:focus,
+.nav-tab-button:focus-visible,
+.nav-tab-button:active,
+button:focus,
+button:focus-visible,
+button:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Remove double borders on active tabs */
+.nav-tab-button.active,
+button[data-state="active"] {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* Print preview page styling - matches PDF export exactly */
 .print-preview-page {
   width: 210mm;
