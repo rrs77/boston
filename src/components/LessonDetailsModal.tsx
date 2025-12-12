@@ -239,12 +239,40 @@ export function LessonDetailsModal({
               
               {/* Share Lesson Plan Link Button */}
               <button
-                onClick={() => setShowPrintModal(true)}
-                className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 group flex items-center space-x-2"
-                title="Share Lesson Plan Link"
+                onClick={async () => {
+                  try {
+                    const url = await shareLesson(lessonNumber);
+                    if (url) {
+                      toast.success('Share link created! URL copied to clipboard.', {
+                        duration: 4000,
+                        icon: '🔗',
+                      });
+                    }
+                  } catch (error: any) {
+                    toast.error(error.message || 'Failed to create share link', {
+                      duration: 5000,
+                    });
+                  }
+                }}
+                disabled={isSharing}
+                className={`p-2 rounded-lg transition-all duration-200 group flex items-center space-x-2 ${
+                  isSharing 
+                    ? 'bg-white bg-opacity-10 cursor-not-allowed' 
+                    : 'bg-white bg-opacity-20 hover:bg-opacity-30'
+                }`}
+                title={isSharing ? "Creating share link..." : "Share Lesson Plan Link"}
               >
-                <Share2 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-                <span className="text-sm font-medium">Share Link</span>
+                {isSharing ? (
+                  <>
+                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm font-medium">Sharing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="text-sm font-medium">Share Link</span>
+                  </>
+                )}
               </button>
               
               <button
