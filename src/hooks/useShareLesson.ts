@@ -287,14 +287,27 @@ export function useShareLesson() {
       });
 
       if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json().catch(() => ({ error: 'Upload failed' }));
+        const errorText = await uploadResponse.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || 'Upload failed' };
+        }
+        
+        // If it's a server configuration error, provide helpful message
+        if (errorData.error === 'Server configuration error' || uploadResponse.status === 500) {
+          throw new Error('Server configuration error: Please ensure SUPABASE_SERVICE_ROLE_KEY is set in Netlify environment variables.');
+        }
+        
         throw new Error(errorData.error || `Upload failed: ${uploadResponse.status}`);
       }
 
-      const { url: publicUrl } = await uploadResponse.json();
+      const responseData = await uploadResponse.json();
+      const publicUrl = responseData.url || responseData.publicUrl;
       
       if (!publicUrl) {
-        throw new Error('No URL returned from upload');
+        throw new Error('No URL returned from upload function');
       }
       setShareUrl(publicUrl);
 
