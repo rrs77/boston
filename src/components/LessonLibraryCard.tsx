@@ -166,12 +166,39 @@ export function LessonLibraryCard({
         </div>
 
         {/* Action buttons - Share, Assign, Edit, and Duplicate buttons */}
-        {((onAssignToUnit && halfTerms.length > 0) || onEdit || onDuplicate || onShare) && (
+        {((onAssignToUnit && halfTerms.length > 0) || onEdit || onDuplicate || true) && (
           <div className="absolute top-0 right-0 h-full flex items-center pr-2">
             <div className="flex items-center space-x-1">
-              {onShare && (
-                <button
-                  onClick={handleShare}
+              {/* Share button - always available */}
+              <button
+                onClick={handleShare}
+                disabled={isSharing}
+                className={`p-2 rounded-button shadow-soft hover:shadow-hover flex items-center space-x-1 transition-all ${
+                  isSharing 
+                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                    : localShareUrl || shareUrl
+                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                    : 'bg-gradient-to-r from-coral-400 to-coral-500 hover:from-coral-500 hover:to-coral-600 text-white'
+                }`}
+                title={localShareUrl || shareUrl ? "Share link created!" : "Share lesson link"}
+              >
+                {isSharing ? (
+                  <>
+                    <div className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-xs">Sharing...</span>
+                  </>
+                ) : localShareUrl || shareUrl ? (
+                  <>
+                    <Check className="h-3 w-3" />
+                    <span className="text-xs">Shared</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-3 w-3" />
+                    <span className="text-xs">Share</span>
+                  </>
+                )}
+              </button>
                   disabled={isSharing}
                   className={`p-2 rounded-button shadow-soft hover:shadow-hover flex items-center space-x-1 transition-all ${
                     isSharing 
@@ -307,39 +334,38 @@ export function LessonLibraryCard({
         
 
         {/* Action buttons - Share, Assign, Duplicate, and Edit buttons */}
-        {((onAssignToUnit && halfTerms.length > 0) || onEdit || onDuplicate || onShare) && (
+        {((onAssignToUnit && halfTerms.length > 0) || onEdit || onDuplicate || true) && (
           <div className="absolute top-2 right-2 flex items-center space-x-2">
-            {onShare && (
-              <button
-                onClick={handleShare}
-                disabled={isSharing}
-                className={`p-2 rounded-lg shadow-sm flex items-center space-x-1 ${
-                  isSharing 
-                    ? 'bg-gray-400 text-white cursor-not-allowed' 
-                    : localShareUrl || shareUrl
-                    ? 'bg-green-500 hover:bg-green-600 text-white'
-                    : 'bg-gradient-to-r from-coral-400 to-coral-500 hover:from-coral-500 hover:to-coral-600 text-white'
-                }`}
-                title={localShareUrl || shareUrl ? "Share link created!" : "Share lesson link"}
-              >
-                {isSharing ? (
-                  <>
-                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-xs">Sharing...</span>
-                  </>
-                ) : localShareUrl || shareUrl ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    <span className="text-xs">Shared</span>
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="h-4 w-4" />
-                    <span className="text-xs">Share</span>
-                  </>
-                )}
-              </button>
-            )}
+            {/* Share button - always available */}
+            <button
+              onClick={handleShare}
+              disabled={isSharing}
+              className={`p-2 rounded-lg shadow-sm flex items-center space-x-1 ${
+                isSharing 
+                  ? 'bg-gray-400 text-white cursor-not-allowed' 
+                  : localShareUrl || shareUrl
+                  ? 'bg-green-500 hover:bg-green-600 text-white'
+                  : 'bg-gradient-to-r from-coral-400 to-coral-500 hover:from-coral-500 hover:to-coral-600 text-white'
+              }`}
+              title={localShareUrl || shareUrl ? "Share link created!" : "Share lesson link"}
+            >
+              {isSharing ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-xs">Sharing...</span>
+                </>
+              ) : localShareUrl || shareUrl ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  <span className="text-xs">Shared</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="h-4 w-4" />
+                  <span className="text-xs">Share</span>
+                </>
+              )}
+            </button>
             {onAssignToUnit && halfTerms.length > 0 && (
               <button
                 onClick={handleAssignClick}

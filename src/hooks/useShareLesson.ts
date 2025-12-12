@@ -266,29 +266,36 @@ export function useShareLesson() {
       };
       
       const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber);
-      const fileName = `${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
-
-      // Upload to Supabase Storage
       const timestamp = Date.now();
-      const storageFileName = `shared-pdfs/${timestamp}_${fileName}`;
+      const fileName = `${timestamp}_${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('lesson-pdfs')
-        .upload(storageFileName, pdfBlob, {
-          contentType: 'application/pdf',
-          upsert: false
-        });
+      // Convert blob to base64 for Netlify function
+      const arrayBuffer = await pdfBlob.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-      if (uploadError) {
-        throw new Error(`Failed to upload PDF: ${uploadError.message}`);
+      // Upload via Netlify function to bypass RLS
+      const netlifyFunctionUrl = '/.netlify/functions/upload-pdf';
+      const uploadResponse = await fetch(netlifyFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName,
+          fileData: base64
+        })
+      });
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(errorData.error || `Upload failed: ${uploadResponse.status}`);
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('lesson-pdfs')
-        .getPublicUrl(storageFileName);
-
-      const publicUrl = urlData.publicUrl;
+      const { url: publicUrl } = await uploadResponse.json();
+      
+      if (!publicUrl) {
+        throw new Error('No URL returned from upload');
+      }
       setShareUrl(publicUrl);
 
       // Try to use Web Share API if available, otherwise copy to clipboard

@@ -828,35 +828,42 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         return numericPart || num;
       };
       
+      const timestamp = Date.now();
       const fileName = exportMode === 'single'
           ? (() => {
               const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber!);
-              return `${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
+              return `${timestamp}_${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
             })()
-          : `${currentSheetInfo.sheet}_${(unitName || halfTermName || 'Unit').replace(/\s+/g, '_')}.pdf`;
+          : `${timestamp}_${currentSheetInfo.sheet}_${(unitName || halfTermName || 'Unit').replace(/\s+/g, '_')}.pdf`;
 
-      // Upload to Supabase Storage
-      const timestamp = Date.now();
-      const storageFileName = `shared-pdfs/${timestamp}_${fileName}`;
+      // Convert blob to base64 for Netlify function
+      const arrayBuffer = await pdfBlob.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('lesson-pdfs')
-        .upload(storageFileName, pdfBlob, {
-          contentType: 'application/pdf',
-          upsert: false
-        });
+      // Upload via Netlify function to bypass RLS
+      const netlifyFunctionUrl = '/.netlify/functions/upload-pdf';
+      const uploadResponse = await fetch(netlifyFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName,
+          fileData: base64
+        })
+      });
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw new Error(`Failed to upload PDF: ${uploadError.message}`);
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Upload failed' }));
+        console.error('Upload error:', errorData);
+        throw new Error(errorData.error || `Failed to upload PDF: ${uploadResponse.status}`);
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('lesson-pdfs')
-        .getPublicUrl(storageFileName);
-
-      const publicUrl = urlData.publicUrl;
+      const { url: publicUrl } = await uploadResponse.json();
+      
+      if (!publicUrl) {
+        throw new Error('No URL returned from upload');
+      }
       
       // Set share URL and success state immediately so it appears right away
       setShareUrl(publicUrl);

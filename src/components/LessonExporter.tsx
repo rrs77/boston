@@ -261,28 +261,36 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
       const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber);
       const fileName = `${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
 
-      // Upload to Supabase Storage
+      // Convert blob to base64 for Netlify function
+      const arrayBuffer = await pdfBlob.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+      // Upload via Netlify function to bypass RLS
       const timestamp = Date.now();
-      const storageFileName = `shared-pdfs/${timestamp}_${fileName}`;
+      const netlifyFileName = `${timestamp}_${fileName}`;
+      const netlifyFunctionUrl = '/.netlify/functions/upload-pdf';
+      const uploadResponse = await fetch(netlifyFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName: netlifyFileName,
+          fileData: base64
+        })
+      });
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('lesson-pdfs')
-        .upload(storageFileName, pdfBlob, {
-          contentType: 'application/pdf',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw new Error(`Failed to upload PDF: ${uploadError.message}`);
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Upload failed' }));
+        console.error('Upload error:', errorData);
+        throw new Error(errorData.error || `Failed to upload PDF: ${uploadResponse.status}`);
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('lesson-pdfs')
-        .getPublicUrl(storageFileName);
-
-      const publicUrl = urlData.publicUrl;
+      const { url: publicUrl } = await uploadResponse.json();
+      
+      if (!publicUrl) {
+        throw new Error('No URL returned from upload');
+      }
       setShareUrl(publicUrl);
       setShareSuccess(true);
 
