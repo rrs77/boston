@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Clock, Users, Calendar, Edit3, Copy } from 'lucide-react';
+import { Clock, Users, Calendar, Edit3, Copy, Share2, Check, X } from 'lucide-react';
 import type { LessonData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { AssignToHalfTermModal } from './AssignToHalfTermModal';
+import { useShareLesson } from '../hooks/useShareLesson';
+import toast from 'react-hot-toast';
 
 interface HalfTerm {
   id: string;
@@ -28,6 +30,7 @@ interface LessonLibraryCardProps {
   halfTerms?: HalfTerm[];
   onEdit?: () => void;
   onDuplicate?: () => void;
+  onShare?: () => void;
 }
 
 export function LessonLibraryCard({
@@ -38,6 +41,7 @@ export function LessonLibraryCard({
   onClick,
   onEdit,
   onDuplicate,
+  onShare,
   theme,
   onAssignToUnit,
   halfTerms = []
@@ -48,8 +52,10 @@ export function LessonLibraryCard({
   // console.log('LessonLibraryCard:', lessonNumber, { hasOnEdit: !!onEdit, halfTermsCount: halfTerms?.length });
 
   const { getCategoryColor } = useSettings();
+  const { shareLesson, isSharing, shareUrl } = useShareLesson();
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
+  const [localShareUrl, setLocalShareUrl] = useState<string | null>(null);
   
   // Check if lesson is assigned to any half-term
   const isAssigned = halfTerms.some(halfTerm => halfTerm.lessons.includes(lessonNumber));
@@ -111,6 +117,25 @@ export function LessonLibraryCard({
     }
   };
 
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      const url = await shareLesson(lessonNumber);
+      if (url) {
+        setLocalShareUrl(url);
+        toast.success('Share link created! URL copied to clipboard.', {
+          duration: 4000,
+          icon: '🔗',
+        });
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create share link', {
+        duration: 5000,
+      });
+    }
+  };
+
   if (viewMode === 'compact') {
     return (
       <div className="relative group">
@@ -140,10 +165,41 @@ export function LessonLibraryCard({
           </div>
         </div>
 
-        {/* Action buttons - Assign, Edit, and Duplicate buttons */}
-        {((onAssignToUnit && halfTerms.length > 0) || onEdit || onDuplicate) && (
+        {/* Action buttons - Share, Assign, Edit, and Duplicate buttons */}
+        {((onAssignToUnit && halfTerms.length > 0) || onEdit || onDuplicate || onShare) && (
           <div className="absolute top-0 right-0 h-full flex items-center pr-2">
             <div className="flex items-center space-x-1">
+              {onShare && (
+                <button
+                  onClick={handleShare}
+                  disabled={isSharing}
+                  className={`p-2 rounded-button shadow-soft hover:shadow-hover flex items-center space-x-1 transition-all ${
+                    isSharing 
+                      ? 'bg-gray-400 text-white cursor-not-allowed' 
+                      : localShareUrl || shareUrl
+                      ? 'bg-green-500 hover:bg-green-600 text-white'
+                      : 'bg-gradient-to-r from-coral-400 to-coral-500 hover:from-coral-500 hover:to-coral-600 text-white'
+                  }`}
+                  title={localShareUrl || shareUrl ? "Share link created!" : "Share lesson link"}
+                >
+                  {isSharing ? (
+                    <>
+                      <div className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-xs">Sharing...</span>
+                    </>
+                  ) : localShareUrl || shareUrl ? (
+                    <>
+                      <Check className="h-3 w-3" />
+                      <span className="text-xs">Shared</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="h-3 w-3" />
+                      <span className="text-xs">Share</span>
+                    </>
+                  )}
+                </button>
+              )}
               {onAssignToUnit && halfTerms.length > 0 && (
                 <button
                   onClick={handleAssignClick}
@@ -250,9 +306,40 @@ export function LessonLibraryCard({
         </div>
         
 
-        {/* Action buttons - Assign, Duplicate, and Edit buttons */}
-        {((onAssignToUnit && halfTerms.length > 0) || onEdit || onDuplicate) && (
+        {/* Action buttons - Share, Assign, Duplicate, and Edit buttons */}
+        {((onAssignToUnit && halfTerms.length > 0) || onEdit || onDuplicate || onShare) && (
           <div className="absolute top-2 right-2 flex items-center space-x-2">
+            {onShare && (
+              <button
+                onClick={handleShare}
+                disabled={isSharing}
+                className={`p-2 rounded-lg shadow-sm flex items-center space-x-1 ${
+                  isSharing 
+                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                    : localShareUrl || shareUrl
+                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                    : 'bg-gradient-to-r from-coral-400 to-coral-500 hover:from-coral-500 hover:to-coral-600 text-white'
+                }`}
+                title={localShareUrl || shareUrl ? "Share link created!" : "Share lesson link"}
+              >
+                {isSharing ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-xs">Sharing...</span>
+                  </>
+                ) : localShareUrl || shareUrl ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    <span className="text-xs">Shared</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-4 w-4" />
+                    <span className="text-xs">Share</span>
+                  </>
+                )}
+              </button>
+            )}
             {onAssignToUnit && halfTerms.length > 0 && (
               <button
                 onClick={handleAssignClick}

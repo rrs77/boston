@@ -632,6 +632,7 @@ export function UnitViewer() {
                       onEdit={() => handleEditLesson(lessonNumber)}
                       theme={theme}
                       halfTerms={halfTerms}
+                      onShare={() => {}} // Share functionality handled internally in card
                     />
                     
                     {/* Overlay buttons that appear on hover */}

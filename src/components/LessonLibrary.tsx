@@ -1045,6 +1045,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                     halfTerms={halfTerms}
                     onEdit={() => handleStartEditing(lessonNum)}
                     onDuplicate={() => handleDuplicateLesson(lessonNum)}
+                    onShare={() => {}} // Share functionality handled internally in card
                   />
                 );
               })}
