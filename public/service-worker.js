@@ -78,9 +78,18 @@ self.addEventListener('fetch', (event) => {
     return; // Don't intercept, let browser handle directly
   }
   
+  // Skip navigation requests on HTTPS to avoid SSL protocol errors
+  // Let the browser handle navigation requests directly for better SSL compatibility
+  if (request.mode === 'navigate' && url.protocol === 'https:') {
+    // Only intercept if we're sure it's safe (has referrer and isn't a hard refresh)
+    if (!request.referrer || request.headers.get('upgrade-insecure-requests')) {
+      return; // Let browser handle navigation requests to avoid SSL issues
+    }
+  }
+  
   // Also skip if it's a navigation request without a referrer (hard refresh indicator)
-  if (request.mode === 'navigate' && !request.referrer && request.headers.get('upgrade-insecure-requests')) {
-    return; // Likely a hard refresh, let browser handle
+  if (request.mode === 'navigate' && !request.referrer) {
+    return; // Likely a hard refresh or initial load, let browser handle
   }
 
   // Skip Supabase API calls (always try network)
@@ -102,29 +111,55 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle navigation requests (pages)
+  // Handle navigation requests (pages) - but only if safe
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Cache successful page responses
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
-          return response;
-        })
-        .catch(() => {
-          // If offline, try cache first
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
+    // For HTTPS navigation, be more conservative to avoid SSL errors
+    if (url.protocol === 'https:') {
+      // Only cache if we have a successful response and it's not an error
+      event.respondWith(
+        fetch(request)
+          .then((response) => {
+            // Only cache successful responses (200-299)
+            if (response.status >= 200 && response.status < 300) {
+              const responseClone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, responseClone);
+              });
             }
-            // Fall back to offline page
-            return caches.match(OFFLINE_URL);
-          });
-        })
-    );
+            return response;
+          })
+          .catch((error) => {
+            // If network fails, try cache
+            return caches.match(request).then((cachedResponse) => {
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              // Fall back to offline page
+              return caches.match(OFFLINE_URL);
+            });
+          })
+      );
+    } else {
+      // For HTTP, use the original logic
+      event.respondWith(
+        fetch(request)
+          .then((response) => {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            });
+            return response;
+          })
+          .catch(() => {
+            return caches.match(request).then((cachedResponse) => {
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              return caches.match(OFFLINE_URL);
+            });
+          })
+      );
+    }
     return;
   }
 
