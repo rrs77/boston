@@ -7,6 +7,8 @@ import { EditableText } from './EditableText';
 import { NestedStandardsBrowser } from './NestedStandardsBrowser';
 import { LessonPrintModal } from './LessonPrintModal';
 import { LinkViewer } from './LinkViewer';
+import { useShareLesson } from '../hooks/useShareLesson';
+import toast from 'react-hot-toast';
 import type { Activity, LessonData } from '../contexts/DataContext';
 
 interface LessonDetailsModalProps {
@@ -41,6 +43,7 @@ export function LessonDetailsModal({
 }: LessonDetailsModalProps) {
   const { allLessonsData, updateLessonTitle, lessonStandards, deleteLesson } = useData();
   const { getCategoryColor } = useSettings();
+  const { shareLesson, isSharing } = useShareLesson();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [initialResource, setInitialResource] = useState<{url: string, title: string, type: string} | null>(null);
   const [showEyfsSelector, setShowEyfsSelector] = useState(false);
