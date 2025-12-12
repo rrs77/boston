@@ -67,6 +67,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip Netlify functions - let them handle directly
+  if (url.pathname.startsWith('/.netlify/functions/')) {
+    return;
+  }
+
   // Skip hard refresh requests (bypass cache) - let browser handle them directly
   // Hard refresh sends cache: 'reload' or cache: 'no-store', or specific headers
   if (
@@ -78,18 +83,10 @@ self.addEventListener('fetch', (event) => {
     return; // Don't intercept, let browser handle directly
   }
   
-  // Skip navigation requests on HTTPS to avoid SSL protocol errors
-  // Let the browser handle navigation requests directly for better SSL compatibility
-  if (request.mode === 'navigate' && url.protocol === 'https:') {
-    // Only intercept if we're sure it's safe (has referrer and isn't a hard refresh)
-    if (!request.referrer || request.headers.get('upgrade-insecure-requests')) {
-      return; // Let browser handle navigation requests to avoid SSL issues
-    }
-  }
-  
-  // Also skip if it's a navigation request without a referrer (hard refresh indicator)
-  if (request.mode === 'navigate' && !request.referrer) {
-    return; // Likely a hard refresh or initial load, let browser handle
+  // Skip ALL navigation requests on HTTPS to prevent SSL protocol errors
+  // This is the safest approach - let browser handle all navigation
+  if (request.mode === 'navigate') {
+    return; // Don't intercept navigation requests - prevents SSL errors
   }
 
   // Skip Supabase API calls (always try network)
