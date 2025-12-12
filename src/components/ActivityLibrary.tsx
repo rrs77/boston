@@ -469,7 +469,7 @@ export function ActivityLibrary({
           <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap gap-2">
             <button
               onClick={() => setShowCreator(true)}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors duration-200 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
+              className="btn-accent px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm"
             >
               <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Create Activity</span>

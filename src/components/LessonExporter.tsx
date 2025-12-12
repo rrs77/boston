@@ -146,34 +146,41 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
   const ensureBucketExists = async () => {
     const bucketName = 'lesson-pdfs';
     
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-    
-    if (listError) {
-      console.error('Error listing buckets:', listError);
-      return { exists: false, error: listError.message };
-    }
-    
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-    
-    if (!bucketExists) {
-      console.log('Bucket does not exist, attempting to create...');
-      const { data: newBucket, error: createError } = await supabase.storage.createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 52428800,
-        allowedMimeTypes: ['application/pdf']
-      });
+    // Try to access the bucket directly instead of listing all buckets
+    try {
+      const { data: files, error: accessError } = await supabase.storage
+        .from(bucketName)
+        .list('', { limit: 1 });
       
-      if (createError) {
-        console.error('Error creating bucket:', createError);
-        // Bucket creation requires admin/service role permissions
-        return { exists: false, error: createError.message, requiresManualSetup: true };
+      if (!accessError) {
+        console.log('✅ Bucket exists and is accessible');
+        return { exists: true, created: false };
       }
       
-      console.log('Bucket created successfully:', newBucket);
-      return { exists: true, created: true };
+      if (accessError.message?.includes('not found') || accessError.message?.includes('Bucket not found')) {
+        console.log('Bucket does not exist, attempting to create...');
+        const { data: newBucket, error: createError } = await supabase.storage.createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 52428800,
+          allowedMimeTypes: ['application/pdf']
+        });
+        
+        if (createError) {
+          console.error('Error creating bucket:', createError);
+          return { exists: false, error: createError.message, requiresManualSetup: true };
+        }
+        
+        console.log('Bucket created successfully:', newBucket);
+        return { exists: true, created: true };
+      }
+      
+      console.error('Error accessing bucket:', accessError);
+      return { exists: false, error: accessError.message, requiresManualSetup: true };
+      
+    } catch (error: any) {
+      console.error('Unexpected error checking bucket:', error);
+      return { exists: false, error: error.message || 'Unknown error', requiresManualSetup: true };
     }
-    
-    return { exists: true, created: false };
   };
 
   const handleShare = async () => {

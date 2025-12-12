@@ -303,6 +303,69 @@ button[data-state="active"] {
   box-shadow: none !important;
 }
 
+/* ============================================================================
+   ACCENT COLOR SYSTEM - CORAL (#FF6B6B)
+   Use coral for special actions, highlights, and eye-catching elements
+   ============================================================================ */
+
+/* Coral accent button for special actions */
+.btn-accent {
+  background: linear-gradient(to right, #FF6B6B, #FF5252);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 0.75rem;
+  font-size: 14px;
+  font-weight: 500;
+  height: 36px;
+  border: none;
+  cursor: pointer;
+  transition: all 200ms ease-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.2);
+}
+
+.btn-accent:hover {
+  background: linear-gradient(to right, #FF5252, #FF4444);
+  box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Coral accent badge/pill */
+.badge-accent {
+  background: linear-gradient(135deg, #FF6B6B, #FF5252);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Coral accent border */
+.border-accent {
+  border-color: #FF6B6B !important;
+}
+
+/* Coral accent text */
+.text-accent {
+  color: #FF6B6B !important;
+}
+
+/* Coral accent background (light) */
+.bg-accent-light {
+  background-color: rgba(255, 107, 107, 0.1) !important;
+}
+
+/* Coral accent hover state */
+.hover-accent:hover {
+  color: #FF6B6B !important;
+  border-color: #FF6B6B !important;
+}
+
 /* Print preview page styling - matches PDF export exactly */
 .print-preview-page {
   width: 210mm;

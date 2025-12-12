@@ -1435,7 +1435,7 @@ export function LessonPlannerCalendar({
                   setIsLessonSummaryOpen(false);
                   setShowAssignmentModal(true);
                 }}
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-button transition-colors duration-200 shadow-soft hover:shadow-hover"
+                className="btn-accent inline-flex items-center space-x-2"
               >
                 <Plus className="h-5 w-5" />
                 <span>Add Lesson or Stack</span>

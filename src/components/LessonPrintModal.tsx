@@ -713,38 +713,47 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
   const ensureBucketExists = async () => {
     const bucketName = 'lesson-pdfs';
     
-    // Check if bucket exists by trying to list it
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-    
-    if (listError) {
-      console.error('Error listing buckets:', listError);
-      return { exists: false, error: listError.message };
-    }
-    
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-    
-    if (!bucketExists) {
-      // Try to create the bucket
-      console.log('Bucket does not exist, attempting to create...');
-      const { data: newBucket, error: createError } = await supabase.storage.createBucket(bucketName, {
-        public: true, // Make it public so URLs are accessible
-        fileSizeLimit: 52428800, // 50 MB
-        allowedMimeTypes: ['application/pdf']
-      });
+    // Try to access the bucket directly instead of listing all buckets
+    // This works with anon key if bucket exists and is public
+    try {
+      // Try to list files in the bucket (empty list is fine, just checking access)
+      const { data: files, error: accessError } = await supabase.storage
+        .from(bucketName)
+        .list('', { limit: 1 });
       
-      if (createError) {
-        console.error('Error creating bucket:', createError);
-        // Bucket creation requires admin/service role permissions
-        // The anon key doesn't have permission to create buckets
-        // User must create it manually in Supabase Dashboard
-        return { exists: false, error: createError.message, requiresManualSetup: true };
+      // If we can access the bucket (even if empty), it exists
+      if (!accessError) {
+        console.log('✅ Bucket exists and is accessible');
+        return { exists: true, created: false };
       }
       
-      console.log('Bucket created successfully:', newBucket);
-      return { exists: true, created: true };
+      // If error is "Bucket not found", bucket doesn't exist
+      if (accessError.message?.includes('not found') || accessError.message?.includes('Bucket not found')) {
+        console.log('Bucket does not exist, attempting to create...');
+        // Try to create the bucket (will fail with anon key, but we'll show helpful message)
+        const { data: newBucket, error: createError } = await supabase.storage.createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 52428800,
+          allowedMimeTypes: ['application/pdf']
+        });
+        
+        if (createError) {
+          console.error('Error creating bucket:', createError);
+          return { exists: false, error: createError.message, requiresManualSetup: true };
+        }
+        
+        console.log('Bucket created successfully:', newBucket);
+        return { exists: true, created: true };
+      }
+      
+      // Other errors (permissions, etc.)
+      console.error('Error accessing bucket:', accessError);
+      return { exists: false, error: accessError.message, requiresManualSetup: true };
+      
+    } catch (error: any) {
+      console.error('Unexpected error checking bucket:', error);
+      return { exists: false, error: error.message || 'Unknown error', requiresManualSetup: true };
     }
-    
-    return { exists: true, created: false };
   };
 
   const handleShare = async () => {
@@ -761,18 +770,18 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       // Ensure bucket exists before proceeding
       const bucketCheck = await ensureBucketExists();
       if (!bucketCheck.exists) {
-        const setupUrl = 'https://supabase.com/dashboard/project/_/storage/buckets';
+        const setupUrl = 'https://supabase.com/dashboard/project/wiudrzdkbpyziaodqoog/storage/buckets';
         const errorMsg = bucketCheck.requiresManualSetup
-          ? `The 'lesson-pdfs' storage bucket needs to be created manually in Supabase Dashboard.\n\n` +
-            `This is required because bucket creation needs admin permissions.\n\n` +
-            `Quick Setup:\n` +
+          ? `The 'lesson-pdfs' storage bucket needs to be created.\n\n` +
+            `Quick Setup (2 minutes):\n` +
             `1. Go to: ${setupUrl}\n` +
             `2. Click "New bucket"\n` +
             `3. Name: "lesson-pdfs"\n` +
             `4. Enable "Public bucket"\n` +
             `5. Click "Create bucket"\n\n` +
-            `See SUPABASE_STORAGE_SETUP.md for detailed instructions.`
-          : `Storage bucket 'lesson-pdfs' does not exist. Please create it manually in Supabase Dashboard.\n\nError: ${bucketCheck.error || 'Unknown error'}`;
+            `Or use the automated script: node scripts/create-storage-bucket.js\n\n` +
+            `See QUICK_STORAGE_SETUP.md for more options.`
+          : `Storage bucket 'lesson-pdfs' does not exist. Please create it manually in Supabase Dashboard.\n\nError: ${bucketCheck.error || 'Unknown error'}\n\nGo to: ${setupUrl}`;
         
         alert(errorMsg);
         throw new Error('Storage bucket not configured');
