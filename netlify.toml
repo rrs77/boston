@@ -24,15 +24,12 @@
   status = 301
   force = true
 
-# SPA routing - must be last (but exclude functions)
+# SPA routing - must be last
+# Note: Netlify functions (/.netlify/functions/*) are automatically excluded from redirects
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  force = false
-  conditions = {Role = ["admin"], Country = ["US"]}
-  # Exclude Netlify functions from SPA routing
-  # Functions are handled separately by Netlify
 
 [build.environment]
   NODE_VERSION = "18"
