@@ -25,7 +25,8 @@ import {
   Calendar,
   MoreHorizontal,
   Pencil,
-  Copy
+  Copy,
+  Eye
 } from 'lucide-react';
 import { 
   format, 
