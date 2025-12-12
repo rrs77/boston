@@ -90,7 +90,7 @@ export function LessonDetailsModal({
   if (!lessonData) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-        <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">
+        <div className="bg-white rounded-card shadow-soft p-6 max-w-md w-full">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Error</h2>
           <p className="text-gray-600 mb-6">Lesson data not found for lesson {lessonNumber}.</p>
           <div className="flex justify-end">
@@ -141,7 +141,7 @@ export function LessonDetailsModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-2 sm:p-4 z-[60] animate-fade-in">
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[98vh] sm:max-h-[95vh] overflow-hidden flex flex-col animate-scale-in">
+      <div className="bg-white rounded-card shadow-soft w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[98vh] sm:max-h-[95vh] overflow-hidden flex flex-col animate-scale-in">
         {/* Header */}
         <div 
           className="p-4 text-white relative"
@@ -270,7 +270,7 @@ export function LessonDetailsModal({
               const activities = lessonData.grouped[category] || [];
               
               return (
-                <div key={category} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                <div key={category} className="bg-white rounded-card shadow-soft border border-gray-200 overflow-hidden">
                   {/* Category Header */}
                   <div 
                     className="p-4 border-b border-gray-200"
@@ -293,7 +293,7 @@ export function LessonDetailsModal({
                       <div
                         key={`${category}-${index}`}
                         onClick={() => setSelectedActivity(activity)}
-                        className="w-full text-left bg-gray-50 hover:bg-blue-50 rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md overflow-hidden cursor-pointer"
+                        className="w-full text-left bg-gray-50 hover:bg-blue-50 rounded-card border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-soft hover:shadow-hover overflow-hidden cursor-pointer"
                       >
                         {/* Activity Header */}
                         <div className="p-4 border-b border-gray-200 bg-white">
@@ -502,7 +502,7 @@ export function LessonDetailsModal({
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="bg-white rounded-card shadow-soft max-w-md w-full p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Delete Lesson</h3>
             <p className="text-gray-700 mb-6">
               Are you sure you want to delete Lesson {displayNumber || lessonNumber}? This action cannot be undone and will remove the lesson from all units.

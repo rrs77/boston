@@ -290,7 +290,7 @@ export function LessonDropZone({
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden" style={{ backgroundColor: '#109D90' }}>
+      <div className="bg-white rounded-card shadow-soft border border-gray-200 overflow-hidden" style={{ background: 'linear-gradient(to right, #14B8A6, #0D9488)' }}>
         {/* Header - Thinner when activities are present */}
         <div className={`${headerPadding} text-white transition-all duration-200`}>
           <div className={`flex items-start justify-between ${headerCompact ? 'mb-2' : 'mb-4'}`}>
@@ -381,8 +381,8 @@ export function LessonDropZone({
           >
             {lessonPlan.activities.length === 0 ? (
               <div className="text-center py-12 px-6">
-                <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-3 transition-colors duration-200 ${
-                  isOver ? 'bg-gray-200' : 'bg-gray-100'
+                <div className={`mx-auto w-16 h-16 rounded-button flex items-center justify-center mb-3 transition-colors duration-200 ${
+                  isOver ? 'bg-teal-100' : 'bg-gray-100'
                 }`}>
                   <Plus className={`h-8 w-8 transition-colors duration-200 ${
                     isOver ? 'text-gray-600' : 'text-gray-400'

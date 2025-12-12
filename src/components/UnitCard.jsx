@@ -148,7 +148,7 @@ export function UnitCard({
   if (viewMode === 'list') {
     return (
       <div 
-        className={`bg-white rounded-xl shadow-md border border-gray-200 p-4 transition-all duration-200 hover:shadow-lg cursor-pointer hover:border-indigo-300 relative ${
+        className={`bg-white rounded-card shadow-soft border border-gray-200 p-4 transition-all duration-200 hover:shadow-hover cursor-pointer hover:border-indigo-300 relative ${
           isFocused ? 'ring-2 ring-indigo-500 bg-indigo-50' : ''
         }`}
         onClick={onClick}
@@ -216,7 +216,7 @@ export function UnitCard({
   // Default grid view
   return (
     <div 
-      className={`bg-white rounded-xl shadow-lg border transition-all duration-300 hover:shadow-xl cursor-pointer overflow-hidden hover:scale-[1.02] h-full flex flex-col relative ${
+      className={`bg-white rounded-card shadow-soft border transition-all duration-300 hover:shadow-hover cursor-pointer overflow-hidden hover:scale-[1.02] h-full flex flex-col relative ${
         isFocused ? 'ring-2 ring-indigo-500 bg-indigo-50' : ''
       }`}
       style={{ borderColor: unit.color || theme.primary, borderWidth: '1px' }}

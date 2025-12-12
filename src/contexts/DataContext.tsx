@@ -82,6 +82,7 @@ export interface LessonPlan {
   title?: string;
   term?: string;
   time?: string; // Added time field for scheduled lessons
+  stackId?: string; // Added for stack assignments
   createdAt: Date;
   updatedAt: Date;
 }

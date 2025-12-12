@@ -63,24 +63,7 @@ export function HalfTermCard({
 
   return (
     <div 
-      className="transition-all duration-300 cursor-pointer group hover:-translate-y-0.5"
-      style={{
-        background: 'white',
-        border: 'none',
-        borderRadius: '12px',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
-        overflow: 'hidden'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
-                e.currentTarget.style.borderColor = 'transparent';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
-        e.currentTarget.style.borderColor = 'transparent';
-      }}
+      className="bg-white rounded-card shadow-soft transition-all duration-300 cursor-pointer group hover:-translate-y-0.5 hover:shadow-hover overflow-hidden"
       onClick={onClick}
     >
       {/* TOP SECTION - White Background */}

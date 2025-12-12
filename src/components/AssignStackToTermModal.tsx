@@ -68,7 +68,7 @@ export function AssignStackToTermModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
+      <div className="bg-white rounded-card shadow-soft max-w-md w-full mx-4 overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white">
           <div className="flex items-center justify-between">

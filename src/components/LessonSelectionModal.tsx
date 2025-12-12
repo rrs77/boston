@@ -278,7 +278,7 @@ export function LessonSelectionModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-card shadow-soft w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div 
           className="p-6 text-white relative"
@@ -548,7 +548,7 @@ export function LessonSelectionModal({
                           return (
                             <div 
                               key={lessonNum} 
-                              className={`bg-white rounded-lg shadow-md border p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                              className={`bg-white rounded-card shadow-soft border p-4 cursor-pointer transition-all duration-200 hover:shadow-hover ${
                                 isSelected 
                                   ? 'border-blue-500 bg-blue-50' 
                                   : 'border-gray-200 hover:border-gray-300'

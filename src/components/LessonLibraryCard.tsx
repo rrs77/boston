@@ -115,7 +115,7 @@ export function LessonLibraryCard({
     return (
       <div className="relative group">
         <div 
-          className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration-200 hover:shadow-md cursor-pointer h-full ${
+          className={`bg-white rounded-card shadow-soft border-l-4 p-3 transition-all duration-200 hover:shadow-hover cursor-pointer h-full ${
             isUserCreated ? 'border-teal-500' : ''
           }`}
           style={isUserCreated ? {} : { borderLeftColor: theme.primary }}
@@ -204,7 +204,7 @@ export function LessonLibraryCard({
     return (
       <div className="relative group">
         <div 
-          className={`bg-white rounded-xl shadow-md border p-4 transition-all duration-200 hover:shadow-lg cursor-pointer ${
+          className={`bg-white rounded-card shadow-soft border p-4 transition-all duration-200 hover:shadow-hover cursor-pointer ${
             isUserCreated 
               ? 'border-teal-300 hover:border-teal-400 border-l-4' 
               : 'border-gray-200 hover:border-blue-300'
@@ -316,7 +316,7 @@ export function LessonLibraryCard({
   return (
     <div className="relative group">
       <div 
-        className="bg-white rounded-xl shadow-lg border border-gray-300 transition-all duration-300 hover:shadow-xl cursor-pointer overflow-hidden hover:scale-[1.02] h-full flex flex-col"
+        className="bg-white rounded-card shadow-soft border border-gray-300 transition-all duration-300 hover:shadow-hover cursor-pointer overflow-hidden hover:scale-[1.02] h-full flex flex-col"
         onClick={onClick}
       >
         {/* Header with blue color - teal for user-created lessons */}

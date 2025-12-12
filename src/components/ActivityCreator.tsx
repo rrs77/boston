@@ -207,7 +207,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-card shadow-soft w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 text-white" style={{ background: 'linear-gradient(135deg, #0BA596 0%, #0BA596 100%)' }}>
           <div className="flex items-center space-x-3">
@@ -237,7 +237,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                   name="activity"
                   value={activity.activity}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border ${errors.activity ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:border-transparent text-lg`}
+                  className={`w-full px-4 py-3 border ${errors.activity ? 'border-red-500' : 'border-gray-300'} rounded-button focus:ring-2 focus:ring-teal-500 focus:border-transparent text-lg`}
                   style={{ '--tw-ring-color': '#0BA596' } as React.CSSProperties}
                   onFocus={(e) => e.target.style.borderColor = '#0BA596'}
                   onBlur={(e) => e.target.style.borderColor = errors.activity ? '#EF4444' : '#D1D5DB'}
@@ -254,7 +254,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                 <button
                   type="button"
                   onClick={() => setShowObjectivesBrowser(true)}
-                  className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-teal-500 hover:bg-teal-50 transition-colors duration-200 flex items-center justify-center space-x-2 text-gray-600 hover:text-teal-700"
+                  className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-button hover:border-teal-500 hover:bg-teal-50 transition-colors duration-200 flex items-center justify-center space-x-2 text-gray-600 hover:text-teal-700"
                 >
                   <Tag className="h-5 w-5" />
                   <span className="font-medium">

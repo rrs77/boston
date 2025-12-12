@@ -616,11 +616,11 @@ export function ActivityLibrary({
         ) : (
           viewMode === 'list' ? (
           // List View - Compact cards in grid layout with full functionality
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             {filteredAndSortedActivities.map((activity, index) => (
               <div 
                 key={generateActivityKey(activity, index)}
-                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-3 relative group"
+                className="bg-white rounded-card shadow-soft hover:shadow-hover transition-shadow duration-200 p-3 relative group"
                 style={{
                   borderLeft: `4px solid ${getCategoryColor(activity.category)}`,
                   minHeight: '120px'

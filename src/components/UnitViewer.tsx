@@ -527,7 +527,7 @@ export function UnitViewer() {
       <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           {/* Unit Header */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-6">
+          <div className="bg-white rounded-card shadow-soft border border-gray-200 overflow-hidden mb-6">
             <div 
               className="p-6 text-white relative"
               style={{ 
@@ -580,7 +580,7 @@ export function UnitViewer() {
 
           {/* Unit Description */}
           {selectedUnit.description && (
-            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-6">
+            <div className="bg-white rounded-card shadow-soft border border-gray-200 p-6 mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-3">Unit Description</h2>
               <div 
                 className="prose prose-sm max-w-none"
@@ -686,7 +686,7 @@ export function UnitViewer() {
           <div className="text-center">
             <button
               onClick={handleBackToUnits}
-              className="inline-flex items-center space-x-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors duration-200 shadow-lg hover:shadow-xl"
+              className="inline-flex items-center space-x-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-button transition-colors duration-200 shadow-soft hover:shadow-hover"
             >
               <ChevronLeft className="h-5 w-5" />
               <span>Back to All Units</span>
@@ -764,7 +764,7 @@ export function UnitViewer() {
         {/* Activity Picker Modal */}
         {showActivityPicker && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
+            <div className="bg-white rounded-card shadow-soft w-full max-w-4xl max-h-[80vh] overflow-hidden">
               <div className="p-4 border-b border-gray-200 text-white"
 style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                 <div className="flex items-center justify-between">
@@ -848,7 +848,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
         {/* Lesson Edit Modal */}
         {showEditModal && editingLessonNumber && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+            <div className="bg-white rounded-card shadow-soft w-full max-w-6xl max-h-[90vh] overflow-hidden">
               {/* Edit Header */}
               <div className="p-4 border-b border-gray-200 text-white"
 style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
@@ -988,7 +988,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
       <div key={refreshKey} className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
           {/* Clean White Header Card */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6 sm:mb-8 p-4 sm:p-6 md:p-7">
+          <div className="bg-white rounded-card shadow-soft border border-gray-200 mb-6 sm:mb-8 p-4 sm:p-6 md:p-7">
             <div className="text-gray-900">
               <div className="flex items-center justify-between">
                 <div>

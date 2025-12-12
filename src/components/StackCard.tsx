@@ -32,17 +32,17 @@ export function StackCard({ stack, onClick, onPrint, onDelete, showDelete }: Sta
     >
       {/* Layer 2 (back) - Teal */}
       <div
-        className="absolute inset-0 translate-x-2 translate-y-2 rounded-xl bg-[#0D9488] opacity-40 shadow-md"
+        className="absolute inset-0 translate-x-2 translate-y-2 rounded-card bg-[#0D9488] opacity-40 shadow-soft"
         aria-hidden
       />
       {/* Layer 1 (middle) - Teal/Blue */}
       <div
-        className="absolute inset-0 translate-x-1 translate-y-1 rounded-xl bg-[#10A293] opacity-70 shadow-lg"
+        className="absolute inset-0 translate-x-1 translate-y-1 rounded-card bg-[#10A293] opacity-70 shadow-soft"
         aria-hidden
       />
       {/* Top card */}
       <div 
-        className="relative bg-white rounded-xl shadow-lg border transition-all duration-300 hover:shadow-xl overflow-hidden hover:scale-[1.02] h-full flex flex-col"
+        className="relative bg-white rounded-card shadow-soft border transition-all duration-300 hover:shadow-hover overflow-hidden hover:scale-[1.02] h-full flex flex-col"
         style={{ borderColor: '#10A293', borderWidth: '1px' }}
       >
       {/* Header with teal/blue gradient for stacks */}

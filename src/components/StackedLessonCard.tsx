@@ -164,7 +164,7 @@ export function StackedLessonCard({
       // Data is still loading - show loading state
       return (
         <div className="relative group cursor-pointer h-60">
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 h-full flex items-center justify-center">
+          <div className="bg-white rounded-card shadow-soft border border-gray-200 p-4 h-full flex items-center justify-center">
             <div className="text-center text-gray-500">
               <Layers className="h-8 w-8 mx-auto mb-2 text-gray-400 animate-pulse" />
               <p className="text-sm font-medium">Loading lessons...</p>
@@ -182,7 +182,7 @@ export function StackedLessonCard({
     });
     return (
       <div className="relative group cursor-pointer h-60">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 h-full flex items-center justify-center">
+        <div className="bg-white rounded-card shadow-soft border border-gray-200 p-4 h-full flex items-center justify-center">
           <div className="text-center text-gray-500">
             <Layers className="h-8 w-8 mx-auto mb-2" />
             <p className="text-sm">No valid lessons in this stack</p>
@@ -253,7 +253,7 @@ export function StackedLessonCard({
                 </button>
                 
                 {showMenu && (
-                  <div className="absolute right-0 top-6 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[160px]">
+                  <div className="absolute right-0 top-6 z-50 bg-white rounded-button shadow-soft border border-gray-200 py-1 min-w-[160px]">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -424,7 +424,7 @@ export function StackedLessonCard({
         className="relative group cursor-pointer"
         onClick={onClick}
       >
-        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-4 transition-all duration-200 hover:shadow-lg hover:border-blue-300">
+        <div className="bg-white rounded-card shadow-soft border border-gray-200 p-4 transition-all duration-200 hover:shadow-hover hover:border-blue-300">
           <div className="flex items-start">
             <div 
               className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 mr-4"
@@ -508,7 +508,7 @@ export function StackedLessonCard({
           return (
           <div
             key={lesson.number}
-            className={`absolute bg-white rounded-xl shadow-lg border transition-all duration-300 overflow-hidden hover:scale-[1.02] ${
+            className={`absolute bg-white rounded-card shadow-soft border transition-all duration-300 overflow-hidden hover:scale-[1.02] hover:shadow-hover ${
               index === 0 ? 'h-full' : 'h-[calc(100%-12px)]'
             }`}
             style={{

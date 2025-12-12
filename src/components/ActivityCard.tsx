@@ -181,7 +181,7 @@ export function ActivityCard({
     return (
       <div
         ref={draggable ? drag : undefined}
-className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration-200 hover:shadow-md cursor-pointer h-full ${
+className={`bg-white rounded-card shadow-soft border-l-4 p-3 transition-all duration-200 hover:shadow-hover cursor-pointer h-full ${
           isDragging ? 'opacity-50' : ''
         }`}
         style={{ borderLeftColor: cardColor }}
@@ -222,7 +222,7 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
     return (
       <div
         ref={draggable ? drag : undefined}
-        className={`bg-white rounded-lg border transition-all duration-200 hover:shadow-md cursor-pointer ${
+        className={`bg-white rounded-card shadow-soft border transition-all duration-200 hover:shadow-hover cursor-pointer ${
           isEditing ? 'ring-2 ring-blue-300' : 'border-gray-200 hover:border-gray-300'
         } ${isDragging ? 'opacity-50' : ''} h-full flex flex-col`}
         style={{ borderLeftColor: cardColor, borderLeftWidth: '4px' }}
@@ -318,7 +318,7 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
     return (
       <div
         ref={draggable ? drag : undefined}
-        className={`bg-white rounded-lg shadow-md border transition-all duration-200 hover:shadow-lg ${draggable ? 'cursor-move' : 'cursor-pointer'} ${
+        className={`bg-white rounded-card shadow-soft border transition-all duration-200 hover:shadow-hover ${draggable ? 'cursor-move' : 'cursor-pointer'} ${
           isEditing ? 'ring-2 ring-blue-300' : 'border-gray-200 hover:border-gray-300'
         } ${isDragging ? 'opacity-50' : ''} h-full flex flex-col`}
         style={{ cursor: draggable ? 'move' : 'pointer', borderLeftColor: cardColor, borderLeftWidth: '4px' }}
@@ -482,7 +482,7 @@ className={`bg-white rounded-lg shadow-sm border-l-4 p-3 transition-all duration
 return (
   <div
     ref={draggable ? drag : undefined}
-    className={`bg-white rounded-xl shadow-lg border transition-all duration-300 hover:shadow-xl ${draggable ? 'cursor-move' : 'cursor-pointer'} overflow-hidden ${
+    className={`bg-white rounded-card shadow-soft border transition-all duration-300 hover:shadow-hover ${draggable ? 'cursor-move' : 'cursor-pointer'} overflow-hidden ${
       isEditing ? 'ring-4 ring-blue-300' : 'border-gray-200 hover:border-gray-300'
     } ${isDragging ? 'opacity-50' : ''} h-full flex flex-col`}
     style={{ borderLeftColor: cardColor, borderLeftWidth: '6px', cursor: 'pointer' }}

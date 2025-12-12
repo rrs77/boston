@@ -60,6 +60,8 @@ import { TimetableModal } from './TimetableModal';
 import { EventModal } from './EventModal';
 import { LessonDetailsModal } from './LessonDetailsModal';
 import { LessonPrintModal } from './LessonPrintModal';
+import { CalendarLessonAssignmentModal } from './CalendarLessonAssignmentModal';
+import { useLessonStacks } from '../hooks/useLessonStacks';
 import type { Activity, LessonPlan } from '../contexts/DataContext';
 
 interface LessonPlannerCalendarProps {
@@ -143,6 +145,9 @@ export function LessonPlannerCalendar({
   const [units, setUnits] = useState<any[]>([]); // Units from UnitViewer
   const [termTimeConfigs, setTermTimeConfigs] = useState<Array<{termId: string, startDate: Date, endDate: Date, startTime?: string, endTime?: string}>>([]);
   const [showTermTimeConfig, setShowTermTimeConfig] = useState(false);
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [assignmentDate, setAssignmentDate] = useState<Date | null>(null);
+  const { stacks } = useLessonStacks();
   const calendarRef = useRef<HTMLDivElement>(null);
   
   // Get theme colors for current class
@@ -322,12 +327,13 @@ export function LessonPlannerCalendar({
     const plansForDate = getLessonPlansForDate(date);
     
     if (plansForDate.length > 0) {
+      // If plans exist, show summary with option to view/edit
       setSelectedDateWithPlans({date, plans: plansForDate});
       setIsLessonSummaryOpen(true);
     } else {
-      // If no plans exist, create a new one
-      onDateSelect(date);
-      onCreateLessonPlan(date);
+      // If no plans exist, show assignment modal to add lesson or stack
+      setAssignmentDate(date);
+      setShowAssignmentModal(true);
     }
   };
 
@@ -430,6 +436,82 @@ export function LessonPlannerCalendar({
   const handlePrintLesson = (lessonNumber: string) => {
     setSelectedLessonForDetails(lessonNumber);
     setShowPrintModal(true);
+  };
+
+  // Handle assigning a lesson to calendar dates
+  const handleAssignLesson = (lessonNumber: string, dates: Date[]) => {
+    const lessonData = allLessonsData[lessonNumber];
+    if (!lessonData) return;
+
+    // Create lesson plans for each date
+    dates.forEach((date, index) => {
+      const weekNumber = getWeekNumber(date);
+      const activities = Object.values(lessonData.grouped || {}).flat();
+      
+      const newPlan: LessonPlan = {
+        id: `plan-${Date.now()}-${index}`,
+        date,
+        week: weekNumber,
+        className,
+        activities: activities.map(activity => ({
+          ...activity,
+          lessonNumber
+        })),
+        duration: lessonData.totalTime || 0,
+        notes: '',
+        status: 'planned' as const,
+        lessonNumber,
+        unitId: unitFilter !== 'all' ? unitFilter : undefined,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      onUpdateLessonPlan(newPlan);
+    });
+  };
+
+  // Handle assigning a stack to calendar dates
+  const handleAssignStack = (stackId: string, dates: Date[]) => {
+    const stack = stacks.find(s => s.id === stackId);
+    if (!stack) return;
+
+    // Distribute stack lessons across the dates
+    const lessonsPerDate = Math.ceil(stack.lessons.length / dates.length);
+    
+    dates.forEach((date, dateIndex) => {
+      const startLessonIndex = dateIndex * lessonsPerDate;
+      const endLessonIndex = Math.min(startLessonIndex + lessonsPerDate, stack.lessons.length);
+      const lessonsForThisDate = stack.lessons.slice(startLessonIndex, endLessonIndex);
+
+      lessonsForThisDate.forEach((lessonNumber, lessonIndex) => {
+        const lessonData = allLessonsData[lessonNumber];
+        if (!lessonData) return;
+
+        const weekNumber = getWeekNumber(date);
+        const activities = Object.values(lessonData.grouped || {}).flat();
+        
+        const newPlan: LessonPlan = {
+          id: `plan-${Date.now()}-${dateIndex}-${lessonIndex}`,
+          date,
+          week: weekNumber,
+          className,
+          activities: activities.map(activity => ({
+            ...activity,
+            lessonNumber
+          })),
+          duration: lessonData.totalTime || 0,
+          notes: `Part of stack: ${stack.name}`,
+          status: 'planned' as const,
+          lessonNumber,
+          unitId: unitFilter !== 'all' ? unitFilter : undefined,
+          stackId: stackId,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        onUpdateLessonPlan(newPlan);
+      });
+    });
   };
 
   // Render a calendar day cell for month view
@@ -1164,7 +1246,14 @@ export function LessonPlannerCalendar({
                         return (
                           <div 
                             key={plan.id}
-                            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200"
+                            className="bg-white rounded-card shadow-soft border border-gray-200 overflow-hidden hover:shadow-hover transition-all duration-200 cursor-pointer"
+                            onClick={(e) => {
+                              if (plan.lessonNumber) {
+                                e.stopPropagation();
+                                handleViewLessonDetails(plan.lessonNumber);
+                                setIsLessonSummaryOpen(false);
+                              }
+                            }}
                           >
                             {/* Plan Header */}
                             <div 
@@ -1192,17 +1281,31 @@ export function LessonPlannerCalendar({
                                   </div>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onDateSelect(date);
-                                      setIsLessonSummaryOpen(false);
-                                    }}
-                                    className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                                    title="Edit Lesson"
-                                  >
-                                    <Edit3 className="h-4 w-4" />
-                                  </button>
+                                  {plan.lessonNumber ? (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewLessonDetails(plan.lessonNumber!);
+                                        setIsLessonSummaryOpen(false);
+                                      }}
+                                      className="p-1.5 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded-button transition-colors duration-200"
+                                      title="View/Edit Lesson"
+                                    >
+                                      <Edit3 className="h-4 w-4" />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDateSelect(date);
+                                        setIsLessonSummaryOpen(false);
+                                      }}
+                                      className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-button transition-colors duration-200"
+                                      title="Edit Lesson Plan"
+                                    >
+                                      <Edit3 className="h-4 w-4" />
+                                    </button>
+                                  )}
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -1323,19 +1426,22 @@ export function LessonPlannerCalendar({
               </div>
             )}
             
-            {/* Add New Lesson Button */}
-            <div className="mt-6 text-center">
+            {/* Add New Lesson/Stack Button */}
+            <div className="mt-6 text-center space-y-3">
               <button
                 onClick={() => {
-                  onDateSelect(selectedDateWithPlans.date);
-                  onCreateLessonPlan(selectedDateWithPlans.date);
+                  setAssignmentDate(selectedDateWithPlans.date);
                   setIsLessonSummaryOpen(false);
+                  setShowAssignmentModal(true);
                 }}
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-button transition-colors duration-200 shadow-soft hover:shadow-hover"
               >
                 <Plus className="h-5 w-5" />
-                <span>Add New Lesson</span>
+                <span>Add Lesson or Stack</span>
               </button>
+              <div className="text-xs text-gray-500">
+                Choose from lesson library or stacks, spread over multiple days
+              </div>
             </div>
           </div>
         </div>
@@ -1677,6 +1783,11 @@ export function LessonPlannerCalendar({
           lessonNumber={selectedLessonForDetails}
           onClose={() => setSelectedLessonForDetails(null)}
           theme={theme}
+          onEdit={() => {
+            // Open lesson builder for editing
+            setSelectedLessonForDetails(null);
+            // The lesson can be edited through the modal's built-in edit functionality
+          }}
         />
       )}
 
@@ -1688,6 +1799,22 @@ export function LessonPlannerCalendar({
             setShowPrintModal(false);
             setSelectedLessonForDetails(null);
           }}
+        />
+      )}
+
+      {/* Calendar Lesson Assignment Modal */}
+      {showAssignmentModal && assignmentDate && (
+        <CalendarLessonAssignmentModal
+          isOpen={showAssignmentModal}
+          onClose={() => {
+            setShowAssignmentModal(false);
+            setAssignmentDate(null);
+          }}
+          selectedDate={assignmentDate}
+          className={className}
+          onAssignLesson={handleAssignLesson}
+          onAssignStack={handleAssignStack}
+          timetableClasses={timetableClasses}
         />
       )}
     </div>

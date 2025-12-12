@@ -32,7 +32,7 @@ export function IndexCard({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-card shadow-soft border border-gray-200 overflow-hidden">
       {/* Index Card Header */}
       <div
         className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"

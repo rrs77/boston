@@ -593,7 +593,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
   if (lessonsToRender.length === 0) {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">
+          <div className="bg-white rounded-card shadow-soft p-6 max-w-md w-full">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Error</h2>
             <p className="text-gray-600 mb-6">No lessons found to print.</p>
             <div className="flex justify-end">
@@ -912,7 +912,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
 
   return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-        <div className="bg-white rounded-xl shadow-lg w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="bg-white rounded-card shadow-soft w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div>

@@ -785,8 +785,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
   return (
     <div className={`bg-white rounded-xl shadow-lg  overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 text-white"
-style={{ backgroundColor: '#10A293' }}>
+      <div className="p-6 border-b border-gray-200 text-white" style={{ background: 'linear-gradient(to right, #14B8A6, #0D9488)' }}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <BookOpen className="h-6 w-6" />

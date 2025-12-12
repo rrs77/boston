@@ -80,7 +80,7 @@ export function AssignToHalfTermModal({
   if (!displayHalfTerms || displayHalfTerms.length === 0) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-        <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+        <div className="bg-white rounded-card shadow-soft w-full max-w-md">
           <div className="p-6 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading half-terms...</p>
@@ -121,7 +121,7 @@ export function AssignToHalfTermModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+      <div className="bg-white rounded-card shadow-soft w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white">
           <div className="flex items-center justify-between">

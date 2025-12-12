@@ -113,7 +113,7 @@ export function ActivityStackCard({
     return (
       <div 
         ref={drag}
-        className={`bg-white rounded-xl shadow-lg border border-gray-200 p-4 ${
+        className={`bg-white rounded-card shadow-soft border border-gray-200 p-4 ${
           isDragging ? 'opacity-50' : ''
         }`}
         style={{ borderColor: categoryColor }}
@@ -165,7 +165,7 @@ export function ActivityStackCard({
               </button>
               
               {showMenu && (
-                <div className="absolute right-0 top-full mt-3 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-[100] transform translate-y-2">
+                <div className="absolute right-0 top-full mt-3 w-48 bg-white rounded-button shadow-soft border border-gray-200 z-[100] transform translate-y-2">
                   <button
                     onClick={handleEdit}
                     className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
@@ -261,7 +261,7 @@ export function ActivityStackCard({
   return (
     <div 
       ref={drag}
-      className={`bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-all duration-200 cursor-pointer group ${
+      className={`bg-white rounded-card shadow-soft border border-gray-200 hover:shadow-hover transition-all duration-200 cursor-pointer group ${
         isDragging ? 'opacity-50' : ''
       }`}
       onClick={() => onOpenStack ? onOpenStack(stack) : onToggleExpand()}
@@ -339,7 +339,7 @@ export function ActivityStackCard({
 
       {/* Menu dropdown */}
       {showMenu && (
-        <div className="absolute right-0 top-full mt-3 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-[100] transform translate-y-2">
+        <div className="absolute right-0 top-full mt-3 w-48 bg-white rounded-button shadow-soft border border-gray-200 z-[100] transform translate-y-2">
           <button
             onClick={handleEdit}
             className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"

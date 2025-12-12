@@ -11,42 +11,47 @@ body, main, .page-container {
   background-color: #F9FAFB !important;
 }
 
-/* Global Button Styles */
+/* Global Button Styles - Design System */
 .btn-primary {
-  background: #14B8A6;
+  background: linear-gradient(to right, #14B8A6, #0D9488);
   color: white;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 0.75rem; /* rounded-button */
   font-size: 14px;
   font-weight: 500;
   height: 36px;
   border: none;
   cursor: pointer;
-  transition: background 200ms;
+  transition: all 200ms ease-out;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary:hover {
-  background: #0D9488;
+  background: linear-gradient(to right, #0D9488, #0F766E);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
   background: white;
-  color: #374151;
+  color: #475569; /* text-slate-600 */
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 0.75rem; /* rounded-button */
   font-size: 14px;
   font-weight: 500;
   height: 36px;
   border: 1px solid #D1D5DB;
   cursor: pointer;
-  transition: all 200ms;
+  transition: all 200ms ease-out;
 }
 
 .btn-secondary:hover {
   background: #F9FAFB;
+  border-color: #14B8A6;
+  color: #0f172a; /* text-slate-900 */
 }
 
 .btn-icon {
@@ -54,12 +59,12 @@ body, main, .page-container {
   height: 32px;
   background: white;
   border: 1px solid #E5E7EB;
-  border-radius: 8px;
+  border-radius: 0.75rem; /* rounded-button */
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 200ms;
+  transition: all 200ms ease-out;
 }
 
 .btn-icon svg {
@@ -77,29 +82,35 @@ body, main, .page-container {
   color: #14B8A6;
 }
 
-/* Global Input Styles */
+/* Global Input Styles - Design System */
 input[type="text"], input[type="email"], input[type="password"], 
 select, textarea {
   height: 36px;
   padding: 0 12px;
   border: 1px solid #D1D5DB;
-  border-radius: 8px;
+  border-radius: 0.75rem; /* rounded-button */
   font-size: 14px;
-  color: #111827;
+  color: #0f172a; /* text-slate-900 */
   background: white;
-  transition: all 200ms;
+  transition: all 200ms ease-out;
 }
 
 input[type="text"]::placeholder, input[type="email"]::placeholder, 
 input[type="password"]::placeholder, textarea::placeholder {
-  color: #9CA3AF;
+  color: #9CA3AF; /* text-gray-400 */
 }
 
 input[type="text"]:focus, input[type="email"]:focus, 
 input[type="password"]:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: transparent;
-  box-shadow: 0 0 0 2px #14B8A6;
+  border-color: #14B8A6; /* teal-500 */
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1); /* teal focus ring */
+}
+
+textarea {
+  min-height: 80px;
+  padding: 12px;
+  resize: vertical;
 }
 
 /* Input with left icon */
