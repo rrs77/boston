@@ -31,6 +31,10 @@ exports.handler = async (event, context) => {
     if (!fileName || !fileData) {
       return {
         statusCode: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
         body: JSON.stringify({ error: 'Missing fileName or fileData' })
       };
     }
@@ -43,7 +47,15 @@ exports.handler = async (event, context) => {
       console.error('Missing SUPABASE_SERVICE_ROLE_KEY');
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: 'Server configuration error' })
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS'
+        },
+        body: JSON.stringify({ 
+          error: 'Server configuration error: SUPABASE_SERVICE_ROLE_KEY environment variable is not set in Netlify. Please add it in Site Settings > Environment Variables.'
+        })
       };
     }
 
@@ -70,6 +82,12 @@ exports.handler = async (event, context) => {
       console.error('Upload error:', error);
       return {
         statusCode: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS'
+        },
         body: JSON.stringify({ error: `Upload failed: ${error.message}` })
       };
     }
@@ -97,7 +115,16 @@ exports.handler = async (event, context) => {
     console.error('Function error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message || 'Internal server error' })
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      },
+      body: JSON.stringify({ 
+        error: error.message || 'Internal server error',
+        details: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Service role key is set' : 'Service role key is missing'
+      })
     };
   }
 };
