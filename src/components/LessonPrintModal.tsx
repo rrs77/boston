@@ -626,7 +626,9 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
 
   const handleExport = async () => {
     if (!PDFBOLT_API_KEY || PDFBOLT_API_KEY === 'd089165b-e1da-43bb-a7dc-625ce514ed1b') {
-      alert('Please set your PDFBolt API key in the environment variables (VITE_PDFBOLT_API_KEY)');
+      toast.error('Please set your PDFBolt API key in the environment variables (VITE_PDFBOLT_API_KEY)', {
+        duration: 5000,
+      });
       return;
     }
 
@@ -703,10 +705,16 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       window.URL.revokeObjectURL(url);
 
       setExportSuccess(true);
+      toast.success('PDF exported successfully!', {
+        duration: 3000,
+        icon: '📄',
+      });
       setTimeout(() => setExportSuccess(false), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Export failed:', error);
-      alert(`Export failed: ${error.message}`);
+      toast.error(error.message || 'Failed to export PDF', {
+        duration: 5000,
+      });
     } finally {
       setIsExporting(false);
     }
@@ -936,7 +944,10 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      alert('Shareable URL copied to clipboard!');
+      toast.success('Shareable URL copied to clipboard!', {
+        duration: 3000,
+        icon: '📋',
+      });
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
       // Fallback: create a temporary textarea
@@ -948,9 +959,14 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       textarea.select();
       try {
         document.execCommand('copy');
-        alert('Shareable URL copied to clipboard!');
+        toast.success('Shareable URL copied to clipboard!', {
+          duration: 3000,
+          icon: '📋',
+        });
       } catch (err) {
-        alert(`Shareable URL: ${text}`);
+        toast.error(`Failed to copy URL. Here it is: ${text}`, {
+          duration: 8000,
+        });
       }
       document.body.removeChild(textarea);
     }
