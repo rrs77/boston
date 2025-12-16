@@ -219,6 +219,12 @@ export function useShareLesson() {
 
   // Main share function
   const shareLesson = async (lessonNumber: string): Promise<string | null> => {
+    // Prevent multiple simultaneous calls
+    if (isSharing) {
+      console.warn('Share already in progress, ignoring duplicate call');
+      return null;
+    }
+
     setIsSharing(true);
     setShareUrl(null);
     setShareError(null);
