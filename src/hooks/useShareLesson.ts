@@ -5,9 +5,6 @@ import { supabase } from '../config/supabase';
 import { customObjectivesApi } from '../config/customObjectivesApi';
 import type { CustomObjective, CustomObjectiveArea, CustomObjectiveYearGroup } from '../types/customObjectives';
 
-const PDFBOLT_API_URL = 'https://api.pdfbolt.com/v1/direct';
-const PDFBOLT_API_KEY = import.meta.env.VITE_PDFBOLT_API_KEY || '146bdd01-146f-43f8-92aa-26201c38aa11';
-
 export function useShareLesson() {
   const { allLessonsData, currentSheetInfo, lessonStandards, halfTerms, getTermSpecificLessonNumber, getLessonDisplayTitle } = useData();
   const { getCategoryColor } = useSettings();
@@ -218,9 +215,7 @@ export function useShareLesson() {
         throw new Error(errorMsg);
       }
 
-      if (!PDFBOLT_API_KEY || PDFBOLT_API_KEY === 'd089165b-e1da-43bb-a7dc-625ce514ed1b') {
-        throw new Error('Please set your PDFBolt API key in the environment variables (VITE_PDFBOLT_API_KEY)');
-      }
+      // PDF generation is handled by Netlify function, no API key check needed here
 
       // Generate HTML content
       const [htmlContent, footerContent] = generateHTMLContent(lessonNumber);
