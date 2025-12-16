@@ -74,10 +74,17 @@ export function LessonPlanBuilder({
     const yearGroupKeys = getCurrentYearGroupKeys();
     if (yearGroupKeys.length === 0) {
       // If no year group selected, show all categories
+      console.log('📋 Lesson Builder: No year group selected, showing all categories');
       return categories.map(c => c.name);
     }
     
     const primaryKey = yearGroupKeys[0];
+    console.log('📋 Lesson Builder: Filtering categories for year group:', {
+      yearGroupId: primaryKey,
+      currentSheet: currentSheetInfo?.sheet,
+      totalCategories: categories.length,
+      categoriesWithYearGroups: categories.filter(c => c.yearGroups && Object.keys(c.yearGroups).length > 0).length
+    });
     
     // Filter categories that are assigned to this year group
     const filteredCategories = categories
@@ -98,9 +105,19 @@ export function LessonPlanBuilder({
         }
         
         // Check if this category is assigned to the current year group
-        return category.yearGroups[primaryKey] === true;
+        const isAssigned = category.yearGroups[primaryKey] === true;
+        if (isAssigned) {
+          console.log(`✅ Category "${category.name}" is assigned to ${primaryKey}`);
+        }
+        return isAssigned;
       })
       .map(c => c.name);
+    
+    console.log('📋 Lesson Builder: Filtered categories:', {
+      yearGroupId: primaryKey,
+      matchedCategories: filteredCategories.length,
+      categoryNames: filteredCategories
+    });
     
     return filteredCategories;
   }, [categories, currentSheetInfo, customYearGroups]);
