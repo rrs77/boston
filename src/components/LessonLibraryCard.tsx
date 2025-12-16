@@ -199,34 +199,6 @@ export function LessonLibraryCard({
                   </>
                 )}
               </button>
-                  disabled={isSharing}
-                  className={`p-2 rounded-button shadow-soft hover:shadow-hover flex items-center space-x-1 transition-all ${
-                    isSharing 
-                      ? 'bg-gray-400 text-white cursor-not-allowed' 
-                      : localShareUrl || shareUrl
-                      ? 'bg-green-500 hover:bg-green-600 text-white'
-                      : 'bg-gradient-to-r from-coral-400 to-coral-500 hover:from-coral-500 hover:to-coral-600 text-white'
-                  }`}
-                  title={localShareUrl || shareUrl ? "Share link created!" : "Share lesson link"}
-                >
-                  {isSharing ? (
-                    <>
-                      <div className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-xs">Sharing...</span>
-                    </>
-                  ) : localShareUrl || shareUrl ? (
-                    <>
-                      <Check className="h-3 w-3" />
-                      <span className="text-xs">Shared</span>
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="h-3 w-3" />
-                      <span className="text-xs">Share</span>
-                    </>
-                  )}
-                </button>
-              )}
               {onAssignToUnit && halfTerms.length > 0 && (
                 <button
                   onClick={handleAssignClick}
