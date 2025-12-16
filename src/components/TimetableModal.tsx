@@ -162,17 +162,17 @@ export function TimetableModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
       <div className="bg-white rounded-card shadow-soft w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white">
-          <div className="flex items-center space-x-3">
-            <Repeat className="h-6 w-6" />
-            <div>
-              <h2 className="text-xl font-bold">Class Timetable</h2>
-              <p className="text-blue-100 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+            <Repeat className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold truncate">Class Timetable</h2>
+              <p className="text-blue-100 text-xs sm:text-sm truncate">
                 {className} • Manage recurring classes
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-end space-x-2 flex-shrink-0">
             {timetableClasses.length > 0 && (
               <>
                 <button
@@ -194,38 +194,42 @@ export function TimetableModal({
                     }
                   }}
                   disabled={isSharing}
-                  className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-1.5 sm:space-x-2 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-xs sm:text-sm min-h-[36px] sm:min-h-[40px]"
                   title="Share timetable as PDF link"
                 >
                   {isSharing ? (
                     <>
-                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                      <span>Generating...</span>
+                      <div className="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full flex-shrink-0"></div>
+                      <span className="hidden sm:inline">Generating...</span>
+                      <span className="sm:hidden">...</span>
                     </>
                   ) : (
                     <>
-                      <Share2 className="h-4 w-4" />
-                      <span>Share Link</span>
+                      <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span className="hidden sm:inline">Share Link</span>
+                      <span className="sm:hidden">Share</span>
                     </>
                   )}
                 </button>
                 {shareUrl && (
                   <button
                     onClick={() => window.open(shareUrl, '_blank')}
-                    className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-1.5 sm:space-x-2 touch-manipulation text-xs sm:text-sm min-h-[36px] sm:min-h-[40px]"
                     title="Open PDF in new tab for printing"
                   >
-                    <Download className="h-4 w-4" />
-                    <span>Print PDF</span>
+                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">Print PDF</span>
+                    <span className="sm:hidden">Print</span>
                   </button>
                 )}
               </>
             )}
             <button
               onClick={onClose}
-              className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200"
+              className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200 touch-manipulation flex-shrink-0"
+              aria-label="Close"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
           </div>
         </div>
@@ -234,7 +238,7 @@ export function TimetableModal({
         <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('add')}
-            className={`px-6 py-3 font-medium text-sm transition-colors duration-200 ${
+            className={`flex-1 sm:flex-initial px-4 sm:px-6 py-2.5 sm:py-3 font-medium text-xs sm:text-sm transition-colors duration-200 touch-manipulation ${
               activeTab === 'add' 
                 ? 'border-b-2 border-teal-600 text-teal-600 bg-white' 
                 : 'text-gray-600 hover:text-gray-900'
@@ -244,7 +248,7 @@ export function TimetableModal({
           </button>
           <button
             onClick={() => setActiveTab('manage')}
-            className={`px-6 py-3 font-medium text-sm transition-colors duration-200 ${
+            className={`flex-1 sm:flex-initial px-4 sm:px-6 py-2.5 sm:py-3 font-medium text-xs sm:text-sm transition-colors duration-200 touch-manipulation ${
               activeTab === 'manage' 
                 ? 'border-b-2 border-teal-600 text-teal-600 bg-white' 
                 : 'text-gray-600 hover:text-gray-900'
@@ -401,16 +405,16 @@ export function TimetableModal({
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-gray-200">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium rounded-lg transition-colors duration-200"
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium rounded-lg transition-colors duration-200 touch-manipulation w-full sm:w-auto"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddClass}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 touch-manipulation w-full sm:w-auto"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Add Class</span>
@@ -639,21 +643,21 @@ export function TimetableModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-0 p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
           <button
             onClick={() => setActiveTab('add')}
             className={`px-4 py-2 ${
               activeTab === 'manage' 
                 ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                 : 'text-gray-600 hover:text-gray-800 bg-gray-200 hover:bg-gray-300'
-            } font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2`}
+            } font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 touch-manipulation w-full sm:w-auto text-sm sm:text-base`}
           >
             <Plus className="h-4 w-4" />
             <span>Add New Class</span>
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
+            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 touch-manipulation w-full sm:w-auto text-sm sm:text-base"
           >
             Close
           </button>

@@ -687,12 +687,41 @@ export function LessonPlannerCalendar({
     );
   };
 
-  // Render a time slot for the week view
-  const renderWeekTimeSlot = (date: Date, hour: number) => {
+  // WeekTimeSlot component - separate component to allow hooks
+  const WeekTimeSlot = React.memo(({ 
+    date, 
+    hour,
+    getLessonPlansForDate,
+    isHoliday,
+    isInsetDay,
+    timetableClasses,
+    getWeekNumber,
+    className,
+    onUpdateLessonPlan,
+    handleTimeSlotClick,
+    units,
+    theme,
+    setSelectedDateWithPlans,
+    setIsLessonSummaryOpen
+  }: { 
+    date: Date; 
+    hour: number;
+    getLessonPlansForDate: (date: Date) => LessonPlan[];
+    isHoliday: (date: Date) => boolean;
+    isInsetDay: (date: Date) => boolean;
+    timetableClasses: TimetableClass[];
+    getWeekNumber: (date: Date) => number;
+    className: string;
+    onUpdateLessonPlan: (plan: LessonPlan) => void;
+    handleTimeSlotClick: (day: number, date: Date, hour: number) => void;
+    units: any[];
+    theme: any;
+    setSelectedDateWithPlans: (data: {date: Date, plans: LessonPlan[]}) => void;
+    setIsLessonSummaryOpen: (open: boolean) => void;
+  }) => {
     const startTime = setHours(setMinutes(date, 0), hour);
     const endTime = addMinutes(startTime, 59);
     const plansForDate = getLessonPlansForDate(date);
-    const eventsForDate = getEventsForDate(date);
     const isHolidayDate = isHoliday(date);
     const isInsetDayDate = isInsetDay(date);
     const dayOfWeek = getDay(date);
@@ -741,7 +770,7 @@ export function LessonPlannerCalendar({
       collect: (monitor) => ({
         isOver: monitor.isOver()
       })
-    }), [date, hour, onUpdateLessonPlan]);
+    }), [date, hour, className, getWeekNumber, onUpdateLessonPlan]);
 
     // Determine cell background color based on events
     let cellBgColor = 'bg-white';
@@ -751,7 +780,6 @@ export function LessonPlannerCalendar({
     return (
       <div
         ref={drop}
-        key={`${date.toISOString()}-${hour}`}
         onClick={() => !isHolidayDate && !isInsetDayDate && handleTimeSlotClick(dayOfWeek, date, hour)}
         className={`
           relative border border-gray-200 p-1 h-16 transition-colors duration-200
@@ -825,7 +853,7 @@ export function LessonPlannerCalendar({
         )}
       </div>
     );
-  };
+  });
 
   // Render a day column for the week view
   const renderWeekDayColumn = (date: Date) => {
@@ -843,7 +871,25 @@ export function LessonPlannerCalendar({
           <div className={`text-lg ${isToday ? 'font-bold' : ''}`}>{format(date, 'd')}</div>
         </div>
         <div className="flex flex-col">
-          {dayViewHours.map(hour => renderWeekTimeSlot(date, hour))}
+          {dayViewHours.map(hour => (
+            <WeekTimeSlot 
+              key={`${date.toISOString()}-${hour}`} 
+              date={date} 
+              hour={hour}
+              getLessonPlansForDate={getLessonPlansForDate}
+              isHoliday={isHoliday}
+              isInsetDay={isInsetDay}
+              timetableClasses={timetableClasses}
+              getWeekNumber={getWeekNumber}
+              className={className}
+              onUpdateLessonPlan={onUpdateLessonPlan}
+              handleTimeSlotClick={handleTimeSlotClick}
+              units={units}
+              theme={theme}
+              setSelectedDateWithPlans={setSelectedDateWithPlans}
+              setIsLessonSummaryOpen={setIsLessonSummaryOpen}
+            />
+          ))}
         </div>
       </div>
     );
@@ -887,7 +933,25 @@ export function LessonPlannerCalendar({
           {/* Day columns with time slots */}
           {weekDays.map(date => (
             <div key={date.toISOString()} className="flex-1 flex flex-col">
-              {dayViewHours.map(hour => renderWeekTimeSlot(date, hour))}
+              {dayViewHours.map(hour => (
+                <WeekTimeSlot 
+                  key={`${date.toISOString()}-${hour}`} 
+                  date={date} 
+                  hour={hour}
+                  getLessonPlansForDate={getLessonPlansForDate}
+                  isHoliday={isHoliday}
+                  isInsetDay={isInsetDay}
+                  timetableClasses={timetableClasses}
+                  getWeekNumber={getWeekNumber}
+                  className={className}
+                  onUpdateLessonPlan={onUpdateLessonPlan}
+                  handleTimeSlotClick={handleTimeSlotClick}
+                  units={units}
+                  theme={theme}
+                  setSelectedDateWithPlans={setSelectedDateWithPlans}
+                  setIsLessonSummaryOpen={setIsLessonSummaryOpen}
+                />
+              ))}
             </div>
           ))}
         </div>

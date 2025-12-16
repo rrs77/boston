@@ -991,16 +991,16 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
           {/* Clean White Header Card */}
           <div className="bg-white rounded-card shadow-soft border border-gray-200 mb-6 sm:mb-8 p-4 sm:p-6 md:p-7">
             <div className="text-gray-900">
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="flex-shrink-0">
                   <h2 
-                    className="text-2xl font-semibold text-gray-900 mb-1"
+                    className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1"
                     style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
                   >
                     Half-Term Planner
                   </h2>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm font-normal text-gray-600">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span className="text-xs sm:text-sm font-normal text-gray-600">
                       Academic Year {currentAcademicYear}
                     </span>
                     {(() => {
@@ -1008,7 +1008,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                       const nextYear = currentYear + 1;
                       const currentAcademicYearCheck = `${currentYear}-${nextYear}`;
                       return currentAcademicYear === currentAcademicYearCheck && (
-                        <span className="text-xs font-medium px-3 py-1 rounded-full" style={{ backgroundColor: '#F0FDFA', color: '#0F766E' }}>
+                        <span className="text-xs font-medium px-2 sm:px-3 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: '#F0FDFA', color: '#0F766E' }}>
                           Current Year
                         </span>
                       );
@@ -1016,9 +1016,9 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-1 lg:flex-initial lg:max-w-md">
                   {/* Year Navigation Arrows */}
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 flex-shrink-0">
                     <button
                       onClick={() => {
                         const currentIndex = getAvailableYears().indexOf(currentAcademicYear);
@@ -1028,7 +1028,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                         }
                       }}
                       disabled={getAvailableYears().indexOf(currentAcademicYear) >= getAvailableYears().length - 1}
-                      className="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center transition-colors duration-200 hover:border-teal-600 hover:text-teal-600"
+                      className="w-8 h-8 sm:w-9 sm:h-9 bg-white border border-gray-200 rounded-lg flex items-center justify-center transition-colors duration-200 hover:border-teal-600 hover:text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                       style={{ color: '#6B7280' }}
                       title="View previous academic year"
                     >
@@ -1044,7 +1044,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                         }
                       }}
                       disabled={getAvailableYears().indexOf(currentAcademicYear) <= 0}
-                      className="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center transition-colors duration-200 hover:border-teal-600 hover:text-teal-600"
+                      className="w-8 h-8 sm:w-9 sm:h-9 bg-white border border-gray-200 rounded-lg flex items-center justify-center transition-colors duration-200 hover:border-teal-600 hover:text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                       style={{ color: '#6B7280' }}
                       title="Return to more recent year"
                     >
@@ -1055,13 +1055,13 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                   {/* Copy Term Button */}
                   <button
                     onClick={() => setShowTermCopyModal(true)}
-                    className="px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2 focus:outline-none focus:ring-0"
+                    className="px-3 sm:px-4 py-2 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors duration-200 flex items-center justify-center space-x-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 touch-manipulation min-h-[36px] sm:min-h-[40px]"
                     style={{ 
                       backgroundColor: '#14B8A6', 
-                      height: '36px',
                       fontWeight: 500,
                       userSelect: 'none',
-                      WebkitUserSelect: 'none'
+                      WebkitUserSelect: 'none',
+                      WebkitTapHighlightColor: 'transparent'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = '#0D9488';
@@ -1069,13 +1069,19 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = '#14B8A6';
                     }}
+                    onTouchStart={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0D9488';
+                    }}
+                    onTouchEnd={(e) => {
+                      e.currentTarget.style.backgroundColor = '#14B8A6';
+                    }}
                   >
-                    <Calendar className="h-4 w-4" />
-                    <span style={{ fontWeight: 500, userSelect: 'none' }}>Copy Term</span>
+                    <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span style={{ fontWeight: 500, userSelect: 'none', whiteSpace: 'nowrap' }}>Copy Term</span>
                   </button>
                   
                   {/* Search field */}
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-initial sm:min-w-[200px]">
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ width: '16px', height: '16px' }}>
                       <svg 
                         viewBox="0 0 80 80" 
@@ -1115,12 +1121,15 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                       placeholder="Search units..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-64 pl-10 pr-4 border border-gray-300 rounded-lg text-sm transition-all duration-200"
+                      className="w-full sm:w-64 pl-10 pr-4 border border-gray-300 rounded-lg text-xs sm:text-sm transition-all duration-200 touch-manipulation"
                       style={{ 
                         height: '36px',
+                        minHeight: '36px',
                         fontSize: '14px',
                         color: '#111827',
-                        backgroundColor: 'white'
+                        backgroundColor: 'white',
+                        WebkitAppearance: 'none',
+                        appearance: 'none'
                       }}
                       onFocus={(e) => {
                         e.target.style.borderColor = 'transparent';

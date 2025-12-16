@@ -481,7 +481,11 @@ export function LessonPlanBuilder({
                            activity.description.toLowerCase().includes(searchQuery.toLowerCase());
       
       // Filter by category assignment to year group
-      const matchesYearGroupCategory = availableCategoriesForYearGroup.includes(activity.category);
+      // If no categories are available for year group, show all activities
+      // Otherwise, only show activities from available categories
+      const matchesYearGroupCategory = availableCategoriesForYearGroup.length === 0 
+        ? true 
+        : availableCategoriesForYearGroup.includes(activity.category);
       
       // Filter by selected category if one is chosen
       const matchesCategory = selectedCategory === 'all' || activity.category === selectedCategory;
