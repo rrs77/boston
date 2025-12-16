@@ -182,18 +182,38 @@ export function useShareLesson() {
   };
 
   // Copy to clipboard
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string): Promise<boolean> => {
     try {
+      // Try modern clipboard API first
       await navigator.clipboard.writeText(text);
+      // Verify it worked by checking clipboard (if possible)
+      return true;
     } catch (err) {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.opacity = '0';
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
+      console.warn('Clipboard API failed, trying fallback:', err);
+      // Fallback for older browsers or when clipboard API is blocked
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.opacity = '0';
+        textArea.style.pointerEvents = 'none';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (!successful) {
+          throw new Error('execCommand copy failed');
+        }
+        return true;
+      } catch (fallbackErr) {
+        console.error('Fallback clipboard copy failed:', fallbackErr);
+        return false;
+      }
     }
   };
 
@@ -296,21 +316,11 @@ export function useShareLesson() {
       }
       setShareUrl(publicUrl);
 
-      // Try to use Web Share API if available, otherwise copy to clipboard
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: fileName,
-            text: `Check out this lesson plan: ${fileName}`,
-            url: publicUrl
-          });
-        } catch (shareError: any) {
-          if (shareError.name !== 'AbortError') {
-            await copyToClipboard(publicUrl);
-          }
-        }
-      } else {
-        await copyToClipboard(publicUrl);
+      // Copy to clipboard directly (no Web Share API dialog)
+      const clipboardSuccess = await copyToClipboard(publicUrl);
+      
+      if (!clipboardSuccess) {
+        throw new Error('Failed to copy URL to clipboard. Please copy it manually from the URL shown.');
       }
 
       return publicUrl;
