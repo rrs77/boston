@@ -230,7 +230,12 @@ export function LessonDetailsModal({
               
               {/* Export PDF Button - Single Click */}
               <button
-                onClick={() => setShowPrintModal(true)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowPrintModal(true);
+                }}
                 className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 group flex items-center space-x-2"
                 title="Export PDF"
               >
@@ -240,8 +245,14 @@ export function LessonDetailsModal({
               
               {/* Share Lesson Plan Link Button */}
               <button
+                type="button"
                 onClick={async (e) => {
+                  e.preventDefault();
                   e.stopPropagation(); // Prevent any event bubbling
+                  
+                  // Prevent any default button behavior
+                  if (isSharing) return;
+                  
                   try {
                     const url = await shareLesson(lessonNumber);
                     if (url) {
@@ -252,6 +263,7 @@ export function LessonDetailsModal({
                       });
                     }
                   } catch (error: any) {
+                    console.error('Share link error:', error);
                     toast.error(error.message || 'Failed to create share link', {
                       duration: 5000,
                     });
