@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Save, Trash2, Clock, MapPin, Repeat, FolderOpen, Check, InfoIcon, Pencil } from 'lucide-react';
+import { X, Plus, Save, Trash2, Clock, MapPin, Repeat, FolderOpen, Check, InfoIcon, Pencil, Share2, Download } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContextNew';
+import { useShareTimetable } from '../hooks/useShareTimetable';
+import toast from 'react-hot-toast';
 
 interface TimetableClass {
   id: string;
@@ -62,6 +64,7 @@ export function TimetableModal({
   className
 }: TimetableModalProps) {
   const { getThemeForClass } = useSettings();
+  const { shareTimetable, isSharing, shareUrl } = useShareTimetable();
   const [activeTab, setActiveTab] = useState<'add' | 'manage'>('add');
   const [editingClass, setEditingClass] = useState<TimetableClass | null>(null);
   const [newClass, setNewClass] = useState<TimetableClass>({
@@ -169,12 +172,62 @@ export function TimetableModal({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200"
-          >
-            <X className="h-6 w-6" />
-          </button>
+          <div className="flex items-center space-x-2">
+            {timetableClasses.length > 0 && (
+              <>
+                <button
+                  onClick={async () => {
+                    try {
+                      const url = await shareTimetable(timetableClasses, className);
+                      if (url) {
+                        // Open PDF in new tab for printing/downloading
+                        window.open(url, '_blank');
+                        toast.success('Timetable PDF ready! URL copied to clipboard.', {
+                          duration: 4000,
+                          icon: '🔗',
+                        });
+                      }
+                    } catch (error: any) {
+                      toast.error(error.message || 'Failed to create share link', {
+                        duration: 5000,
+                      });
+                    }
+                  }}
+                  disabled={isSharing}
+                  className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Share timetable as PDF link"
+                >
+                  {isSharing ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                      <span>Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="h-4 w-4" />
+                      <span>Share Link</span>
+                    </>
+                  )}
+                </button>
+                {shareUrl && (
+                  <button
+                    onClick={() => window.open(shareUrl, '_blank')}
+                    className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                    title="Open PDF in new tab for printing"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Print PDF</span>
+                  </button>
+                )}
+              </>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
