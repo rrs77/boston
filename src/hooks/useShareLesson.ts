@@ -227,38 +227,6 @@ export function useShareLesson() {
       const encodedHtml = encodeUnicodeBase64(htmlContent);
       const encodedFooter = encodeUnicodeBase64(footerContent);
 
-      // Generate PDF using PDFBolt API
-      const response = await fetch(PDFBOLT_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'API_KEY': PDFBOLT_API_KEY
-        },
-        body: JSON.stringify({
-          html: encodedHtml,
-          printBackground: true,
-          waitUntil: "networkidle",
-          format: "A4",
-          margin: {
-            "top": "15px",
-            "right": "20px",
-            "left": "20px",
-            "bottom": "55px"
-          },
-          displayHeaderFooter: true,
-          footerTemplate: encodedFooter,
-          headerTemplate: encodeUnicodeBase64(`<div></div>`)
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`PDFBolt API Error: ${response.status} - ${errorText}`);
-      }
-
-      // Get PDF blob
-      const pdfBlob = await response.blob();
-
       // Generate filename
       const getLessonDisplayNumber = (num: string): string => {
         const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
@@ -267,27 +235,44 @@ export function useShareLesson() {
       
       const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber);
       const timestamp = Date.now();
-      const fileName = `${timestamp}_${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
+      const fileName = `shared-pdfs/${timestamp}_${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
 
-      // Convert blob to base64 for Netlify function
-      const arrayBuffer = await pdfBlob.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-
-      // Upload via Netlify function to bypass RLS
-      const netlifyFunctionUrl = '/.netlify/functions/upload-pdf';
-      const uploadResponse = await fetch(netlifyFunctionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fileName,
-          fileData: base64
-        })
-      });
+      // Use Netlify function to generate PDF and upload (bypasses CORS)
+      // Use full URL in production, relative path in development
+      const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
+      const netlifyFunctionUrl = isProduction 
+        ? `${window.location.origin}/.netlify/functions/generate-pdf`
+        : '/.netlify/functions/generate-pdf';
+      
+      console.log('Generating PDF via Netlify function:', netlifyFunctionUrl);
+      
+      let uploadResponse;
+      try {
+        uploadResponse = await fetch(netlifyFunctionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            html: encodedHtml,
+            footerTemplate: encodedFooter,
+            fileName: fileName
+          })
+        });
+      } catch (fetchError: any) {
+        console.error('Network error calling Netlify function:', fetchError);
+        console.error('Function URL attempted:', netlifyFunctionUrl);
+        throw new Error(`Failed to connect to PDF generation service. This might be a network issue or the function may not be deployed. Please check Netlify function logs. Error: ${fetchError.message || 'Network error'}`);
+      }
 
       if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
+        let errorText;
+        try {
+          errorText = await uploadResponse.text();
+        } catch (textError) {
+          throw new Error(`Upload failed with status ${uploadResponse.status}. Unable to read error message.`);
+        }
+        
         let errorData;
         try {
           errorData = JSON.parse(errorText);
@@ -298,6 +283,11 @@ export function useShareLesson() {
         // If it's a server configuration error, provide helpful message
         if (errorData.error === 'Server configuration error' || uploadResponse.status === 500) {
           throw new Error('Server configuration error: Please ensure SUPABASE_SERVICE_ROLE_KEY is set in Netlify environment variables.');
+        }
+        
+        // If function not found
+        if (uploadResponse.status === 404) {
+          throw new Error('Upload function not found. Please ensure the Netlify function is deployed correctly.');
         }
         
         throw new Error(errorData.error || `Upload failed: ${uploadResponse.status}`);
