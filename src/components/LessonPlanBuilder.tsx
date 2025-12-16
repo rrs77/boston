@@ -63,11 +63,8 @@ export function LessonPlanBuilder({
     
     const yearGroup = customYearGroups.find(yg => yg.id === sheetId);
     if (yearGroup) {
-      const primaryKey = yearGroup.id || 
-        (yearGroup.name.toLowerCase().includes('lower') || yearGroup.name.toLowerCase().includes('lkg') ? 'LKG' :
-         yearGroup.name.toLowerCase().includes('upper') || yearGroup.name.toLowerCase().includes('ukg') ? 'UKG' :
-         yearGroup.name.toLowerCase().includes('reception') ? 'Reception' : yearGroup.name);
-      return [primaryKey];
+      // Use the year group ID directly - this should match what's in category.yearGroups
+      return [yearGroup.id];
     }
     return [];
   };
@@ -81,12 +78,16 @@ export function LessonPlanBuilder({
     }
     
     const primaryKey = yearGroupKeys[0];
-    return categories
+    
+    // Filter categories that are assigned to this year group
+    const filteredCategories = categories
       .filter(category => {
         if (!category.yearGroups || Object.keys(category.yearGroups).length === 0) {
+          // Categories without yearGroups assigned should not be shown
           return false;
         }
-        // Check for old defaults
+        
+        // Check for old defaults (LKG, UKG, Reception all true with only 3 keys)
         const hasOldDefaults = 
           category.yearGroups.LKG === true && 
           category.yearGroups.UKG === true && 
@@ -95,9 +96,13 @@ export function LessonPlanBuilder({
         if (hasOldDefaults) {
           return false;
         }
+        
+        // Check if this category is assigned to the current year group
         return category.yearGroups[primaryKey] === true;
       })
       .map(c => c.name);
+    
+    return filteredCategories;
   }, [categories, currentSheetInfo, customYearGroups]);
   
   // Initialize currentLessonPlan with a default value instead of null
