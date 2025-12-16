@@ -108,58 +108,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle static assets (JS, CSS, images, etc.) - but NOT navigation
-  // Navigation requests are already skipped above
-    // For HTTPS navigation, be more conservative to avoid SSL errors
-    if (url.protocol === 'https:') {
-      // Only cache if we have a successful response and it's not an error
-      event.respondWith(
-        fetch(request)
-          .then((response) => {
-            // Only cache successful responses (200-299)
-            if (response.status >= 200 && response.status < 300) {
-              const responseClone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(request, responseClone);
-              });
-            }
-            return response;
-          })
-          .catch((error) => {
-            // If network fails, try cache
-            return caches.match(request).then((cachedResponse) => {
-              if (cachedResponse) {
-                return cachedResponse;
-              }
-              // Fall back to offline page
-              return caches.match(OFFLINE_URL);
-            });
-          })
-      );
-    } else {
-      // For HTTP, use the original logic
-      event.respondWith(
-        fetch(request)
-          .then((response) => {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
-            return response;
-          })
-          .catch(() => {
-            return caches.match(request).then((cachedResponse) => {
-              if (cachedResponse) {
-                return cachedResponse;
-              }
-              return caches.match(OFFLINE_URL);
-            });
-          })
-      );
-    }
-    return;
-  }
-
   // Handle static assets (JS, CSS, images, fonts)
   if (
     request.destination === 'script' ||
