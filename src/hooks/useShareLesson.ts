@@ -5,7 +5,7 @@ import { supabase } from '../config/supabase';
 import { customObjectivesApi } from '../config/customObjectivesApi';
 import type { CustomObjective, CustomObjectiveArea, CustomObjectiveYearGroup } from '../types/customObjectives';
 
-const PDFBOLT_API_URL = 'https://api.pdfbolt.com/api/v1/generate';
+const PDFBOLT_API_URL = 'https://api.pdfbolt.com/v1/direct';
 const PDFBOLT_API_KEY = import.meta.env.VITE_PDFBOLT_API_KEY || '146bdd01-146f-43f8-92aa-26201c38aa11';
 
 export function useShareLesson() {
