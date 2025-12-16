@@ -46,6 +46,12 @@ export function LessonLibraryCard({
   onAssignToUnit,
   halfTerms = []
 }: LessonLibraryCardProps) {
+  // Safety check for lesson data - MUST be before any hooks to avoid React error #310
+  if (!lessonData) {
+    console.warn(`❌ LessonLibraryCard: No lesson data for lesson ${lessonNumber}`);
+    return null;
+  }
+
   // Debug console log
   // Debug logs removed to reduce console noise (was logging for every card on every render)
   // Uncomment below if you need to debug a specific issue:
@@ -73,12 +79,6 @@ export function LessonLibraryCard({
       return 0;
     }
   }, [lessonData]);
-
-  // Safety check for lesson data
-  if (!lessonData) {
-    console.warn(`❌ LessonLibraryCard: No lesson data for lesson ${lessonNumber}`);
-    return null;
-  }
 
   // Check if this is a user-created lesson
   const isUserCreated = lessonData.isUserCreated === true;
