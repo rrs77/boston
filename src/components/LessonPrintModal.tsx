@@ -768,9 +768,16 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
   };
 
   const handleShare = async () => {
+    // Prevent multiple simultaneous calls
+    if (isSharing || isSharingSingle) {
+      return;
+    }
+
     // For single lesson, use the useShareLesson hook
     if (exportMode === 'single' && lessonNumber) {
       try {
+        setIsSharing(true);
+        setShareSuccess(false);
         const url = await shareSingleLesson(lessonNumber);
         if (url) {
           setShareUrl(url);
@@ -789,9 +796,13 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
           }, 100);
         }
       } catch (error: any) {
+        console.error('Share error:', error);
+        setShareSuccess(false);
         toast.error(error.message || 'Failed to create share link', {
           duration: 5000,
         });
+      } finally {
+        setIsSharing(false);
       }
       return;
     }
