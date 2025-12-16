@@ -44,6 +44,9 @@ exports.handler = async (event, context) => {
     const PDFBOLT_API_URL = 'https://api.pdfbolt.com/v1/direct';
 
     // Generate PDF using PDFBolt API (server-side, bypasses CORS)
+    // Node 18+ has built-in fetch, but use node-fetch as fallback for compatibility
+    const fetch = require('node-fetch');
+
     const response = await fetch(PDFBOLT_API_URL, {
       method: 'POST',
       headers: {
