@@ -1114,7 +1114,9 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
               minHeight: 0,
               maxHeight: 'calc(90vh - 300px)',
               overflowY: 'auto',
-              overflowX: 'hidden'
+              overflowX: 'hidden',
+              backgroundColor: '#e5e7eb',
+              padding: '20px'
             }}
           >
             {/* Render each lesson as a separate page-like container */}
@@ -1156,10 +1158,13 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         minHeight: '297mm',
                         margin: '0 auto 40px auto',
                         background: 'white',
-                        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2), 0 0 1px rgba(0, 0, 0, 0.1)',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 30px rgba(0, 0, 0, 0.15)',
                         position: 'relative',
                         pageBreakAfter: lessonIndex < lessonsToRender.length - 1 ? 'always' : 'auto',
-                        breakAfter: lessonIndex < lessonsToRender.length - 1 ? 'page' : 'auto'
+                        breakAfter: lessonIndex < lessonsToRender.length - 1 ? 'page' : 'auto',
+                        border: '1px solid #d1d5db',
+                        padding: '1cm',
+                        boxSizing: 'border-box'
                       }}
                   >
                       {/* Page Header */}
@@ -1183,7 +1188,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         </div>
                       </div>
 
-                      {/* Lesson Content - Match PDF export structure exactly (no extra padding, .lesson-page already has 1cm padding) */}
+                      {/* Lesson Content - Match PDF export structure exactly (px-6 pt-3 pb-6 matches PDF) */}
                       <div className="px-6 pt-3 pb-6">
                         {/* Lesson Title */}
                         <div className="mb-3 border-b border-black pb-2">
