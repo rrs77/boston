@@ -44,7 +44,7 @@ exports.handler = async (event, context) => {
     const PDFBOLT_API_URL = 'https://api.pdfbolt.com/v1/direct';
 
     // Generate PDF using PDFBolt API (server-side, bypasses CORS)
-    // Node 18+ has built-in fetch, but use node-fetch as fallback for compatibility
+    // Use node-fetch for Node.js compatibility
     const fetch = require('node-fetch');
 
     const response = await fetch(PDFBOLT_API_URL, {
@@ -83,10 +83,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Get PDF blob
-    const pdfBlob = await response.blob();
-    const arrayBuffer = await pdfBlob.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    // Get PDF buffer (node-fetch returns buffer, not blob)
+    const pdfBuffer = await response.buffer();
 
     // Get Supabase credentials from environment variables
     const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://wiudrzdkbpyziaodqoog.supabase.co';
@@ -116,8 +114,8 @@ exports.handler = async (event, context) => {
     // Generate filename if not provided
     const storageFileName = fileName || `shared-pdfs/${Date.now()}_lesson.pdf`;
 
-    // Convert base64 to buffer
-    const fileBuffer = Buffer.from(base64, 'base64');
+    // Use the buffer directly (already a Buffer from response.buffer())
+    const fileBuffer = pdfBuffer;
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
