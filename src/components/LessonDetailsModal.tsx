@@ -43,7 +43,7 @@ export function LessonDetailsModal({
 }: LessonDetailsModalProps) {
   const { allLessonsData, updateLessonTitle, lessonStandards, deleteLesson } = useData();
   const { getCategoryColor } = useSettings();
-  const { shareLesson, isSharing } = useShareLesson();
+  const { shareLesson, isSharing, shareUrl } = useShareLesson();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [initialResource, setInitialResource] = useState<{url: string, title: string, type: string} | null>(null);
   const [showEyfsSelector, setShowEyfsSelector] = useState(false);
@@ -51,6 +51,7 @@ export function LessonDetailsModal({
   const [lessonTitleValue, setLessonTitleValue] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [localShareUrl, setLocalShareUrl] = useState<string | null>(null);
   
   // LinkViewer modal state
   const [showLinkViewer, setShowLinkViewer] = useState(false);
@@ -239,10 +240,12 @@ export function LessonDetailsModal({
               
               {/* Share Lesson Plan Link Button */}
               <button
-                onClick={async () => {
+                onClick={async (e) => {
+                  e.stopPropagation(); // Prevent any event bubbling
                   try {
                     const url = await shareLesson(lessonNumber);
                     if (url) {
+                      setLocalShareUrl(url);
                       toast.success('Share link created! URL copied to clipboard.', {
                         duration: 4000,
                         icon: '🔗',
@@ -258,14 +261,21 @@ export function LessonDetailsModal({
                 className={`p-2 rounded-lg transition-all duration-200 group flex items-center space-x-2 ${
                   isSharing 
                     ? 'bg-white bg-opacity-10 cursor-not-allowed' 
+                    : (localShareUrl || shareUrl)
+                    ? 'bg-green-500 hover:bg-green-600 bg-opacity-90'
                     : 'bg-white bg-opacity-20 hover:bg-opacity-30'
                 }`}
-                title={isSharing ? "Creating share link..." : "Share Lesson Plan Link"}
+                title={localShareUrl || shareUrl ? "Share link created!" : (isSharing ? "Creating share link..." : "Share Lesson Plan Link")}
               >
                 {isSharing ? (
                   <>
                     <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span className="text-sm font-medium">Sharing...</span>
+                  </>
+                ) : (localShareUrl || shareUrl) ? (
+                  <>
+                    <Check className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="text-sm font-medium">Link Created!</span>
                   </>
                 ) : (
                   <>

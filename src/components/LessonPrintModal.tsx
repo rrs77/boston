@@ -6,6 +6,8 @@ import { useSettings } from '../contexts/SettingsContextNew';
 import { customObjectivesApi } from '../config/customObjectivesApi';
 import type { CustomObjective, CustomObjectiveArea, CustomObjectiveYearGroup } from '../types/customObjectives';
 import { supabase } from '../config/supabase';
+import { useShareLesson } from '../hooks/useShareLesson';
+import toast from 'react-hot-toast';
 
 interface LessonPrintModalProps {
   lessonNumber?: string;
@@ -37,6 +39,7 @@ export function LessonPrintModal({
     getLessonDisplayTitle
   } = useData();
   const { getCategoryColor } = useSettings();
+  const { shareLesson: shareSingleLesson, isSharing: isSharingSingle } = useShareLesson();
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -757,8 +760,39 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
   };
 
   const handleShare = async () => {
+    // For single lesson, use the useShareLesson hook
+    if (exportMode === 'single' && lessonNumber) {
+      try {
+        const url = await shareSingleLesson(lessonNumber);
+        if (url) {
+          setShareUrl(url);
+          setShareSuccess(true);
+          toast.success('Share link created! URL copied to clipboard.', {
+            duration: 4000,
+            icon: '🔗',
+          });
+          
+          // Scroll to the share URL display area after a brief delay
+          setTimeout(() => {
+            const shareUrlElement = document.querySelector('[data-share-url]');
+            if (shareUrlElement) {
+              shareUrlElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 100);
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to create share link', {
+          duration: 5000,
+        });
+      }
+      return;
+    }
+
+    // For unit/half-term sharing, use custom implementation
     if (!PDFBOLT_API_KEY || PDFBOLT_API_KEY === 'd089165b-e1da-43bb-a7dc-625ce514ed1b') {
-      alert('Please set your PDFBolt API key in the environment variables (VITE_PDFBOLT_API_KEY)');
+      toast.error('Please set your PDFBolt API key in the environment variables (VITE_PDFBOLT_API_KEY)', {
+        duration: 5000,
+      });
       return;
     }
 
@@ -772,18 +806,12 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       if (!bucketCheck.exists) {
         const setupUrl = 'https://supabase.com/dashboard/project/wiudrzdkbpyziaodqoog/storage/buckets';
         const errorMsg = bucketCheck.requiresManualSetup
-          ? `The 'lesson-pdfs' storage bucket needs to be created.\n\n` +
-            `Quick Setup (2 minutes):\n` +
-            `1. Go to: ${setupUrl}\n` +
-            `2. Click "New bucket"\n` +
-            `3. Name: "lesson-pdfs"\n` +
-            `4. Enable "Public bucket"\n` +
-            `5. Click "Create bucket"\n\n` +
-            `Or use the automated script: node scripts/create-storage-bucket.js\n\n` +
-            `See QUICK_STORAGE_SETUP.md for more options.`
-          : `Storage bucket 'lesson-pdfs' does not exist. Please create it manually in Supabase Dashboard.\n\nError: ${bucketCheck.error || 'Unknown error'}\n\nGo to: ${setupUrl}`;
+          ? `The 'lesson-pdfs' storage bucket needs to be created.\n\nQuick Setup:\n1. Go to: ${setupUrl}\n2. Click "New bucket"\n3. Name: "lesson-pdfs"\n4. Enable "Public bucket"\n5. Click "Create bucket"`
+          : `Storage bucket 'lesson-pdfs' does not exist. Error: ${bucketCheck.error || 'Unknown error'}`;
         
-        alert(errorMsg);
+        toast.error(errorMsg, {
+          duration: 8000,
+        });
         throw new Error('Storage bucket not configured');
       }
 
@@ -897,7 +925,9 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       }
     } catch (error: any) {
       console.error('Share failed:', error);
-      alert(`Share failed: ${error.message}`);
+      toast.error(error.message || 'Failed to create share link', {
+        duration: 5000,
+      });
     } finally {
       setIsSharing(false);
     }
@@ -1015,10 +1045,10 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                 </button>
                 <button
                     onClick={handleShare}
-                    disabled={isExporting || isSharing}
+                    disabled={isExporting || isSharing || isSharingSingle}
                     className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:bg-teal-400"
                 >
-                  {isSharing ? (
+                  {(isSharing || isSharingSingle) ? (
                       <>
                         <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
                         <span>Sharing...</span>
