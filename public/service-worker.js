@@ -83,8 +83,8 @@ self.addEventListener('fetch', (event) => {
     return; // Don't intercept, let browser handle directly
   }
   
-  // Skip ALL navigation requests on HTTPS to prevent SSL protocol errors
-  // This is the safest approach - let browser handle all navigation
+  // Skip ALL navigation requests to prevent SSL protocol errors
+  // This is the safest approach - let browser handle all navigation directly
   if (request.mode === 'navigate') {
     return; // Don't intercept navigation requests - prevents SSL errors
   }
@@ -108,8 +108,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle navigation requests (pages) - but only if safe
-  if (request.mode === 'navigate') {
+  // Handle static assets (JS, CSS, images, etc.) - but NOT navigation
+  // Navigation requests are already skipped above
     // For HTTPS navigation, be more conservative to avoid SSL errors
     if (url.protocol === 'https:') {
       // Only cache if we have a successful response and it's not an error
