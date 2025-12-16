@@ -770,7 +770,7 @@ export function LessonPlannerCalendar({
       collect: (monitor) => ({
         isOver: monitor.isOver()
       })
-    }), [date, hour, className, getWeekNumber, onUpdateLessonPlan]);
+    }), [date, hour, className, getWeekNumber, onUpdateLessonPlan, handleTimeSlotClick, timetableClasses, units, theme, setSelectedDateWithPlans, setIsLessonSummaryOpen]);
 
     // Determine cell background color based on events
     let cellBgColor = 'bg-white';
