@@ -504,6 +504,12 @@ export function LessonPlanBuilder({
 
   // Filter and sort activities for the library
   const filteredAndSortedActivities = React.useMemo(() => {
+    // Safety check - ensure allActivities is an array
+    if (!allActivities || !Array.isArray(allActivities)) {
+      console.warn('📋 Lesson Builder: allActivities is not an array:', allActivities);
+      return [];
+    }
+    
     let filtered = allActivities.filter(activity => {
       const matchesSearch = activity.activity.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            activity.description.toLowerCase().includes(searchQuery.toLowerCase());
