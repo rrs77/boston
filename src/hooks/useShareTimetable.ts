@@ -200,7 +200,14 @@ export function useShareTimetable() {
   };
 
   // Copy to clipboard
+  // IMPORTANT: Native sharing (navigator.share) is intentionally disabled by design.
+  // This function ONLY copies to clipboard - no native share dialogs, no window.open, no auto-open.
   const copyToClipboard = async (text: string): Promise<boolean> => {
+    // Defensive guard: explicitly prevent native sharing
+    if ('share' in navigator) {
+      console.warn('Native share API detected but intentionally disabled - using clipboard only');
+    }
+    
     try {
       await navigator.clipboard.writeText(text);
       return true;
