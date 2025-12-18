@@ -144,7 +144,7 @@ export function LessonPlanBuilder({
         id: crypto.randomUUID(),
         date: new Date(),
         week: parseInt(editingLessonNumber),
-        className: currentSheetInfo.sheet,
+        className: currentSheetInfo?.sheet || '',
         activities: activities,
         duration: existingLesson.totalTime,
         notes: '',
@@ -202,7 +202,7 @@ export function LessonPlanBuilder({
     if (!editingLessonNumber) {
       generateNextLessonNumber();
     }
-  }, [allLessonsData, currentSheetInfo.sheet, editingLessonNumber]);
+  }, [allLessonsData, currentSheetInfo?.sheet, editingLessonNumber]);
 
   // Generate the next available lesson number
   const generateNextLessonNumber = () => {
@@ -433,7 +433,7 @@ export function LessonPlanBuilder({
         id: crypto.randomUUID(),
         date: new Date(),
         week: currentLessonPlan.week + 1, // Increment week number
-        className: currentSheetInfo.sheet,
+        className: currentSheetInfo?.sheet || '',
         activities: [],
         duration: 0,
         notes: '',
@@ -466,7 +466,7 @@ export function LessonPlanBuilder({
     
     // Find all user-created lesson plans for this class
     const classLessonPlans = userCreatedLessonPlans
-      .filter(plan => plan.className === currentSheetInfo.sheet)
+      .filter(plan => plan.className === currentSheetInfo?.sheet)
       .sort((a, b) => {
         // Sort by lesson number if available, otherwise by date
         if (a.lessonNumber && b.lessonNumber) {
