@@ -243,14 +243,14 @@ export function LessonDetailsModal({
                 <span className="text-sm font-medium">Export PDF</span>
               </button>
               
-              {/* Share Lesson Plan Link Button */}
-              <button
-                type="button"
+              {/* Copy Link Button - using div instead of button to prevent macOS share sheet */}
+              <div
                 onClick={async (e) => {
                   e.preventDefault();
-                  e.stopPropagation(); // Prevent any event bubbling
+                  e.stopPropagation();
+                  e.stopImmediatePropagation();
                   
-                  // Prevent any default button behavior
+                  // Prevent any default behavior
                   if (isSharing) return;
                   
                   try {
@@ -269,15 +269,33 @@ export function LessonDetailsModal({
                     });
                   }
                 }}
-                disabled={isSharing}
-                className={`p-2 rounded-lg transition-all duration-200 group flex items-center space-x-2 ${
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                role="button"
+                aria-label="Copy share link to clipboard"
+                className={`p-2 rounded-lg transition-all duration-200 group flex items-center space-x-2 cursor-pointer ${
                   isSharing 
-                    ? 'bg-white bg-opacity-10 cursor-not-allowed' 
+                    ? 'bg-white bg-opacity-10 cursor-not-allowed opacity-50' 
                     : (localShareUrl || shareUrl)
                     ? 'bg-green-500 hover:bg-green-600 bg-opacity-90'
                     : 'bg-white bg-opacity-20 hover:bg-opacity-30'
                 }`}
-                title={localShareUrl || shareUrl ? "Share link created!" : (isSharing ? "Creating share link..." : "Share Lesson Plan Link")}
+                title={localShareUrl || shareUrl ? "Link created!" : (isSharing ? "Copying link..." : "Copy link to clipboard")}
+                style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isSharing) {
+                      // Trigger the click handler
+                      const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+                      (e.target as HTMLElement).dispatchEvent(clickEvent);
+                    }
+                  }
+                }}
               >
                 {isSharing ? (
                   <>
@@ -287,15 +305,15 @@ export function LessonDetailsModal({
                 ) : (localShareUrl || shareUrl) ? (
                   <>
                     <Check className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-                    <span className="text-sm font-medium">Link Created!</span>
+                    <span className="text-sm font-medium">Copied!</span>
                   </>
                 ) : (
                   <>
-                    <Share2 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-                    <span className="text-sm font-medium">Share Link</span>
+                    <Link2 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="text-sm font-medium">Copy Link</span>
                   </>
                 )}
-              </button>
+              </div>
               
               <button
                 onClick={onClose}
