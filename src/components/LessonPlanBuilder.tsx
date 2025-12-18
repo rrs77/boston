@@ -56,6 +56,18 @@ export function LessonPlanBuilder({
   const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks } = useData();
   const { categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   
+  // Early return if essential data is not loaded
+  if (!currentSheetInfo || !categories || !Array.isArray(categories) || !Array.isArray(allActivities)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading lesson builder...</p>
+        </div>
+      </div>
+    );
+  }
+  
   // Get categories assigned to current year group
   const getCurrentYearGroupKeys = (): string[] => {
     const sheetId = currentSheetInfo?.sheet;
