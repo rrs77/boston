@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, X, Check, Tag, ChevronDown, Share2, Copy } from 'lucide-react';
+import { Download, X, Check, Tag, ChevronDown, Share2, Copy, Link2 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { Activity } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
@@ -1099,18 +1099,35 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                       </>
                   )}
                 </button>
-                <button
-                    type="button"
-                    onClick={(e) => {
+                <div 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    if (!isExporting && !isSharing && !isSharingSingle) {
+                      handleShare(e as any);
+                    }
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  role="button"
+                  aria-label="Copy share link to clipboard"
+                  className={`px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 cursor-pointer ${
+                    isExporting || isSharing || isSharingSingle ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       e.stopPropagation();
-                      handleShare(e);
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                    }}
-                    disabled={isExporting || isSharing || isSharingSingle}
-                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:bg-teal-400"
+                      if (!isExporting && !isSharing && !isSharingSingle) {
+                        handleShare(e as any);
+                      }
+                    }
+                  }}
                 >
                   {(isSharing || isSharingSingle) ? (
                       <>
@@ -1124,7 +1141,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                       </>
                   ) : (
                       <>
-                        <Share2 className="h-4 w-4" aria-hidden="true" />
+                        <Link2 className="h-4 w-4" aria-hidden="true" />
                         <span>Copy Link</span>
                       </>
                   )}

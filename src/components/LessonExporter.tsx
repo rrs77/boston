@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, FileText, File, Printer, X, Check, ChevronDown, ChevronUp, Tag, Share2, Copy } from 'lucide-react';
+import { Download, FileText, File, Printer, X, Check, ChevronDown, ChevronUp, Tag, Share2, Copy, Link2 } from 'lucide-react';
 import { supabase } from '../config/supabase';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
@@ -424,36 +424,53 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
                   </>
                 )}
               </button>
-              <button
-                type="button"
+              <div
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  handleShare(e);
+                  e.stopImmediatePropagation();
+                  if (!isExporting && !isSharing) {
+                    handleShare(e as any);
+                  }
                 }}
                 onMouseDown={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                 }}
-                disabled={isExporting || isSharing}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:bg-teal-400"
+                role="button"
+                aria-label="Copy share link to clipboard"
+                className={`px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 cursor-pointer ${
+                  isExporting || isSharing ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+                style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isExporting && !isSharing) {
+                      handleShare(e as any);
+                    }
+                  }
+                }}
               >
                 {isSharing ? (
                   <>
                     <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    <span>Sharing...</span>
+                    <span>Copying...</span>
                   </>
                 ) : shareSuccess ? (
                   <>
                     <Check className="h-4 w-4" />
-                    <span>Shared!</span>
+                    <span>Copied!</span>
                   </>
                 ) : (
                   <>
-                    <Share2 className="h-4 w-4" />
-                    <span>Share Link</span>
+                    <Link2 className="h-4 w-4" />
+                    <span>Copy Link</span>
                   </>
                 )}
-              </button>
+              </div>
             </div>
             {shareUrl && shareSuccess && (
               <div className="mt-3 p-3 bg-teal-50 border border-teal-200 rounded-lg">
