@@ -183,7 +183,12 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
     }
   };
 
-  const handleShare = async () => {
+  const handleShare = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     setIsSharing(true);
     setShareUrl(null);
     setShareSuccess(false);
@@ -266,9 +271,11 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
       const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
       // Upload via Netlify function to bypass RLS
+      // Use helper to route through Netlify subdomain on custom domains (fixes SSL issues)
       const timestamp = Date.now();
       const netlifyFileName = `${timestamp}_${fileName}`;
-      const netlifyFunctionUrl = '/.netlify/functions/upload-pdf';
+      const { getNetlifyFunctionUrl } = await import('../utils/netlifyFunctions');
+      const netlifyFunctionUrl = getNetlifyFunctionUrl('/.netlify/functions/upload-pdf');
       const uploadResponse = await fetch(netlifyFunctionUrl, {
         method: 'POST',
         headers: {
@@ -294,21 +301,11 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
       setShareUrl(publicUrl);
       setShareSuccess(true);
 
-      // Try to use Web Share API if available, otherwise copy to clipboard
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: fileName,
-            text: `Check out this lesson plan: ${fileName}`,
-            url: publicUrl
-          });
-        } catch (shareError: any) {
-          if (shareError.name !== 'AbortError') {
-            await copyToClipboard(publicUrl);
-          }
-        }
-      } else {
-        await copyToClipboard(publicUrl);
+      // Copy to clipboard directly (no Web Share API dialog)
+      const clipboardSuccess = await copyToClipboard(publicUrl);
+      
+      if (!clipboardSuccess) {
+        throw new Error('Failed to copy URL to clipboard. Please copy it manually from the URL shown.');
       }
     } catch (error: any) {
       console.error('Share failed:', error);
@@ -428,7 +425,15 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
                 )}
               </button>
               <button
-                onClick={handleShare}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleShare(e);
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                }}
                 disabled={isExporting || isSharing}
                 className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:bg-teal-400"
               >

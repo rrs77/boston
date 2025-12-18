@@ -261,10 +261,9 @@ export function useShareTimetable() {
       const fileName = `shared-pdfs/${timestamp}_${sanitizedClassName}_Timetable.pdf`;
 
       // Use Netlify function to generate PDF and upload (bypasses CORS)
-      const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
-      const netlifyFunctionUrl = isProduction 
-        ? `${window.location.origin}/.netlify/functions/generate-pdf`
-        : '/.netlify/functions/generate-pdf';
+      // Use helper to route through Netlify subdomain on custom domains (fixes SSL issues)
+      const { getNetlifyFunctionUrl } = await import('../utils/netlifyFunctions');
+      const netlifyFunctionUrl = getNetlifyFunctionUrl('/.netlify/functions/generate-pdf');
       
       console.log('Generating timetable PDF via Netlify function:', netlifyFunctionUrl);
       

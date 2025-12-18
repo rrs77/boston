@@ -58,7 +58,7 @@ export function LessonLibraryCard({
   // console.log('LessonLibraryCard:', lessonNumber, { hasOnEdit: !!onEdit, halfTermsCount: halfTerms?.length });
 
   const { getCategoryColor } = useSettings();
-  const { shareLesson, isSharing, shareUrl } = useShareLesson();
+  const { shareLesson, isSharing, shareUrl, getStoredShareUrl } = useShareLesson();
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
   const [localShareUrl, setLocalShareUrl] = useState<string | null>(null);
@@ -118,16 +118,32 @@ export function LessonLibraryCard({
   };
 
   const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     
     try {
+      // Check if URL already exists in localStorage before calling shareLesson
+      // This allows us to show the right message (retrieved vs created)
+      const storedUrl = getStoredShareUrl ? getStoredShareUrl(lessonNumber) : null;
+      const wasStored = !!storedUrl;
+      
+      // shareLesson will check localStorage internally and return immediately if found
+      // No PDF generation will happen if URL exists in localStorage
       const url = await shareLesson(lessonNumber);
       if (url) {
         setLocalShareUrl(url);
-        toast.success('Share link created! URL copied to clipboard.', {
-          duration: 4000,
-          icon: '🔗',
-        });
+        
+        if (wasStored) {
+          toast.success('Share link retrieved! URL copied to clipboard.', {
+            duration: 4000,
+            icon: '🔗',
+          });
+        } else {
+          toast.success('Share link created! URL copied to clipboard.', {
+            duration: 4000,
+            icon: '🔗',
+          });
+        }
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to create share link', {
@@ -171,7 +187,15 @@ export function LessonLibraryCard({
             <div className="flex items-center space-x-1">
               {/* Share button - always available */}
               <button
-                onClick={handleShare}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleShare(e);
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                }}
                 disabled={isSharing}
                 className={`p-2 rounded-button shadow-soft hover:shadow-hover flex items-center space-x-1 transition-all ${
                   isSharing 
@@ -194,8 +218,8 @@ export function LessonLibraryCard({
                   </>
                 ) : (
                   <>
-                    <Share2 className="h-3 w-3" />
-                    <span className="text-xs">Share</span>
+                    <Share2 className="h-3 w-3" aria-hidden="true" />
+                    <span className="text-xs">Copy Link</span>
                   </>
                 )}
               </button>
@@ -310,7 +334,15 @@ export function LessonLibraryCard({
           <div className="absolute top-2 right-2 flex items-center space-x-2">
             {/* Share button - always available */}
             <button
-              onClick={handleShare}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleShare(e);
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+              }}
               disabled={isSharing}
               className={`p-2 rounded-lg shadow-sm flex items-center space-x-1 ${
                 isSharing 
@@ -333,8 +365,8 @@ export function LessonLibraryCard({
                 </>
               ) : (
                 <>
-                  <Share2 className="h-4 w-4" />
-                  <span className="text-xs">Share</span>
+                  <Share2 className="h-4 w-4" aria-hidden="true" />
+                  <span className="text-xs">Copy Link</span>
                 </>
               )}
             </button>

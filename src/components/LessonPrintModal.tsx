@@ -767,49 +767,60 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
     }
   };
 
-  const handleShare = async () => {
+  const handleShare = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevent default behavior and event propagation
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     // Prevent multiple simultaneous calls
     if (isSharing || isSharingSingle) {
       return;
     }
 
     // For single lesson, use the useShareLesson hook
+    // The hook already checks localStorage internally and will reuse existing URLs
     if (exportMode === 'single' && lessonNumber) {
       try {
-        // Check if we already have a stored URL
+        // Check if URL already exists in localStorage before calling shareSingleLesson
+        // This allows us to show the right message (retrieved vs created)
         const storedUrl = getStoredShareUrl ? getStoredShareUrl(lessonNumber) : null;
-        if (storedUrl) {
-          // Use existing URL
-          setShareUrl(storedUrl);
-          setShareSuccess(true);
-          const clipboardSuccess = await copyToClipboard(storedUrl);
-          if (clipboardSuccess) {
-            toast.success('Share link retrieved! URL copied to clipboard.', {
-              duration: 4000,
-              icon: '🔗',
-            });
-          }
-          return;
+        const wasStored = !!storedUrl;
+        
+        // Only set loading state if we're actually generating a new PDF
+        if (!wasStored) {
+          setIsSharing(true);
+          setShareSuccess(false);
         }
         
-        setIsSharing(true);
-        setShareSuccess(false);
+        // shareSingleLesson will check localStorage internally and return immediately if found
         const url = await shareSingleLesson(lessonNumber);
         if (url) {
           setShareUrl(url);
           setShareSuccess(true);
-          toast.success('Share link created! URL copied to clipboard.', {
-            duration: 4000,
-            icon: '🔗',
-          });
           
-          // Scroll to the share URL display area after a brief delay
-          setTimeout(() => {
-            const shareUrlElement = document.querySelector('[data-share-url]');
-            if (shareUrlElement) {
-              shareUrlElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-          }, 100);
+          if (wasStored) {
+            // URL was retrieved from localStorage - no PDF generation happened
+            toast.success('Share link retrieved! URL copied to clipboard.', {
+              duration: 4000,
+              icon: '🔗',
+            });
+          } else {
+            // New PDF was generated
+            toast.success('Share link created! URL copied to clipboard.', {
+              duration: 4000,
+              icon: '🔗',
+            });
+            
+            // Scroll to the share URL display area after a brief delay
+            setTimeout(() => {
+              const shareUrlElement = document.querySelector('[data-share-url]');
+              if (shareUrlElement) {
+                shareUrlElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+            }, 100);
+          }
         }
       } catch (error: any) {
         console.error('Share error:', error);
@@ -819,6 +830,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         });
       } finally {
         setIsSharing(false);
+        setIsSharingSingle(false);
       }
       return;
     }
@@ -904,7 +916,9 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
       // Upload via Netlify function to bypass RLS
-      const netlifyFunctionUrl = '/.netlify/functions/upload-pdf';
+      // Use helper to route through Netlify subdomain on custom domains (fixes SSL issues)
+      const { getNetlifyFunctionUrl } = await import('../utils/netlifyFunctions');
+      const netlifyFunctionUrl = getNetlifyFunctionUrl('/.netlify/functions/upload-pdf');
       const uploadResponse = await fetch(netlifyFunctionUrl, {
         method: 'POST',
         headers: {
@@ -1086,7 +1100,15 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                   )}
                 </button>
                 <button
-                    onClick={handleShare}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleShare(e);
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                    }}
                     disabled={isExporting || isSharing || isSharingSingle}
                     className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:bg-teal-400"
                 >
@@ -1102,8 +1124,8 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                       </>
                   ) : (
                       <>
-                        <Share2 className="h-4 w-4" />
-                        <span>Share Lesson Plan Link</span>
+                        <Share2 className="h-4 w-4" aria-hidden="true" />
+                        <span>Copy Link</span>
                       </>
                   )}
                 </button>

@@ -1117,6 +1117,41 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
         sample: categoriesForSupabase.slice(0, 3).map(c => ({ name: c.name, yearGroups: c.yearGroups }))
       });
       
+      // Also check for categories in Supabase that should be deleted
+      // (custom categories that are no longer in the current list)
+      if (isSupabaseConfigured() && dataLoadedFromSupabase.current) {
+        try {
+          const supabaseCategories = await customCategoriesApi.getAll();
+          const currentCategoryNames = new Set(categoriesToSave.map(c => c.name));
+          
+          // Find custom categories in Supabase that are no longer in the current list
+          const categoriesToDelete = supabaseCategories
+            .filter(supabaseCat => {
+              const isFixed = FIXED_CATEGORIES.some(fixed => fixed.name === supabaseCat.name);
+              const isInCurrentList = currentCategoryNames.has(supabaseCat.name);
+              // Delete if it's a custom category (not fixed) and not in current list
+              return !isFixed && !isInCurrentList;
+            })
+            .map(cat => cat.name);
+          
+          if (categoriesToDelete.length > 0) {
+            console.log('🗑️ Deleting categories from Supabase that are no longer in the list:', categoriesToDelete);
+            // Delete each category
+            for (const categoryName of categoriesToDelete) {
+              try {
+                await customCategoriesApi.delete(categoryName);
+                console.log('✅ Deleted category from Supabase:', categoryName);
+              } catch (deleteError) {
+                console.error('❌ Failed to delete category from Supabase:', categoryName, deleteError);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error checking for categories to delete:', error);
+          // Continue with save even if delete check fails
+        }
+      }
+      
       // Queue Supabase save
       queueSave('categories', categoriesForSupabase);
     } else {

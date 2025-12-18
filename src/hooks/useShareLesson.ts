@@ -475,17 +475,25 @@ export function useShareLesson() {
       return null;
     }
 
-    // Check if we already have a stored URL for this lesson
+    // Check if we already have a stored URL for this lesson FIRST
+    // If it exists, just copy it to clipboard and return immediately - no PDF generation needed
     const storedUrl = getStoredShareUrl(lessonNumber);
     if (storedUrl) {
+      console.log('✅ Found stored share URL for lesson', lessonNumber, '- reusing existing link');
       // Copy existing URL to clipboard
       const clipboardSuccess = await copyToClipboard(storedUrl);
       if (clipboardSuccess) {
         setShareUrl(storedUrl);
+        // Don't set isSharing to true - we're just retrieving, not generating
         return storedUrl;
+      } else {
+        console.warn('⚠️ Failed to copy stored URL to clipboard, will generate new one');
+        // If clipboard copy fails, continue to generate new PDF
       }
     }
 
+    // Only proceed with PDF generation if no stored URL exists
+    console.log('🔄 No stored URL found for lesson', lessonNumber, '- generating new PDF');
     setIsSharing(true);
     setShareUrl(null);
     setShareError(null);
@@ -520,11 +528,9 @@ export function useShareLesson() {
       const fileName = `shared-pdfs/${timestamp}_${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
 
       // Use Netlify function to generate PDF and upload (bypasses CORS)
-      // Use full URL in production, relative path in development
-      const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
-      const netlifyFunctionUrl = isProduction 
-        ? `${window.location.origin}/.netlify/functions/generate-pdf`
-        : '/.netlify/functions/generate-pdf';
+      // Use helper to route through Netlify subdomain on custom domains (fixes SSL issues)
+      const { getNetlifyFunctionUrl } = await import('../utils/netlifyFunctions');
+      const netlifyFunctionUrl = getNetlifyFunctionUrl('/.netlify/functions/generate-pdf');
       
       console.log('Generating PDF via Netlify function:', netlifyFunctionUrl);
       

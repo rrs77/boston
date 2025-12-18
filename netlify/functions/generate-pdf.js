@@ -1,15 +1,18 @@
 const { createClient } = require('@supabase/supabase-js');
 
+// CORS headers helper
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+};
+
 exports.handler = async (event, context) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests (OPTIONS)
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
-      },
+      headers: corsHeaders,
       body: ''
     };
   }
@@ -19,9 +22,13 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 405,
       headers: {
-        'Access-Control-Allow-Origin': '*'
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ error: 'Method not allowed' })
+      body: JSON.stringify({ 
+        error: 'Method not allowed',
+        allowedMethods: ['POST', 'OPTIONS']
+      })
     };
   }
 
@@ -32,8 +39,8 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 400,
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ error: 'Missing html content' })
       };
@@ -76,8 +83,8 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 500,
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ error: `PDFBolt API Error: ${response.status} - ${errorText}` })
       };
@@ -95,8 +102,8 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 500,
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
           error: 'Server configuration error: SUPABASE_SERVICE_ROLE_KEY environment variable is not set in Netlify.'
@@ -130,8 +137,8 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 500,
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ error: `Upload failed: ${error.message}` })
       };
@@ -145,8 +152,8 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         success: true,
@@ -159,8 +166,8 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ 
         error: error.message || 'Internal server error'

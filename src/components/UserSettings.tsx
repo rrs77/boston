@@ -5,6 +5,8 @@ import { DataSourceSettings } from './DataSourceSettings';
 import { CustomObjectivesAdmin } from './CustomObjectivesAdmin';
 import { ActivityPacksAdmin } from './ActivityPacksAdmin';
 import { useAuth } from '../hooks/useAuth';
+import { isSupabaseConfigured } from '../config/supabase';
+import { customCategoriesApi } from '../config/api';
 
 interface UserSettingsProps {
   isOpen: boolean;
@@ -223,14 +225,39 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
       try {
         // Start user change to pause real-time sync
         startUserChange();
-      const updatedCategories = tempCategories.filter((_, i) => i !== index);
-      // Update positions
-      updatedCategories.forEach((cat, i) => {
-        cat.position = i;
-      });
-      setTempCategories(updatedCategories);
         
-        // Immediately persist changes
+        const categoryToDelete = tempCategories[index];
+        const updatedCategories = tempCategories.filter((_, i) => i !== index);
+        
+        // Update positions
+        updatedCategories.forEach((cat, i) => {
+          cat.position = i;
+        });
+        setTempCategories(updatedCategories);
+        
+        // Check if this is a custom category (not in FIXED_CATEGORIES)
+        // FIXED_CATEGORIES are: Welcome, Kodaly Songs, Kodaly Action Songs, Action/Games Songs, 
+        // Rhythm Sticks, Scarf Songs, General Game, Core Songs, Parachute Games, Percussion Games,
+        // Teaching Units, Goodbye, Kodaly Rhythms, Kodaly Games, IWB Games
+        const FIXED_CATEGORY_NAMES = [
+          'Welcome', 'Kodaly Songs', 'Kodaly Action Songs', 'Action/Games Songs', 'Rhythm Sticks',
+          'Scarf Songs', 'General Game', 'Core Songs', 'Parachute Games', 'Percussion Games',
+          'Teaching Units', 'Goodbye', 'Kodaly Rhythms', 'Kodaly Games', 'IWB Games'
+        ];
+        const isCustomCategory = !FIXED_CATEGORY_NAMES.includes(categoryToDelete.name);
+        
+        // Explicitly delete from Supabase if it's a custom category
+        if (isCustomCategory && isSupabaseConfigured()) {
+          try {
+            await customCategoriesApi.delete(categoryToDelete.name);
+            console.log('✅ Deleted category from Supabase:', categoryToDelete.name);
+          } catch (deleteError) {
+            console.error('❌ Failed to delete category from Supabase:', deleteError);
+            // Continue anyway - the category will be removed from local state
+          }
+        }
+        
+        // Immediately persist changes (this will also trigger the save logic)
         console.log('🔄 Deleting category and persisting immediately');
         await updateCategories(updatedCategories);
         
