@@ -163,7 +163,7 @@ export function LessonPlanBuilder({
       id: crypto.randomUUID(),
       date: new Date(),
       week: 1,
-      className: currentSheetInfo.sheet,
+      className: currentSheetInfo?.sheet || '',
       activities: [],
       duration: 0,
       notes: '',
