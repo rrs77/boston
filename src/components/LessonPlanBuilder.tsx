@@ -73,6 +73,10 @@ export function LessonPlanBuilder({
     const sheetId = currentSheetInfo?.sheet;
     if (!sheetId) return [];
     
+    if (!customYearGroups || !Array.isArray(customYearGroups)) {
+      return [];
+    }
+    
     const yearGroup = customYearGroups.find(yg => yg.id === sheetId);
     if (yearGroup) {
       // Use the year group ID directly - this should match what's in category.yearGroups
