@@ -202,7 +202,7 @@ export function ActivityDetails({
     if (isEditMode && !isReadOnly) {
       return (
         <RichTextEditor
-          value={editedActivity.description}
+          value={editedActivity.description || ''}
           onChange={(value) => setEditedActivity(prev => ({ ...prev, description: value }))}
           placeholder="Enter activity description..."
           minHeight="150px"
@@ -218,6 +218,15 @@ export function ActivityDetails({
           dangerouslySetInnerHTML={{ __html: activity.htmlDescription }}
           dir="ltr"
         />
+      );
+    }
+    
+    // Safety check - ensure description exists
+    if (!activity.description) {
+      return (
+        <div className="text-gray-500 italic">
+          No description available.
+        </div>
       );
     }
     
