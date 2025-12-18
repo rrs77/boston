@@ -62,6 +62,12 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // CRITICAL: Skip ALL navigation requests FIRST to prevent SSL protocol errors
+  // Navigation requests must be handled by the browser directly, not the service worker
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    return; // Don't intercept - let browser handle directly
+  }
+
   // Skip non-GET requests
   if (request.method !== 'GET') {
     return;
@@ -83,10 +89,12 @@ self.addEventListener('fetch', (event) => {
     return; // Don't intercept, let browser handle directly
   }
   
-  // Skip ALL navigation requests to prevent SSL protocol errors
-  // This is the safest approach - let browser handle all navigation directly
-  if (request.mode === 'navigate') {
-    return; // Don't intercept navigation requests - prevents SSL errors
+  // Skip HTTPS/SSL related requests - let browser handle
+  if (url.protocol === 'https:' && (request.mode === 'cors' || request.credentials === 'include')) {
+    // Only intercept if it's a static asset from our origin
+    if (url.origin !== self.location.origin) {
+      return;
+    }
   }
 
   // Skip Supabase API calls (always try network)
