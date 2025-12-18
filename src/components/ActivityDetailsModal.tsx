@@ -10,7 +10,18 @@ interface ActivityDetailsModalProps {
 }
 
 export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: ActivityDetailsModalProps) {
-  if (!isOpen || !activity) return null;
+  if (!isOpen || !activity) {
+    console.log('ActivityDetailsModal: Not rendering', { isOpen, hasActivity: !!activity });
+    return null;
+  }
+  
+  console.log('ActivityDetailsModal: Rendering', { 
+    activityName: activity.activity, 
+    category: activity.category,
+    hasDescription: !!activity.description,
+    hasActivityText: !!activity.activityText,
+    hasResources: !!(activity.videoLink || activity.musicLink || activity.backingLink || activity.resourceLink || activity.link || activity.imageLink)
+  });
 
   // Format description with line breaks
   const formatDescription = (text: string) => {
