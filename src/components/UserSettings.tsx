@@ -253,12 +253,14 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
 
   const handleDragOver = (e: React.DragEvent, targetCategory: string) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!draggedCategory || draggedCategory === targetCategory) return;
     
     const draggedIndex = tempCategories.findIndex(cat => cat.name === draggedCategory);
     const targetIndex = tempCategories.findIndex(cat => cat.name === targetCategory);
     
     if (draggedIndex === -1 || targetIndex === -1) return;
+    if (draggedIndex === targetIndex) return; // Already in position
     
     // Reorder categories
     const newCategories = [...tempCategories];
@@ -271,7 +273,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     });
     
     setTempCategories(newCategories);
-    updateCategories(newCategories);
+    // Don't call updateCategories here - only on drop to avoid too many updates
   };
 
   const handleDragEnd = () => {
@@ -1422,11 +1424,12 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                         onDragStart={() => !bulkYearGroupMode && handleDragStart(category.name)}
                         onDragOver={(e) => !bulkYearGroupMode && handleDragOver(e, category.name)}
                         onDrop={(e) => !bulkYearGroupMode && handleDrop(e, category.name)}
+                        onDragEnd={handleDragEnd}
                         className={`p-3 rounded-lg transition-colors duration-200 ${
-                          draggedCategory === category.name ? 'bg-teal-50 border-teal-300' : 
+                          draggedCategory === category.name ? 'bg-teal-50 border-teal-300 opacity-50 cursor-move' : 
                           bulkYearGroupMode && selectedCategoriesForBulk.has(category.name) ? 'bg-teal-100 border-teal-300 border-2' :
                           'bg-gray-50 hover:bg-gray-100'
-                        }`}
+                        } ${!bulkYearGroupMode ? 'cursor-move' : ''}`}
                       >
                         {isEditing ? (
                           <div className="flex flex-col space-y-3">

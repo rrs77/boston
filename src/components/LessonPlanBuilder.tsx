@@ -526,15 +526,23 @@ export function LessonPlanBuilder({
       return [];
     }
     
+    console.log('📋 Lesson Builder: Filtering activities', {
+      totalActivities: allActivities.length,
+      availableCategoriesForYearGroup: availableCategoriesForYearGroup.length,
+      selectedCategory,
+      searchQuery
+    });
+    
     let filtered = allActivities.filter(activity => {
-      const matchesSearch = activity.activity.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           activity.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = searchQuery === '' || 
+        activity.activity.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        activity.description.toLowerCase().includes(searchQuery.toLowerCase());
       
       // Filter by category assignment to year group
-      // If no categories are available for year group, show all activities
-      // Otherwise, only show activities from available categories
+      // If categories are available for year group, only show activities from those categories
+      // Otherwise, show all activities (fallback to show everything)
       const matchesYearGroupCategory = availableCategoriesForYearGroup.length === 0 
-        ? true 
+        ? true  // If no categories assigned, show all activities
         : availableCategoriesForYearGroup.includes(activity.category);
       
       // Filter by selected category if one is chosen
@@ -543,7 +551,18 @@ export function LessonPlanBuilder({
       // Level filtering removed - show all levels
       const matchesLevel = true;
       
-      return matchesSearch && matchesYearGroupCategory && matchesCategory && matchesLevel;
+      const matches = matchesSearch && matchesYearGroupCategory && matchesCategory && matchesLevel;
+      
+      if (!matches && matchesSearch && matchesCategory) {
+        console.log(`❌ Activity "${activity.activity}" filtered out - category "${activity.category}" not in available categories:`, availableCategoriesForYearGroup);
+      }
+      
+      return matches;
+    });
+    
+    console.log('📋 Lesson Builder: Filtered activities result', {
+      filteredCount: filtered.length,
+      totalCount: allActivities.length
     });
 
     // Sort activities
@@ -716,6 +735,7 @@ export function LessonPlanBuilder({
                       placeholder="All Categories"
                       className="flex-1 px-3 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent text-sm truncate font-semibold"
                       dropdownBackgroundColor="#D6F2EE"
+                      showAllCategories={true}
                     />
                   </div>
                   
