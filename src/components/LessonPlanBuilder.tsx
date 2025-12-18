@@ -71,6 +71,12 @@ export function LessonPlanBuilder({
   
   // Get categories available for current year group
   const availableCategoriesForYearGroup = React.useMemo(() => {
+    // Safety check - ensure categories array exists
+    if (!categories || categories.length === 0) {
+      console.warn('📋 Lesson Builder: No categories available');
+      return [];
+    }
+    
     const yearGroupKeys = getCurrentYearGroupKeys();
     if (yearGroupKeys.length === 0) {
       // If no year group selected, show all categories
@@ -89,7 +95,7 @@ export function LessonPlanBuilder({
     // Filter categories that are assigned to this year group
     const filteredCategories = categories
       .filter(category => {
-        if (!category.yearGroups || Object.keys(category.yearGroups).length === 0) {
+        if (!category || !category.yearGroups || Object.keys(category.yearGroups).length === 0) {
           // Categories without yearGroups assigned should not be shown
           return false;
         }
