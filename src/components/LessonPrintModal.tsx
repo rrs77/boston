@@ -39,7 +39,7 @@ export function LessonPrintModal({
     getLessonDisplayTitle
   } = useData();
   const { getCategoryColor } = useSettings();
-  const { shareLesson: shareSingleLesson, isSharing: isSharingSingle } = useShareLesson();
+  const { shareLesson: shareSingleLesson, isSharing: isSharingSingle, getStoredShareUrl } = useShareLesson();
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -776,6 +776,22 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
     // For single lesson, use the useShareLesson hook
     if (exportMode === 'single' && lessonNumber) {
       try {
+        // Check if we already have a stored URL
+        const storedUrl = getStoredShareUrl ? getStoredShareUrl(lessonNumber) : null;
+        if (storedUrl) {
+          // Use existing URL
+          setShareUrl(storedUrl);
+          setShareSuccess(true);
+          const clipboardSuccess = await copyToClipboard(storedUrl);
+          if (clipboardSuccess) {
+            toast.success('Share link retrieved! URL copied to clipboard.', {
+              duration: 4000,
+              icon: '🔗',
+            });
+          }
+          return;
+        }
+        
         setIsSharing(true);
         setShareSuccess(false);
         const url = await shareSingleLesson(lessonNumber);
