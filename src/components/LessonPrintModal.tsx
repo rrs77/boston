@@ -924,24 +924,23 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         }
       }, 100);
 
-      // Try to use Web Share API if available, otherwise copy to clipboard
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: fileName,
-            text: `Check out this lesson plan: ${fileName}`,
-            url: publicUrl
-          });
-        } catch (shareError: any) {
-          // User cancelled or error occurred, fall back to copying URL
-          if (shareError.name !== 'AbortError') {
-            await copyToClipboard(publicUrl);
-          }
-        }
-      } else {
-        // Fall back to copying URL to clipboard
-        await copyToClipboard(publicUrl);
+      // Copy to clipboard directly (no Web Share API dialog)
+      const clipboardSuccess = await copyToClipboard(publicUrl);
+      
+      if (!clipboardSuccess) {
+        throw new Error('Failed to copy URL to clipboard. Please copy it manually from the URL shown.');
       }
+      
+      // Store the URL for future retrieval
+      try {
+        localStorage.setItem(`share-url-unit-${unitId || halfTermId || 'unknown'}`, JSON.stringify({
+          url: publicUrl,
+          timestamp: Date.now()
+        }));
+      } catch (storageError) {
+        console.warn('Failed to store share URL:', storageError);
+      }
+      
     } catch (error: any) {
       console.error('Share failed:', error);
       toast.error(error.message || 'Failed to create share link', {
