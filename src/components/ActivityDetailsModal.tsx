@@ -77,7 +77,25 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
                 </span>
               </div>
             )}
+            
+            {activity.level && (
+              <div className="flex items-center space-x-2">
+                <Users className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-600">
+                  Level: {activity.level}
+                </span>
+              </div>
+            )}
           </div>
+          
+          {/* Fallback message if no content */}
+          {!activity.description && !activity.activityText && resources.length === 0 && (!activity.yearGroups || activity.yearGroups.length === 0) && (
+            <div className="text-center py-8 text-gray-500">
+              <Tag className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+              <p className="text-lg font-medium mb-2">Activity Details</p>
+              <p className="text-sm">No additional information available for this activity.</p>
+            </div>
+          )}
 
           {/* Description */}
           {activity.description && (
