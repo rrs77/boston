@@ -38,6 +38,25 @@ export function ActivityDetails({
   onViewUnit,
   onViewLesson
 }: ActivityDetailsProps) {
+  // Safety check - ensure activity exists and has required fields
+  if (!activity || !activity.activity) {
+    console.error('ActivityDetails: Invalid activity data', activity);
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+        <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Error</h2>
+          <p className="text-gray-700 mb-6">Activity data is invalid or missing.</p>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   const { nestedStandards, lessonStandards, addStandardToLesson, removeStandardFromLesson, updateActivity: updateActivityGlobal } = useData();
   const { customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   const [selectedLink, setSelectedLink] = useState<{ url: string; title: string; type: string } | null>(null);
