@@ -40,28 +40,40 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then((registration) => {
-              console.log('✅ PWA: Service Worker registered', registration.scope);
-              
-              // Check for updates
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New service worker available
-                    console.log('🔄 PWA: New version available!');
-                    if (confirm('New version available! Reload to update?')) {
-                      newWorker.postMessage({ type: 'SKIP_WAITING' });
-                      window.location.reload();
-                    }
-                  }
-                });
+          // First, unregister any existing service workers to prevent SSL errors
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (let registration of registrations) {
+              registration.unregister().then(() => {
+                console.log('🔄 PWA: Unregistered old service worker');
               });
-            })
-            .catch((error) => {
-              console.log('❌ PWA: Service Worker registration failed', error);
+            }
+          }).then(() => {
+            // Small delay to ensure unregistration completes
+            return new Promise(resolve => setTimeout(resolve, 100));
+          }).then(() => {
+            // Register new service worker
+            return navigator.serviceWorker.register('/service-worker.js');
+          }).then((registration) => {
+            console.log('✅ PWA: Service Worker registered', registration.scope);
+            
+            // Check for updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New service worker available
+                  console.log('🔄 PWA: New version available!');
+                  if (confirm('New version available! Reload to update?')) {
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    window.location.reload();
+                  }
+                }
+              });
             });
+          })
+          .catch((error) => {
+            console.log('❌ PWA: Service Worker registration failed', error);
+          });
         });
         
         // Handle service worker updates
