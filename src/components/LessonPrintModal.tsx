@@ -1132,12 +1132,12 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                   {(isSharing || isSharingSingle) ? (
                       <>
                         <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                        <span>Sharing...</span>
+                        <span>Copying...</span>
                       </>
                   ) : shareSuccess ? (
                       <>
                         <Check className="h-4 w-4" />
-                        <span>Shared!</span>
+                        <span>Copied!</span>
                       </>
                   ) : (
                       <>
