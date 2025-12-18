@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Download, Edit3, Save, Check, Tag, Clock, Users, ExternalLink, FileText, Trash2, Share2 } from 'lucide-react';
+import { X, Download, Edit3, Save, Check, Tag, Clock, Users, ExternalLink, FileText, Trash2, Share2, Link2 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { ActivityDetails } from './ActivityDetails';
