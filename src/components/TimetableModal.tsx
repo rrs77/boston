@@ -175,14 +175,18 @@ export function TimetableModal({
           <div className="flex items-center justify-end space-x-2 flex-shrink-0">
             {timetableClasses.length > 0 && (
               <>
-                <button
-                  onClick={async () => {
+                <div
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    if (isSharing) return;
+                    
                     try {
                       const url = await shareTimetable(timetableClasses, className);
                       if (url) {
-                        // Open PDF in new tab for printing/downloading
-                        window.open(url, '_blank');
-                        toast.success('Timetable PDF ready! URL copied to clipboard.', {
+                        // ONLY copy to clipboard - NO window.open, NO auto-open, NO native sharing
+                        toast.success('Timetable PDF link copied to clipboard!', {
                           duration: 4000,
                           icon: '🔗',
                         });
@@ -193,34 +197,71 @@ export function TimetableModal({
                       });
                     }
                   }}
-                  disabled={isSharing}
-                  className="px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-1.5 sm:space-x-2 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-xs sm:text-sm min-h-[36px] sm:min-h-[40px]"
-                  title="Share timetable as PDF link"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  role="button"
+                  aria-label="Copy timetable PDF link to clipboard"
+                  className={`px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-1.5 sm:space-x-2 cursor-pointer touch-manipulation text-xs sm:text-sm min-h-[36px] sm:min-h-[40px] ${
+                    isSharing ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  title="Copy timetable PDF link to clipboard"
+                  style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (!isSharing) {
+                        const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+                        (e.target as HTMLElement).dispatchEvent(clickEvent);
+                      }
+                    }
+                  }}
                 >
                   {isSharing ? (
                     <>
                       <div className="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full flex-shrink-0"></div>
-                      <span className="hidden sm:inline">Generating...</span>
+                      <span className="hidden sm:inline">Copying...</span>
                       <span className="sm:hidden">...</span>
                     </>
                   ) : (
                     <>
-                      <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">Share Link</span>
-                      <span className="sm:hidden">Share</span>
+                      <Link2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span className="hidden sm:inline">Copy Link</span>
+                      <span className="sm:hidden">Copy</span>
                     </>
                   )}
-                </button>
+                </div>
                 {shareUrl && (
-                  <button
-                    onClick={() => window.open(shareUrl, '_blank')}
-                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-1.5 sm:space-x-2 touch-manipulation text-xs sm:text-sm min-h-[36px] sm:min-h-[40px]"
-                    title="Open PDF in new tab for printing"
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Copy the URL to clipboard instead of opening
+                      navigator.clipboard.writeText(shareUrl).then(() => {
+                        toast.success('PDF link copied to clipboard!', {
+                          duration: 3000,
+                          icon: '📋',
+                        });
+                      }).catch(() => {
+                        toast.error('Failed to copy link', {
+                          duration: 3000,
+                        });
+                      });
+                    }}
+                    role="button"
+                    aria-label="Copy PDF link to clipboard"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-1.5 sm:space-x-2 cursor-pointer touch-manipulation text-xs sm:text-sm min-h-[36px] sm:min-h-[40px]"
+                    title="Copy PDF link to clipboard"
+                    style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
+                    tabIndex={0}
                   >
-                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span className="hidden sm:inline">Print PDF</span>
-                    <span className="sm:hidden">Print</span>
-                  </button>
+                    <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">Copy Link</span>
+                    <span className="sm:hidden">Copy</span>
+                  </div>
                 )}
               </>
             )}

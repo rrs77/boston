@@ -301,7 +301,8 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
       setShareUrl(publicUrl);
       setShareSuccess(true);
 
-      // Copy to clipboard directly (no Web Share API dialog)
+      // Copy to clipboard directly - NO native sharing, NO window.open, NO auto-open
+      // This is the ONLY action allowed - clipboard copy only
       const clipboardSuccess = await copyToClipboard(publicUrl);
       
       if (!clipboardSuccess) {

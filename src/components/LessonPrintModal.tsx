@@ -954,7 +954,8 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         }
       }, 100);
 
-      // Copy to clipboard directly (no Web Share API dialog)
+      // Copy to clipboard directly - NO native sharing, NO window.open, NO auto-open
+      // This is the ONLY action allowed - clipboard copy only
       const clipboardSuccess = await copyToClipboard(publicUrl);
       
       if (!clipboardSuccess) {
