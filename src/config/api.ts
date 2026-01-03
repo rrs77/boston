@@ -780,6 +780,7 @@ export const halfTermsApi = {
       };
       
       const year = academicYear || '2025-2026';
+      
       const upsertData: any = {
           id: halfTermId,
           sheet_name: sheet,
@@ -787,7 +788,7 @@ export const halfTermsApi = {
           name: halfTermNames[halfTermId] || halfTermId,
           lessons: lessons,
           is_complete: isComplete,
-        term_id: halfTermId, // Add the missing term_id field
+        term_id: halfTermId, // This is part of the unique constraint
           updated_at: new Date().toISOString()
       };
       
@@ -798,48 +799,61 @@ export const halfTermsApi = {
       
       console.log('🔄 Upserting to Supabase with data:', upsertData);
       
-      // First, check if a record exists for this half-term
-      const { data: existingRecord, error: checkError } = await supabase
-        .from('half_terms')
-        .select('id')
-        .eq('id', halfTermId)
-        .eq('sheet_name', sheet)
-        .eq('academic_year', year)
-        .maybeSingle();
-      
-      if (checkError) {
-        console.warn('Error checking for existing half-term record:', checkError);
-        throw checkError;
-      }
-
-      let data, error;
-      if (existingRecord) {
-        // Update existing record
-        const result = await supabase
-          .from('half_terms')
+      // Use upsert with onConflict to handle the unique constraint properly
+      // The unique constraint is on (sheet_name, term_id), so we need to specify that
+      // First try to update existing record using the unique constraint fields
+      const updateResult = await supabase
+          .from(TABLES.HALF_TERMS)
           .update(upsertData)
-          .eq('id', halfTermId)
           .eq('sheet_name', sheet)
           .eq('academic_year', year)
-        .select()
-        .single();
+          .eq('term_id', halfTermId)
+          .select()
+          .maybeSingle();
       
-        data = result.data;
-        error = result.error;
+      let data, error;
+      
+      // If update found a record, use that result
+      if (updateResult.data) {
+        data = updateResult.data;
+        error = updateResult.error;
         if (error) throw error;
         console.log(`✅ Updated half-term ${halfTermId} for ${sheet} (${year})`);
+      } else if (updateResult.error && updateResult.error.code !== 'PGRST116') {
+        // If there was an error other than "not found", throw it
+        throw updateResult.error;
       } else {
-        // Insert new record
-        const result = await supabase
-          .from('half_terms')
+        // No existing record found, insert new one
+        const insertResult = await supabase
+          .from(TABLES.HALF_TERMS)
           .insert(upsertData)
           .select()
           .single();
         
-        data = result.data;
-        error = result.error;
-        if (error) throw error;
-        console.log(`✅ Created half-term ${halfTermId} for ${sheet} (${year})`);
+        data = insertResult.data;
+        error = insertResult.error;
+        if (error) {
+          // If insert fails with duplicate key, try update again (race condition)
+          if (error.code === '23505') {
+            console.log('⚠️ Insert failed with duplicate key, retrying update...');
+            const retryResult = await supabase
+              .from(TABLES.HALF_TERMS)
+              .update(upsertData)
+              .eq('sheet_name', sheet)
+              .eq('academic_year', year)
+              .eq('term_id', halfTermId)
+              .select()
+              .single();
+            data = retryResult.data;
+            error = retryResult.error;
+            if (error) throw error;
+            console.log(`✅ Updated half-term ${halfTermId} for ${sheet} (${year}) after retry`);
+          } else {
+            throw error;
+          }
+        } else {
+          console.log(`✅ Created half-term ${halfTermId} for ${sheet} (${year})`);
+        }
       }
       
       console.log('🔄 Supabase response:', { data, error });
