@@ -268,9 +268,11 @@ export function LessonPlannerCalendar({
   // Match by exact className or by year group ID/name (e.g., "LKG" matches "Lower Kindergarten Music")
   const filteredLessonPlans = React.useMemo(() => {
     // Get the current year group to help with matching
-    const currentYearGroup = customYearGroups?.find(yg => yg.id === className || yg.name === className);
+    // Ensure customYearGroups is an array
+    const yearGroups = Array.isArray(customYearGroups) ? customYearGroups : [];
+    const currentYearGroup = yearGroups.find(yg => yg && (yg.id === className || yg.name === className));
     const matchingKeys = currentYearGroup 
-      ? [currentYearGroup.id, currentYearGroup.name, className]
+      ? [currentYearGroup.id, currentYearGroup.name, className].filter(Boolean)
       : [className];
     
     let filtered = lessonPlans.filter(plan => {
