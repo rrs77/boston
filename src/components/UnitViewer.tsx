@@ -1071,7 +1071,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                   </button>
                   
                   {/* Search field */}
-                  <div className="relative flex-1 sm:flex-initial sm:min-w-[200px]">
+                  <div className="relative flex-1 sm:flex-initial sm:min-w-[180px] sm:max-w-[240px]">
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ width: '16px', height: '16px' }}>
                       <svg 
                         viewBox="0 0 80 80" 
@@ -1111,7 +1111,7 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                       placeholder="Search units..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full sm:w-64 pl-10 pr-4 border border-gray-300 rounded-lg text-xs sm:text-sm transition-all duration-200 touch-manipulation"
+                      className="w-full sm:w-48 pl-10 pr-4 border border-gray-300 rounded-lg text-xs sm:text-sm transition-all duration-200 touch-manipulation"
                       style={{ 
                         height: '36px',
                         minHeight: '36px',
