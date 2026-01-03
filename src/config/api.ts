@@ -330,22 +330,21 @@ export const lessonsApi = {
         if (data) {
           hasData = true;
           
-          console.log('🔍 DEBUG: Processing Supabase result:', {
-            dataKeys: Object.keys(data),
-            dataKeysFull: Object.keys(data),
+          // Log the full data structure to understand what we're getting
+          console.log('🔍 DEBUG: Processing Supabase result - FULL DATA OBJECT:', JSON.stringify(data, null, 2));
+          console.log('🔍 DEBUG: Processing Supabase result - SUMMARY:', {
+            allKeys: Object.keys(data),
             hasDataField: !!data.data,
-            dataDataType: typeof data.data,
-            dataDataIsArray: Array.isArray(data.data),
-            dataDataIsNull: data.data === null,
-            dataDataIsUndefined: data.data === undefined,
-            dataDataValue: data.data,
-            dataDataKeys: data.data ? Object.keys(data.data).slice(0, 10) : [],
-            dataDataKeysLength: data.data ? Object.keys(data.data).length : 0,
+            dataFieldType: typeof data.data,
+            dataFieldValue: data.data,
+            dataFieldKeys: data.data ? Object.keys(data.data) : [],
+            dataFieldKeysCount: data.data ? Object.keys(data.data).length : 0,
             hasLessonNumbers: !!data.lesson_numbers,
-            lessonNumbersLength: data.lesson_numbers?.length || 0,
-            lessonNumbersValue: data.lesson_numbers,
+            lessonNumbers: data.lesson_numbers,
+            lessonNumbersCount: data.lesson_numbers?.length || 0,
             hasTeachingUnits: !!data.teaching_units,
-            teachingUnitsValue: data.teaching_units,
+            teachingUnits: data.teaching_units,
+            teachingUnitsCount: data.teaching_units?.length || 0,
             sheetName: data.sheet_name,
             academicYear: data.academic_year
           });
