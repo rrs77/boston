@@ -158,10 +158,10 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const handleYearGroupChange = (yearGroupName: string, checked: boolean) => {
     const code = getYearGroupCode(yearGroupName);
     if (code) {
-      setNewCategoryYearGroups(prev => ({
-        ...prev,
+    setNewCategoryYearGroups(prev => ({
+      ...prev,
         [code]: checked
-      }));
+    }));
     }
   };
 
@@ -227,13 +227,13 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
         startUserChange();
         
         const categoryToDelete = tempCategories[index];
-        const updatedCategories = tempCategories.filter((_, i) => i !== index);
+      const updatedCategories = tempCategories.filter((_, i) => i !== index);
         
-        // Update positions
-        updatedCategories.forEach((cat, i) => {
-          cat.position = i;
-        });
-        setTempCategories(updatedCategories);
+      // Update positions
+      updatedCategories.forEach((cat, i) => {
+        cat.position = i;
+      });
+      setTempCategories(updatedCategories);
         
         // Check if this is a custom category (not in FIXED_CATEGORIES)
         // FIXED_CATEGORIES are: Welcome, Kodaly Songs, Kodaly Action Songs, Action/Games Songs, 
@@ -1042,8 +1042,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                   key={yearGroup.id || yearGroup.name} 
                                   className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
                                 >
-                                  <input
-                                    type="checkbox"
+                            <input
+                              type="checkbox"
                                     checked={isChecked}
                                     onChange={(e) => {
                                       if (code) {
@@ -1053,14 +1053,14 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                     className="h-5 w-5 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
                                   />
                                   <span className="text-sm font-medium text-gray-700 flex-1">{yearGroup.name}</span>
-                                </label>
+                          </label>
                               );
                             })
                           ) : (
                             <p className="text-sm text-gray-500 text-center py-4">No year groups available</p>
                           )}
-                        </div>
                       </div>
+                    </div>
 
                       {/* Footer */}
                       <div className="p-4 border-t border-gray-200 flex justify-end space-x-3">
@@ -1083,8 +1083,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                         >
                           Done
                         </button>
-                      </div>
-                    </div>
+                  </div>
+                </div>
                   </div>
                 )}
 
@@ -1438,7 +1438,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                       </button>
                     </div>
                   )}
-
+                  
                   <div className="space-y-2 max-h-[400px] overflow-y-auto">
                     {tempCategories.map((category, index) => {
                       // Use index as stable identifier for editing state (not name, which changes)
@@ -1461,131 +1461,131 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                         {isEditing ? (
                           <div className="flex flex-col space-y-3">
                             {/* Name and Color Row */}
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-shrink-0 cursor-move">
-                                <GripVertical className="h-5 w-5 text-gray-400" />
-                              </div>
-                              <div className="flex-1 flex items-center space-x-3 min-w-0">
-                                <input
-                                  id={`editCategoryName-${index}`}
-                                  name={`editCategoryName-${index}`}
-                                  type="text"
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0 cursor-move">
+                              <GripVertical className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <div className="flex-1 flex items-center space-x-3 min-w-0">
+                              <input
+                                id={`editCategoryName-${index}`}
+                                name={`editCategoryName-${index}`}
+                                type="text"
                                   value={tempCategories[index]?.name || ''}
-                                  onChange={(e) => {
-                                    const updatedCategories = [...tempCategories];
-                                    updatedCategories[index] = { ...updatedCategories[index], name: e.target.value };
-                                    setTempCategories(updatedCategories);
+                                onChange={(e) => {
+                                  const updatedCategories = [...tempCategories];
+                                  updatedCategories[index] = { ...updatedCategories[index], name: e.target.value };
+                                  setTempCategories(updatedCategories);
                                     // Keep edit mode open by maintaining the index-based identifier
-                                  }}
-                                  onBlur={async () => {
-                                    try {
-                                      const updatedCategories = [...tempCategories];
-                                      updatedCategories[index] = { ...updatedCategories[index], name: updatedCategories[index].name };
-                                      setTempCategories(updatedCategories);
-                                      await updateCategories(updatedCategories);
-                                    } catch (error: unknown) {
-                                      console.error('Failed to save category changes:', error);
-                                    }
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      const updatedCategories = [...tempCategories];
-                                      updatedCategories[index] = { ...updatedCategories[index], name: updatedCategories[index].name };
-                                      setTempCategories(updatedCategories);
-                                      updateCategories(updatedCategories);
-                                    } else if (e.key === 'Escape') {
-                                      e.preventDefault();
-                                      setEditingCategory(null);
-                                      setTempCategories(categories);
-                                    }
-                                  }}
-                                  className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
-                                  dir="ltr"
-                                />
-                                <div className="relative">
-                                  <div className="flex flex-wrap gap-1 min-h-[32px] px-2 py-1 border border-gray-300 rounded text-sm bg-white focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500">
-                                    {(tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : [])).map((groupName, groupIndex) => (
-                                      <span
-                                        key={groupIndex}
-                                        className="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-md"
-                                      >
-                                        {groupName}
-                                        <button
-                                          onClick={() => {
-                                            const updatedCategories = [...tempCategories];
-                                            const currentGroups = tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : []);
-                                            const newGroups = currentGroups.filter(g => g !== groupName);
-                                            updatedCategories[index] = { 
-                                              ...updatedCategories[index], 
-                                              groups: newGroups.length > 0 ? newGroups : undefined,
-                                              group: undefined
-                                            };
-                                            setTempCategories(updatedCategories);
-                                            updateCategories(updatedCategories);
-                                          }}
-                                          className="text-teal-600 hover:text-teal-800"
-                                        >
-                                          ×
-                                        </button>
-                                      </span>
-                                    ))}
-                                    <select
-                                      id={`editCategoryGroupSelect-${index}`}
-                                      name={`editCategoryGroupSelect-${index}`}
-                                      onChange={(e) => {
-                                        if (e.target.value) {
-                                          startUserChange();
-                                          const updatedCategories = [...tempCategories];
-                                          const currentGroups = tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : []);
-                                          if (!currentGroups.includes(e.target.value)) {
-                                            const newGroups = [...currentGroups, e.target.value];
-                                            updatedCategories[index] = { 
-                                              ...updatedCategories[index], 
-                                              groups: newGroups,
-                                              group: undefined
-                                            };
-                                            setTempCategories(updatedCategories);
-                                            endUserChange();
-                                          }
-                                          e.target.value = '';
-                                        }
-                                      }}
-                                      className="border border-gray-300 rounded outline-none text-sm bg-white text-gray-900 w-24 px-2 py-1 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-                                      defaultValue=""
-                                    >
-                                      <option value="" disabled>Add group...</option>
-                                      {categoryGroups && categoryGroups.groups && Array.isArray(categoryGroups.groups) ? categoryGroups.groups.filter(group => 
-                                        !(tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : [])).includes(group)
-                                      ).map(group => (
-                                        <option key={group} value={group}>{group}</option>
-                                      )) : null}
-                                    </select>
-                                  </div>
-                                </div>
-                                <input
-                                  id={`editCategoryColor-${index}`}
-                                  name={`editCategoryColor-${index}`}
-                                  type="color"
-                                  value={tempCategories[index]?.color || category.color}
-                                  onChange={(e) => {
+                                }}
+                                onBlur={async () => {
+                                  try {
                                     const updatedCategories = [...tempCategories];
-                                    updatedCategories[index] = { ...updatedCategories[index], color: e.target.value };
+                                    updatedCategories[index] = { ...updatedCategories[index], name: updatedCategories[index].name };
+                                    setTempCategories(updatedCategories);
+                                    await updateCategories(updatedCategories);
+                                  } catch (error: unknown) {
+                                    console.error('Failed to save category changes:', error);
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const updatedCategories = [...tempCategories];
+                                    updatedCategories[index] = { ...updatedCategories[index], name: updatedCategories[index].name };
                                     setTempCategories(updatedCategories);
                                     updateCategories(updatedCategories);
-                                  }}
-                                  className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer"
-                                />
-                                <button
+                                  } else if (e.key === 'Escape') {
+                                    e.preventDefault();
+                                    setEditingCategory(null);
+                                    setTempCategories(categories);
+                                  }
+                                }}
+                                  className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
+                                dir="ltr"
+                              />
+                              <div className="relative">
+                                <div className="flex flex-wrap gap-1 min-h-[32px] px-2 py-1 border border-gray-300 rounded text-sm bg-white focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500">
+                                    {(tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : [])).map((groupName, groupIndex) => (
+                                    <span
+                                      key={groupIndex}
+                                      className="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-md"
+                                    >
+                                      {groupName}
+                                      <button
+                                        onClick={() => {
+                                          const updatedCategories = [...tempCategories];
+                                            const currentGroups = tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : []);
+                                          const newGroups = currentGroups.filter(g => g !== groupName);
+                                          updatedCategories[index] = { 
+                                            ...updatedCategories[index], 
+                                            groups: newGroups.length > 0 ? newGroups : undefined,
+                                              group: undefined
+                                          };
+                                          setTempCategories(updatedCategories);
+                                          updateCategories(updatedCategories);
+                                        }}
+                                        className="text-teal-600 hover:text-teal-800"
+                                      >
+                                        ×
+                                      </button>
+                                    </span>
+                                  ))}
+                                  <select
+                                    id={`editCategoryGroupSelect-${index}`}
+                                    name={`editCategoryGroupSelect-${index}`}
+                                    onChange={(e) => {
+                                      if (e.target.value) {
+                                        startUserChange();
+                                        const updatedCategories = [...tempCategories];
+                                          const currentGroups = tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : []);
+                                        if (!currentGroups.includes(e.target.value)) {
+                                          const newGroups = [...currentGroups, e.target.value];
+                                          updatedCategories[index] = { 
+                                            ...updatedCategories[index], 
+                                            groups: newGroups,
+                                              group: undefined
+                                            };
+                                          setTempCategories(updatedCategories);
+                                          endUserChange();
+                                        }
+                                          e.target.value = '';
+                                      }
+                                    }}
+                                      className="border border-gray-300 rounded outline-none text-sm bg-white text-gray-900 w-24 px-2 py-1 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                                    defaultValue=""
+                                  >
+                                    <option value="" disabled>Add group...</option>
+                                      {categoryGroups && categoryGroups.groups && Array.isArray(categoryGroups.groups) ? categoryGroups.groups.filter(group => 
+                                        !(tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : [])).includes(group)
+                                    ).map(group => (
+                                      <option key={group} value={group}>{group}</option>
+                                      )) : null}
+                                  </select>
+                                </div>
+                              </div>
+                              <input
+                                id={`editCategoryColor-${index}`}
+                                name={`editCategoryColor-${index}`}
+                                type="color"
+                                  value={tempCategories[index]?.color || category.color}
+                                onChange={(e) => {
+                                  const updatedCategories = [...tempCategories];
+                                  updatedCategories[index] = { ...updatedCategories[index], color: e.target.value };
+                                  setTempCategories(updatedCategories);
+                                  updateCategories(updatedCategories);
+                                }}
+                                className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                              />
+                              <button
                                   onClick={() => {
                                     updateCategories(tempCategories);
                                     setEditingCategory(null);
                                   }}
-                                  className="p-1.5 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded-lg transition-colors duration-200"
+                                className="p-1.5 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded-lg transition-colors duration-200"
                                   title="Save changes"
-                                >
-                                  <Save className="h-5 w-5" />
-                                </button>
+                              >
+                                <Save className="h-5 w-5" />
+                              </button>
                               </div>
                             </div>
                             
@@ -1636,17 +1636,17 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                           <div className="flex items-start gap-4">
                             <div className="flex items-start gap-3 flex-1 min-w-0">
                               <div className="flex-shrink-0 cursor-move pt-0.5">
-                                <GripVertical className="h-5 w-5 text-gray-400" />
-                              </div>
-                              <div 
+                              <GripVertical className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <div 
                                 className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5 border border-gray-200"
-                                style={{ backgroundColor: category.color }}
-                              ></div>
-                              <div className="flex-1 min-w-0">
+                              style={{ backgroundColor: category.color }}
+                            ></div>
+                            <div className="flex-1 min-w-0">
                                 <div className="font-semibold text-gray-900 mb-2" dir="ltr">{category.name}</div>
                                 
                                 {/* Groups Display */}
-                                {(category.groups && category.groups.length > 0) ? (
+                              {(category.groups && category.groups.length > 0) ? (
                                   <div className="flex flex-wrap items-center gap-1.5 mb-2">
                                     <span className="text-xs text-gray-500 font-medium">Groups:</span>
                                     {category.groups.map((group, idx) => (
@@ -1654,15 +1654,15 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                         {group}
                                       </span>
                                     ))}
-                                  </div>
-                                ) : category.group ? (
+                                </div>
+                              ) : category.group ? (
                                   <div className="flex items-center gap-1.5 mb-2">
                                     <span className="text-xs text-gray-500 font-medium">Group:</span>
                                     <span className="inline-flex items-center px-2 py-0.5 bg-teal-100 text-teal-800 text-xs rounded-md font-medium">
                                       {category.group}
                                     </span>
-                                  </div>
-                                ) : null}
+                                </div>
+                              ) : null}
                                 
                                 {/* Year Groups Display */}
                                 <div className="flex flex-wrap items-center gap-1.5">
@@ -1743,7 +1743,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                           title="Click to edit year group assignments"
                                         >
                                           {yearGroup.name}
-                                        </span>
+                                    </span>
                                       )) : null}
                                     {(!category.yearGroups || Object.values(category.yearGroups).every(v => !v)) && (
                                       <button
@@ -1862,18 +1862,18 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                 />
                               ) : (
                                 <>
-                                  <button
+                              <button
                                     onClick={() => setEditingCategory(`category-index-${index}`)}
-                                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-                                  >
-                                    <Edit3 className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteCategory(index)}
-                                    className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
+                                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCategory(index)}
+                                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
                                 </>
                               )}
                             </div>

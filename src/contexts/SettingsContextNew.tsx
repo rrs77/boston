@@ -231,7 +231,54 @@ const SettingsContextNew = createContext<SettingsContextType | undefined>(
 export const useSettings = () => {
   const context = useContext(SettingsContextNew);
   if (context === undefined) {
-    throw new Error('useSettings must be used within a SettingsProviderNew');
+    // Return a default context instead of throwing to prevent React hooks errors
+    console.error('useSettings must be used within a SettingsProviderNew');
+    // Return minimal default context to prevent crashes
+    return {
+      getThemeForClass: () => ({ primary: '#3B82F6', secondary: '#2563EB', accent: '#60A5FA' }),
+      getThemeForSubject: () => ({ primary: '#3B82F6', secondary: '#2563EB', accent: '#60A5FA' }),
+      categories: [],
+      getCategoryColor: () => '#6B7280',
+      getCategoryByName: () => null,
+      addCategoryPermanently: async () => {},
+      getSubjectCategories: () => [],
+      getCategoryColorById: () => '#6B7280',
+      getCategoryNameById: () => '',
+      defaultViewMode: 'grid' as const,
+      setDefaultViewMode: () => {},
+      isAdmin: false,
+      setIsAdmin: () => {},
+      settings: {
+        schoolName: '',
+        schoolLogo: '',
+        primaryColor: '#3B82F6',
+        secondaryColor: '#2563EB',
+        accentColor: '#60A5FA',
+        customTheme: false
+      },
+      customYearGroups: [],
+      updateSettings: () => {},
+      updateCategories: () => {},
+      updateYearGroups: () => {},
+      deleteYearGroup: async () => {},
+      forceSyncYearGroups: async () => null,
+      cleanupDuplicates: async () => {},
+      forceSyncToSupabase: async () => false,
+      forceRefreshFromSupabase: async () => false,
+      forceSyncCurrentYearGroups: async () => false,
+      forceSafariSync: async () => false,
+      mapActivityLevelToYearGroup: () => '',
+      mapYearGroupToActivityLevel: () => '',
+      resetToDefaults: () => {},
+      resetCategoriesToDefaults: () => {},
+      resetYearGroupsToDefaults: () => {},
+      categoryGroups: { groups: [] },
+      addCategoryGroup: () => {},
+      removeCategoryGroup: () => {},
+      updateCategoryGroup: () => {},
+      startUserChange: () => {},
+      endUserChange: () => {}
+    } as SettingsContextType;
   }
   return context;
 };
