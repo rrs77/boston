@@ -394,7 +394,7 @@ export function LessonDropZone({
                 <p className="text-sm text-gray-500">
                   {isOver 
                     ? 'Release to add this activity'
-                    : 'Click "Add Activities" to get started'
+                    : 'Add an activity to get started'
                   }
                 </p>
               </div>
