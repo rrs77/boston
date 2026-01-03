@@ -126,7 +126,7 @@ export function LessonPlannerCalendar({
   className
 }: LessonPlannerCalendarProps) {
   const { allLessonsData, units: dataContextUnits, halfTerms, updateHalfTerm } = useData();
-  const { getThemeForClass, getCategoryColor } = useSettings();
+  const { getThemeForClass, getCategoryColor, customYearGroups } = useSettings();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
   const [editingPlan, setEditingPlan] = useState<LessonPlan | null>(null);
@@ -265,15 +265,60 @@ export function LessonPlannerCalendar({
   const dayViewHours = Array.from({ length: 11 }, (_, i) => i + 8);
 
   // Filter lesson plans based on unit filter and class
+  // Match by exact className or by year group ID/name (e.g., "LKG" matches "Lower Kindergarten Music")
   const filteredLessonPlans = React.useMemo(() => {
-    let filtered = lessonPlans.filter(plan => plan.className === className);
+    // Get the current year group to help with matching
+    const currentYearGroup = customYearGroups?.find(yg => yg.id === className || yg.name === className);
+    const matchingKeys = currentYearGroup 
+      ? [currentYearGroup.id, currentYearGroup.name, className]
+      : [className];
+    
+    let filtered = lessonPlans.filter(plan => {
+      if (!plan.className) return false;
+      
+      // Exact match
+      if (matchingKeys.some(key => plan.className === key)) {
+        return true;
+      }
+      
+      // If className doesn't match exactly, check if it's a year group match
+      // This handles cases where Supabase has "LKG" but className prop is "Lower Kindergarten Music"
+      const planClassLower = plan.className.toLowerCase();
+      
+      // Check against all matching keys
+      for (const key of matchingKeys) {
+        if (!key) continue;
+        const keyLower = key.toLowerCase();
+        
+        // Check if one contains the other (e.g., "Lower Kindergarten Music" contains "LKG")
+        if (planClassLower.includes(keyLower) || keyLower.includes(planClassLower)) {
+          return true;
+        }
+      }
+      
+      // Also check for common abbreviations
+      const classNameLower = className.toLowerCase();
+      if ((planClassLower.includes('lkg') || planClassLower.includes('lower kindergarten')) && 
+          (classNameLower.includes('lkg') || classNameLower.includes('lower kindergarten'))) {
+        return true;
+      }
+      if ((planClassLower.includes('ukg') || planClassLower.includes('upper kindergarten')) && 
+          (classNameLower.includes('ukg') || classNameLower.includes('upper kindergarten'))) {
+        return true;
+      }
+      if (planClassLower.includes('reception') && classNameLower.includes('reception')) {
+        return true;
+      }
+      
+      return false;
+    });
     
     if (unitFilter !== 'all') {
       filtered = filtered.filter(plan => plan.unitId === unitFilter);
     }
     
     return filtered;
-  }, [lessonPlans, unitFilter, className]);
+  }, [lessonPlans, unitFilter, className, customYearGroups]);
 
   // Get lesson plans for a specific date
   const getLessonPlansForDate = (date: Date): LessonPlan[] => {
