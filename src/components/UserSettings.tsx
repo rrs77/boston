@@ -246,30 +246,41 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
         ];
         const isCustomCategory = !FIXED_CATEGORY_NAMES.includes(categoryToDelete.name);
         
-        // Explicitly delete from Supabase if it's a custom category
+        // CRITICAL: Delete from Supabase FIRST before updating local state
+        // This ensures the deletion completes before any reloads can happen
         if (isCustomCategory && isSupabaseConfigured()) {
           try {
+            console.log('🗑️ Deleting category from Supabase:', categoryToDelete.name);
             await customCategoriesApi.delete(categoryToDelete.name);
-            console.log('✅ Deleted category from Supabase:', categoryToDelete.name);
+            console.log('✅ Successfully deleted category from Supabase:', categoryToDelete.name);
+            
+            // Wait a moment to ensure Supabase deletion is fully processed
+            await new Promise(resolve => setTimeout(resolve, 500));
           } catch (deleteError) {
             console.error('❌ Failed to delete category from Supabase:', deleteError);
-            // Continue anyway - the category will be removed from local state
+            // Still continue - the category will be removed from local state
+            // The cleanup logic in the useEffect will try to delete it again
           }
         }
         
-        // Immediately persist changes (this will also trigger the save logic)
-        console.log('🔄 Deleting category and persisting immediately');
+        // Now update local state (this will trigger the save logic and cleanup)
+        console.log('🔄 Updating local categories after Supabase deletion');
         await updateCategories(updatedCategories);
         
         console.log('✅ Category deleted and persisted');
         
-        // End user change after a delay to allow persistence
-        endUserChange();
+        // End user change after a longer delay to ensure all sync operations complete
+        // This prevents reloads from Supabase from restoring the deleted category
+        setTimeout(() => {
+          endUserChange();
+        }, 3000); // 3 seconds instead of immediate
       } catch (error: unknown) {
         console.error('❌ Failed to delete category:', error);
         alert('Failed to delete category. Please try again.');
-        // End user change even on error
-        endUserChange();
+        // End user change even on error, but after a delay
+        setTimeout(() => {
+          endUserChange();
+        }, 2000);
       }
     }
   };

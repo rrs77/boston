@@ -1174,9 +1174,13 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
       // Also check for categories in Supabase that should be deleted
       // (custom categories that are no longer in the current list)
       // Wrap in async IIFE since updateCategories is not async
+      // CRITICAL: Only run cleanup if user is not actively making changes to prevent race conditions
       (async () => {
-        if (isSupabaseConfigured() && dataLoadedFromSupabase.current) {
+        if (isSupabaseConfigured() && dataLoadedFromSupabase.current && !isUserMakingChanges) {
           try {
+            // Add a small delay to ensure any pending deletions have completed
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             const supabaseCategories = await customCategoriesApi.getAll();
             const currentCategoryNames = new Set(categoriesToSave.map(c => c.name));
             
@@ -1191,21 +1195,25 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
               .map(cat => cat.name);
             
             if (categoriesToDelete.length > 0) {
-              console.log('🗑️ Deleting categories from Supabase that are no longer in the list:', categoriesToDelete);
+              console.log('🗑️ Cleanup: Deleting categories from Supabase that are no longer in the list:', categoriesToDelete);
               // Delete each category
               for (const categoryName of categoriesToDelete) {
                 try {
                   await customCategoriesApi.delete(categoryName);
-                console.log('✅ Deleted category from Supabase:', categoryName);
-              } catch (deleteError) {
-                console.error('❌ Failed to delete category from Supabase:', categoryName, deleteError);
+                  console.log('✅ Cleanup: Deleted category from Supabase:', categoryName);
+                  // Small delay between deletions to avoid overwhelming Supabase
+                  await new Promise(resolve => setTimeout(resolve, 200));
+                } catch (deleteError) {
+                  console.error('❌ Cleanup: Failed to delete category from Supabase:', categoryName, deleteError);
+                }
               }
             }
-          }
           } catch (error) {
             console.error('❌ Error checking for categories to delete:', error);
             // Continue with save even if delete check fails
           }
+        } else if (isUserMakingChanges) {
+          console.log('⏸️ Skipping category cleanup - user is actively making changes');
         }
       })();
       
@@ -1294,26 +1302,31 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
                 console.log('✅ Year groups reloaded from visibility change');
               }
               
-              // Reload categories
-              const categories = await customCategoriesApi.getAll();
-              if (categories && categories.length > 0) {
-                // Merge with existing categories
-                setCategories(prev => {
-                  const merged = [...prev];
-                  categories.forEach(supabaseCat => {
-                    const existingIndex = merged.findIndex(cat => cat.name === supabaseCat.name);
-                    if (existingIndex >= 0) {
-                      // Update existing category with Supabase data
-                      merged[existingIndex] = {
-                        ...merged[existingIndex],
-                        group: supabaseCat.group,
-                        groups: supabaseCat.groups || []
-                      };
-                    }
+              // Reload categories - but only if user is not actively making changes
+              // This prevents reloading categories that were just deleted
+              if (!isUserMakingChanges) {
+                const categories = await customCategoriesApi.getAll();
+                if (categories && categories.length > 0) {
+                  // Merge with existing categories
+                  setCategories(prev => {
+                    const merged = [...prev];
+                    categories.forEach(supabaseCat => {
+                      const existingIndex = merged.findIndex(cat => cat.name === supabaseCat.name);
+                      if (existingIndex >= 0) {
+                        // Update existing category with Supabase data
+                        merged[existingIndex] = {
+                          ...merged[existingIndex],
+                          group: supabaseCat.group,
+                          groups: supabaseCat.groups || []
+                        };
+                      }
+                    });
+                    return merged;
                   });
-                  return merged;
-                });
-                console.log('✅ Categories reloaded from visibility change');
+                  console.log('✅ Categories reloaded from visibility change');
+                }
+              } else {
+                console.log('⏸️ Skipping category reload from visibility change - user is actively making changes');
               }
     } catch (error) {
               console.warn('⚠️ Error reloading data from visibility change:', error);
