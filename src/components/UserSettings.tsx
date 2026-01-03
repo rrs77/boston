@@ -1678,18 +1678,17 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                 {/* Year Groups Display */}
                                 <div className="flex flex-wrap items-center gap-1.5">
                                   {editingCategoryYearGroups === `category-index-${index}` ? (
-                                  // Edit mode: show checkboxes for year groups
+                                  // Edit mode: show checkboxes for year groups - show ALL year groups
                                   <div className="flex flex-wrap gap-2">
                                     {customYearGroups && Array.isArray(customYearGroups) && customYearGroups.length > 0 ? customYearGroups.map(yearGroup => {
-                                      const yearGroupCode = yearGroup.name.toLowerCase().includes('lower') || yearGroup.name.toLowerCase().includes('lkg') ? 'LKG' :
-                                                           yearGroup.name.toLowerCase().includes('upper') || yearGroup.name.toLowerCase().includes('ukg') ? 'UKG' :
-                                                           yearGroup.name.toLowerCase().includes('reception') ? 'Reception' : null;
-                                      if (!yearGroupCode) return null;
+                                      // Use year group ID as the key (or name if ID not available)
+                                      const yearGroupKey = yearGroup.id || yearGroup.name;
                                       
-                                      const categoryYearGroups = category.yearGroups || { LKG: false, UKG: false, Reception: false };
-                                      const isEnabled = categoryYearGroups[yearGroupCode as 'LKG' | 'UKG' | 'Reception'] || false;
+                                      const categoryYearGroups = category.yearGroups || {};
+                                      const isEnabled = categoryYearGroups[yearGroupKey] === true;
+                                      
                                       return (
-                                        <label key={yearGroup.id} className="flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded hover:bg-gray-50">
+                                        <label key={yearGroup.id || yearGroup.name} className="flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded hover:bg-gray-50">
                                           <input
                                             type="checkbox"
                                             checked={isEnabled}
@@ -1698,8 +1697,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                               updatedCategories[index] = {
                                                 ...updatedCategories[index],
                                                 yearGroups: {
-                                                  ...(updatedCategories[index].yearGroups || { LKG: false, UKG: false, Reception: false }),
-                                                  [yearGroupCode]: e.target.checked
+                                                  ...(updatedCategories[index].yearGroups || {}),
+                                                  [yearGroupKey]: e.target.checked
                                                 }
                                               };
                                               setTempCategories(updatedCategories);
@@ -1717,7 +1716,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                           const updatedCategories = [...tempCategories];
                                           updatedCategories[index] = {
                                             ...updatedCategories[index],
-                                            yearGroups: { LKG: false, UKG: false, Reception: false }
+                                            yearGroups: {} // Clear all year group assignments
                                           };
                                           setTempCategories(updatedCategories);
                                           updateCategories(updatedCategories);
