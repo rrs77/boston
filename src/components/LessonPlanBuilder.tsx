@@ -900,12 +900,11 @@ export function LessonPlanBuilder({
                         
                         return (
                           <div key={categoryName} className="border border-gray-200 rounded-lg overflow-hidden">
-                            {/* Category Header with inline activities */}
-                            <div className="w-full flex items-stretch bg-gray-50" style={{ borderLeft: `4px solid ${categoryColor}` }}>
-                              {/* Category Header Button */}
+                            {/* Category Header */}
+                            <div className="w-full bg-gray-50" style={{ borderLeft: `4px solid ${categoryColor}` }}>
                               <button
                                 onClick={() => toggleCategory(categoryName)}
-                                className="flex-shrink-0 px-4 py-2.5 flex items-center space-x-3 hover:bg-gray-100 transition-colors"
+                                className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-gray-100 transition-colors"
                               >
                                 <ChevronRight 
                                   className={`h-4 w-4 text-gray-600 transition-transform ${isExpanded ? 'transform rotate-90' : ''}`}
@@ -920,44 +919,42 @@ export function LessonPlanBuilder({
                                   {categoryActivities.length} {categoryActivities.length === 1 ? 'activity' : 'activities'}
                                 </span>
                               </button>
-                              
-                              {/* Category Activities - Horizontal scrollable at same height */}
-                              {isExpanded && (
-                                <div className="flex-1 overflow-x-auto overflow-y-hidden bg-white border-l border-gray-200">
-                                  <div className="flex items-center h-full gap-2 px-2 py-1">
-                                    {categoryActivities.map((activity, index) => {
-                                      const activityId = `${activity.activity}-${activity.category}`;
-                                      const isSelected = selectedActivities.includes(activityId);
-                                      
-                                      return (
-                                        <div 
-                                          key={`${activity._id || activity.id || activityId}-${index}`} 
-                                          className="flex-shrink-0"
-                                          style={{ minWidth: '200px', maxWidth: '250px' }}
-                                        >
-                                          <ActivityCard
-                                            activity={activity}
-                                            draggable={true}
-                                            selectable={true}
-                                            isSelected={isSelected}
-                                            onSelectionChange={(id, selected) => {
-                                              if (selected) {
-                                                toggleActivitySelection(activityId);
-                                              } else {
-                                                toggleActivitySelection(activityId);
-                                              }
-                                            }}
-                                            onActivityClick={handleActivityPreview}
-                                            viewMode="compact"
-                                            categoryColor={categoryColor}
-                                          />
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
                             </div>
+                            
+                            {/* Category Activities - Grid layout underneath header */}
+                            {isExpanded && (
+                              <div className="bg-white border-t border-gray-200">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 p-2">
+                                  {categoryActivities.map((activity, index) => {
+                                    const activityId = `${activity.activity}-${activity.category}`;
+                                    const isSelected = selectedActivities.includes(activityId);
+                                    
+                                    return (
+                                      <div 
+                                        key={`${activity._id || activity.id || activityId}-${index}`}
+                                      >
+                                        <ActivityCard
+                                          activity={activity}
+                                          draggable={true}
+                                          selectable={true}
+                                          isSelected={isSelected}
+                                          onSelectionChange={(id, selected) => {
+                                            if (selected) {
+                                              toggleActivitySelection(activityId);
+                                            } else {
+                                              toggleActivitySelection(activityId);
+                                            }
+                                          }}
+                                          onActivityClick={handleActivityPreview}
+                                          viewMode="compact"
+                                          categoryColor={categoryColor}
+                                        />
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
