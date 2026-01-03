@@ -764,7 +764,7 @@ export function LessonPlannerCalendar({
         </div>
       </div>
     );
-  }, () => true);
+  });
 
   // WeekTimeSlot component - separate component to allow hooks
   const WeekTimeSlot = React.memo(({ 
