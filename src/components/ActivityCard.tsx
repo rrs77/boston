@@ -224,19 +224,19 @@ className={`bg-white rounded-card shadow-soft border-l-4 p-3 transition-all dura
         ref={draggable ? drag : undefined}
         className={`bg-white rounded-card shadow-soft border transition-all duration-200 hover:shadow-hover cursor-pointer ${
           isEditing ? 'ring-2 ring-blue-300' : 'border-gray-200 hover:border-gray-300'
-        } ${isDragging ? 'opacity-50' : ''} h-full flex flex-col`}
+        } ${isDragging ? 'opacity-50' : ''} flex flex-col`}
         style={{ borderLeftColor: cardColor, borderLeftWidth: '4px' }}
         onClick={handleCardClick}
       >
-        <div className="flex-1 p-3 flex flex-col">
-          <h4 className="font-semibold text-gray-900 text-sm leading-tight mb-1" dir="ltr">
+        <div className="flex-1 p-1.5 flex flex-col">
+          <h4 className="font-semibold text-gray-900 text-xs leading-tight mb-0.5" dir="ltr">
             {activity.activity}
           </h4>
-          <p className="text-xs text-gray-600 mb-2" dir="ltr">{normalizedCategory}</p>
+          <p className="text-xs text-gray-500 mb-1" dir="ltr">{normalizedCategory}</p>
           
           <div className="mt-auto">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1.5">
                 {activity.time > 0 && (
                   <span className="text-xs text-gray-500">
                     {activity.time}m

@@ -518,54 +518,43 @@ export function LessonPlanBuilder({
     setHasUnsavedChanges(false);
   };
 
-  // Filter and sort activities for the library
-  const filteredAndSortedActivities = React.useMemo(() => {
+  // State for expanded categories
+  const [expandedCategories, setExpandedCategories] = React.useState<Set<string>>(new Set());
+
+  // Toggle category expansion
+  const toggleCategory = (categoryName: string) => {
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(categoryName)) {
+        next.delete(categoryName);
+      } else {
+        next.add(categoryName);
+      }
+      return next;
+    });
+  };
+
+  // Group and filter activities by category
+  const groupedActivitiesByCategory = React.useMemo(() => {
     // Safety check - ensure allActivities is an array
     if (!allActivities || !Array.isArray(allActivities)) {
       console.warn('📋 Lesson Builder: allActivities is not an array:', allActivities);
-      return [];
+      return {};
     }
     
-    console.log('📋 Lesson Builder: Filtering activities', {
-      totalActivities: allActivities.length,
-      availableCategoriesForYearGroup: availableCategoriesForYearGroup.length,
-      selectedCategory,
-      searchQuery
-    });
-    
+    // Filter activities by search query only (show ALL activities, no category/year group restrictions)
     let filtered = allActivities.filter(activity => {
       const matchesSearch = searchQuery === '' || 
         activity.activity.toLowerCase().includes(searchQuery.toLowerCase()) ||
         activity.description.toLowerCase().includes(searchQuery.toLowerCase());
       
-      // Filter by category assignment to year group
-      // If categories are available for year group, only show activities from those categories
-      // Otherwise, show all activities (fallback to show everything)
-      const matchesYearGroupCategory = availableCategoriesForYearGroup.length === 0 
-        ? true  // If no categories assigned, show all activities
-        : availableCategoriesForYearGroup.includes(activity.category);
-      
-      // Filter by selected category if one is chosen
+      // Filter by selected category if one is chosen (but still show all if 'all' is selected)
       const matchesCategory = selectedCategory === 'all' || activity.category === selectedCategory;
       
-      // Level filtering removed - show all levels
-      const matchesLevel = true;
-      
-      const matches = matchesSearch && matchesYearGroupCategory && matchesCategory && matchesLevel;
-      
-      if (!matches && matchesSearch && matchesCategory) {
-        console.log(`❌ Activity "${activity.activity}" filtered out - category "${activity.category}" not in available categories:`, availableCategoriesForYearGroup);
-      }
-      
-      return matches;
-    });
-    
-    console.log('📋 Lesson Builder: Filtered activities result', {
-      filteredCount: filtered.length,
-      totalCount: allActivities.length
+      return matchesSearch && matchesCategory;
     });
 
-    // Sort activities
+    // Sort activities within each category
     filtered.sort((a, b) => {
       let comparison = 0;
       
@@ -580,15 +569,28 @@ export function LessonPlanBuilder({
           comparison = a.time - b.time;
           break;
         case 'level':
-          comparison = a.level.localeCompare(b.level);
+          comparison = (a.level || '').localeCompare(b.level || '');
           break;
       }
       
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
-    return filtered;
-  }, [allActivities, searchQuery, selectedCategory, sortBy, sortOrder, availableCategoriesForYearGroup]);
+    // Group by category
+    const grouped: Record<string, typeof filtered> = {};
+    filtered.forEach(activity => {
+      const category = activity.category || 'Other';
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push(activity);
+    });
+
+    // Sort categories by name
+    const sortedCategories = Object.keys(grouped).sort();
+
+    return { grouped, sortedCategories };
+  }, [allActivities, searchQuery, selectedCategory, sortBy, sortOrder]);
 
   const toggleSort = (field: typeof sortBy) => {
     if (sortBy === field) {
@@ -809,43 +811,79 @@ export function LessonPlanBuilder({
                   </div>
                 )}
 
-                {/* Activity List */}
+                {/* Activity List - Grouped by Category */}
                 <div className="p-3 pt-6 flex-1 overflow-y-auto min-h-0">
-                  {filteredAndSortedActivities.length === 0 ? (
+                  {groupedActivitiesByCategory.sortedCategories.length === 0 ? (
                     <div className="text-center py-8">
                       <p className="text-gray-500">No matching activities found</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      {filteredAndSortedActivities.slice(0, 20).map((activity, index) => {
-                        const activityId = `${activity.activity}-${activity.category}`;
-                        const isSelected = selectedActivities.includes(activityId);
+                    <div className="space-y-3">
+                      {groupedActivitiesByCategory.sortedCategories.map((categoryName) => {
+                        const categoryActivities = groupedActivitiesByCategory.grouped[categoryName] || [];
+                        const categoryInfo = categories.find(cat => cat.name === categoryName);
+                        const categoryColor = categoryInfo?.color || '#6B7280';
+                        const isExpanded = expandedCategories.has(categoryName);
                         
                         return (
-                          <ActivityCard
-                            key={`${activity._id || activity.id || activityId}-${index}`}
-                            activity={activity}
-                            draggable={true}
-                            selectable={true}
-                            isSelected={isSelected}
-                            onSelectionChange={(id, selected) => {
-                              if (selected) {
-                                toggleActivitySelection(activityId);
-                              } else {
-                                toggleActivitySelection(activityId);
-                              }
-                            }}
-                            onActivityClick={handleActivityPreview}
-                            viewMode="compact"
-                            categoryColor={categories.find(cat => cat.name === activity.category)?.color}
-                          />
+                          <div key={categoryName} className="border border-gray-200 rounded-lg overflow-hidden">
+                            {/* Category Header */}
+                            <button
+                              onClick={() => toggleCategory(categoryName)}
+                              className="w-full px-4 py-2.5 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+                              style={{ borderLeft: `4px solid ${categoryColor}` }}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <ChevronRight 
+                                  className={`h-4 w-4 text-gray-600 transition-transform ${isExpanded ? 'transform rotate-90' : ''}`}
+                                />
+                                <span 
+                                  className="text-xs font-semibold px-2 py-1 rounded-full text-white"
+                                  style={{ backgroundColor: categoryColor }}
+                                >
+                                  {categoryName}
+                                </span>
+                                <span className="text-sm text-gray-600">
+                                  {categoryActivities.length} {categoryActivities.length === 1 ? 'activity' : 'activities'}
+                                </span>
+                              </div>
+                            </button>
+                            
+                            {/* Category Activities - Collapsible */}
+                            {isExpanded && (
+                              <div className="bg-white">
+                                <div className="space-y-1 p-2">
+                                  {categoryActivities.map((activity, index) => {
+                                    const activityId = `${activity.activity}-${activity.category}`;
+                                    const isSelected = selectedActivities.includes(activityId);
+                                    
+                                    return (
+                                      <div key={`${activity._id || activity.id || activityId}-${index}`} className="py-0.5">
+                                        <ActivityCard
+                                          activity={activity}
+                                          draggable={true}
+                                          selectable={true}
+                                          isSelected={isSelected}
+                                          onSelectionChange={(id, selected) => {
+                                            if (selected) {
+                                              toggleActivitySelection(activityId);
+                                            } else {
+                                              toggleActivitySelection(activityId);
+                                            }
+                                          }}
+                                          onActivityClick={handleActivityPreview}
+                                          viewMode="compact"
+                                          categoryColor={categoryColor}
+                                        />
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
-                      {filteredAndSortedActivities.length > 20 && (
-                        <div className="text-center py-2 text-gray-500 text-xs">
-                          <p>Showing first 20 results. Refine search to see more.</p>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
