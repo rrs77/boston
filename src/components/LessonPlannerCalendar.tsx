@@ -515,8 +515,42 @@ export function LessonPlannerCalendar({
     });
   };
 
-  // Render a calendar day cell for month view
-  const renderCalendarDay = (date: Date, isCurrentMonth: boolean = true) => {
+  // CalendarDay component - separate component to allow hooks
+  const CalendarDay = React.memo(({ 
+    date, 
+    isCurrentMonth,
+    getLessonPlansForDate,
+    getEventsForDate,
+    getTimetableClassesForDay,
+    isHoliday,
+    isInsetDay,
+    getWeekNumber,
+    selectedDate,
+    selectedDateWithPlans,
+    isLessonSummaryOpen,
+    className,
+    onUpdateLessonPlan,
+    handleDateClick,
+    units,
+    theme
+  }: {
+    date: Date;
+    isCurrentMonth: boolean;
+    getLessonPlansForDate: (date: Date) => LessonPlan[];
+    getEventsForDate: (date: Date) => CalendarEvent[];
+    getTimetableClassesForDay: (day: number) => TimetableClass[];
+    isHoliday: (date: Date) => boolean;
+    isInsetDay: (date: Date) => boolean;
+    getWeekNumber: (date: Date) => number;
+    selectedDate: Date | null;
+    selectedDateWithPlans: {date: Date, plans: LessonPlan[]} | null;
+    isLessonSummaryOpen: boolean;
+    className: string;
+    onUpdateLessonPlan: (plan: LessonPlan) => void;
+    handleDateClick: (date: Date) => void;
+    units: any[];
+    theme: any;
+  }) => {
     const plansForDate = getLessonPlansForDate(date);
     const eventsForDate = getEventsForDate(date);
     const isSelected = selectedDate && isSameDay(date, selectedDate);
@@ -530,7 +564,6 @@ export function LessonPlannerCalendar({
     // Check if there are plans for this date
     const hasPlans = plansForDate.length > 0;
     const hasMultiplePlans = plansForDate.length > 1;
-    const singlePlan = plansForDate.length === 1 ? plansForDate[0] : null;
 
     // Set up drop target for activities and units
     const [{ isOver }, drop] = useDrop(() => ({
@@ -548,7 +581,7 @@ export function LessonPlannerCalendar({
             activities: [item.activity],
             duration: item.activity.time || 0,
             notes: '',
-            status: 'planned',
+            status: 'planned' as const,
             createdAt: new Date(),
             updatedAt: new Date()
           };
@@ -565,7 +598,7 @@ export function LessonPlannerCalendar({
       collect: (monitor) => ({
         isOver: monitor.isOver()
       })
-    }), [date, onUpdateLessonPlan]);
+    }), [date.toISOString(), onUpdateLessonPlan, className, getWeekNumber]);
 
     // Determine cell background color based on events
     let cellBgColor = isCurrentMonth ? 'bg-white' : 'bg-gray-50 opacity-60';
@@ -575,7 +608,6 @@ export function LessonPlannerCalendar({
     return (
       <div
         ref={drop}
-        key={date.toISOString()}
         onClick={() => !isHolidayDate && !isInsetDayDate && handleDateClick(date)}
         className={`
           relative w-full h-24 p-1 border border-gray-200 hover:bg-blue-50 transition-colors duration-200
@@ -1225,7 +1257,27 @@ export function LessonPlannerCalendar({
         ))}
         {calendarDays.map((date, i) => {
           const isCurrentMonth = i >= daysFromPrevMonth && i < (daysFromPrevMonth + currentMonthDays.length);
-          return renderCalendarDay(date, isCurrentMonth);
+          return (
+            <CalendarDay
+              key={date.toISOString()}
+              date={date}
+              isCurrentMonth={isCurrentMonth}
+              getLessonPlansForDate={getLessonPlansForDate}
+              getEventsForDate={getEventsForDate}
+              getTimetableClassesForDay={getTimetableClassesForDay}
+              isHoliday={isHoliday}
+              isInsetDay={isInsetDay}
+              getWeekNumber={getWeekNumber}
+              selectedDate={selectedDate}
+              selectedDateWithPlans={selectedDateWithPlans}
+              isLessonSummaryOpen={isLessonSummaryOpen}
+              className={className}
+              onUpdateLessonPlan={onUpdateLessonPlan}
+              handleDateClick={handleDateClick}
+              units={units}
+              theme={theme}
+            />
+          );
         })}
       </div>
     );
