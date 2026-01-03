@@ -478,6 +478,46 @@ export const lessonsApi = {
       console.warn(`Failed to update lesson notes for ${sheet}:${lessonNumber}:`, error);
       throw error;
     }
+  },
+  
+  // Delete all lessons for a specific sheet and academic year
+  deleteBySheet: async (sheet: string, academicYear?: string) => {
+    try {
+      const query = supabase
+        .from(TABLES.LESSONS)
+        .delete()
+        .eq('sheet_name', sheet);
+      
+      if (academicYear) {
+        query.eq('academic_year', academicYear);
+      }
+      
+      const { error } = await query;
+      
+      if (error) throw error;
+      console.log(`✅ Deleted lessons for ${sheet}${academicYear ? ` (${academicYear})` : ''}`);
+      return { success: true };
+    } catch (error) {
+      console.error(`❌ Failed to delete lessons for ${sheet}:`, error);
+      throw error;
+    }
+  },
+  
+  // Delete ALL lessons from Supabase (use with caution!)
+  deleteAll: async () => {
+    try {
+      const { error } = await supabase
+        .from(TABLES.LESSONS)
+        .delete()
+        .neq('sheet_name', ''); // Delete all rows
+      
+      if (error) throw error;
+      console.log('✅ Deleted all lessons from Supabase');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Failed to delete all lessons:', error);
+      throw error;
+    }
   }
 };
 
