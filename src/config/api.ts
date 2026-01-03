@@ -329,6 +329,18 @@ export const lessonsApi = {
         
         if (data) {
           hasData = true;
+          
+          console.log('🔍 DEBUG: Processing Supabase result:', {
+            dataKeys: Object.keys(data),
+            hasDataField: !!data.data,
+            dataDataType: typeof data.data,
+            dataDataIsArray: Array.isArray(data.data),
+            dataDataKeys: data.data ? Object.keys(data.data).slice(0, 10) : [],
+            hasLessonNumbers: !!data.lesson_numbers,
+            lessonNumbersLength: data.lesson_numbers?.length || 0,
+            hasTeachingUnits: !!data.teaching_units
+          });
+          
           // Merge lesson data
           if (data.data) {
             mergedData.allLessonsData = {
