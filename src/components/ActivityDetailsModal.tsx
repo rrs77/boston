@@ -1,6 +1,7 @@
-import React from 'react';
-import { X, Clock, Video, Music, FileText, Link as LinkIcon, Image, Volume2, Tag, Users, ExternalLink, Edit3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Clock, Video, Music, FileText, Link as LinkIcon, Image, Volume2, Tag, Users, ExternalLink, Edit3, Palette } from 'lucide-react';
 import type { Activity } from '../contexts/DataContext';
+import { CanvaViewer } from './CanvaViewer';
 
 interface ActivityDetailsModalProps {
   isOpen: boolean;
@@ -10,6 +11,8 @@ interface ActivityDetailsModalProps {
 }
 
 export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: ActivityDetailsModalProps) {
+  const [selectedCanvaLink, setSelectedCanvaLink] = useState<{ url: string; title: string } | null>(null);
+  
   if (!isOpen || !activity) {
     console.log('ActivityDetailsModal: Not rendering', { isOpen, hasActivity: !!activity });
     return null;
@@ -20,7 +23,7 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
     category: activity.category,
     hasDescription: !!activity.description,
     hasActivityText: !!activity.activityText,
-    hasResources: !!(activity.videoLink || activity.musicLink || activity.backingLink || activity.resourceLink || activity.link || activity.imageLink)
+    hasResources: !!(activity.videoLink || activity.musicLink || activity.backingLink || activity.resourceLink || activity.link || activity.imageLink || activity.canvaLink)
   });
 
   // Format description with line breaks
@@ -45,6 +48,7 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
     { label: 'Resource', url: activity.resourceLink, icon: FileText, color: 'text-teal-600 bg-teal-50 border-teal-200', type: 'resource' },
     { label: 'Link', url: activity.link, icon: LinkIcon, color: 'text-gray-600 bg-gray-50 border-gray-200', type: 'link' },
     { label: 'Image', url: activity.imageLink, icon: Image, color: 'text-teal-600 bg-teal-50 border-teal-200', type: 'image' },
+    { label: 'Canva', url: activity.canvaLink, icon: Palette, color: 'text-indigo-600 bg-indigo-50 border-indigo-200', type: 'canva' },
   ].filter(resource => resource.url && resource.url.trim());
 
   return (
@@ -80,33 +84,60 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
               <span className="text-sm text-gray-600">Duration: {activity.time || 0} minutes</span>
             </div>
             
-            {activity.yearGroups && activity.yearGroups.length > 0 && (
-              <div className="flex items-center space-x-2">
-                <Users className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">
-                  Level: {activity.yearGroups.join(', ')}
-                </span>
-              </div>
-            )}
-            
-            {activity.level && (
-              <div className="flex items-center space-x-2">
-                <Users className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">
-                  Level: {activity.level}
-                </span>
-              </div>
-            )}
+            {(() => {
+              // Filter out "All" and empty values from year groups for display
+              const validYearGroups = activity.yearGroups?.filter(
+                group => group && group.trim() !== '' && group.toLowerCase() !== 'all'
+              ) || [];
+              
+              // Only show if there are valid year groups
+              if (validYearGroups.length > 0) {
+                return (
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">
+                      Level: {validYearGroups.join(', ')}
+                    </span>
+                  </div>
+                );
+              }
+              
+              // Fallback to level if it exists and is not "All"
+              if (activity.level && activity.level.toLowerCase() !== 'all') {
+                return (
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">
+                      Level: {activity.level}
+                    </span>
+                  </div>
+                );
+              }
+              
+              return null;
+            })()}
           </div>
           
           {/* Fallback message if no content */}
-          {!activity.description && !activity.activityText && resources.length === 0 && (!activity.yearGroups || activity.yearGroups.length === 0) && (
-            <div className="text-center py-8 text-gray-500">
-              <Tag className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-              <p className="text-lg font-medium mb-2">Activity Details</p>
-              <p className="text-sm">No additional information available for this activity.</p>
-            </div>
-          )}
+          {(() => {
+            // Check if there are valid year groups (excluding "All")
+            const validYearGroups = activity.yearGroups?.filter(
+              group => group && group.trim() !== '' && group.toLowerCase() !== 'all'
+            ) || [];
+            
+            const hasValidLevel = activity.level && activity.level.toLowerCase() !== 'all';
+            
+            if (!activity.description && !activity.activityText && resources.length === 0 && validYearGroups.length === 0 && !hasValidLevel) {
+              return (
+                <div className="text-center py-8 text-gray-500">
+                  <Tag className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                  <p className="text-lg font-medium mb-2">Activity Details</p>
+                  <p className="text-sm">No additional information available for this activity.</p>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           {/* Description */}
           {activity.description && (
@@ -132,19 +163,31 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
 
           {/* Year Groups */}
           {activity.yearGroups && activity.yearGroups.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Year Groups</h3>
-              <div className="flex flex-wrap gap-2">
-                {activity.yearGroups.map((group, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-teal-100 text-teal-800 text-sm rounded-full"
-                  >
-                    {group}
-                  </span>
-                ))}
-              </div>
-            </div>
+            (() => {
+              // Filter out "All" and empty values from year groups
+              const validYearGroups = activity.yearGroups.filter(
+                group => group && group.trim() !== '' && group.toLowerCase() !== 'all'
+              );
+              
+              // Only show section if there are valid year groups
+              if (validYearGroups.length === 0) return null;
+              
+              return (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Year Groups</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {validYearGroups.map((group, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-teal-100 text-teal-800 text-sm rounded-full"
+                      >
+                        {group}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()
           )}
 
           {/* Resources */}
@@ -156,11 +199,20 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
                   const IconComponent = resource.icon;
                   
                   // Handle resource click - ensure it opens in browser, not PWA
-                  const handleResourceClick = (e: React.MouseEvent, url: string) => {
+                  const handleResourceClick = (e: React.MouseEvent, url: string, type: string) => {
                     e.preventDefault();
                     e.stopPropagation();
                     
-                    // Force open in browser window, not PWA context
+                    // If it's a Canva link, open in modal
+                    if (type === 'canva') {
+                      setSelectedCanvaLink({
+                        url: url,
+                        title: `${activity.activity} - ${resource.label}`
+                      });
+                      return;
+                    }
+                    
+                    // For other resources, force open in browser window, not PWA context
                     // Use window.open with explicit flags to ensure browser opens it
                     const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
                     
@@ -180,7 +232,7 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
                   return (
                     <button
                       key={index}
-                      onClick={(e) => handleResourceClick(e, resource.url!)}
+                      onClick={(e) => handleResourceClick(e, resource.url!, resource.type)}
                       className={`p-3 rounded-lg border transition-all duration-200 hover:shadow-md text-left w-full ${resource.color}`}
                     >
                       <div className="flex items-center space-x-3">
@@ -221,6 +273,15 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
           </button>
         </div>
       </div>
+      
+      {/* CanvaViewer Modal */}
+      {selectedCanvaLink && (
+        <CanvaViewer
+          url={selectedCanvaLink.url}
+          title={selectedCanvaLink.title}
+          onClose={() => setSelectedCanvaLink(null)}
+        />
+      )}
     </div>
   );
 }

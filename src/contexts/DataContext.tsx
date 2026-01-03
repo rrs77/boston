@@ -21,6 +21,7 @@ export interface Activity {
   link: string;
   vocalsLink: string;
   imageLink: string;
+  canvaLink?: string; // Canva design link
   teachingUnit: string;
   category: string;
   level: string; // Keep for backward compatibility
@@ -2745,6 +2746,7 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
               link: activityForSupabase.link,
               vocals_link: activityForSupabase.vocalsLink,
               image_link: activityForSupabase.imageLink,
+              canva_link: activityForSupabase.canvaLink || '',
               teaching_unit: activityForSupabase.teachingUnit,
               category: activityForSupabase.category,
               level: activityForSupabase.level,

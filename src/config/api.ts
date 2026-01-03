@@ -30,7 +30,7 @@ export const activitiesApi = {
       // First, try to load activities for this user
       let { data, error } = await supabase
         .from(TABLES.ACTIVITIES)
-        .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, yeargroups')
+        .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, canva_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, yeargroups')
         .eq('user_id', userId);
       
       if (error) throw error;
@@ -40,7 +40,7 @@ export const activitiesApi = {
         console.log('⚠️ No activities found for user', userId, '- loading all activities');
         const allActivitiesQuery = await supabase
           .from(TABLES.ACTIVITIES)
-          .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, yeargroups');
+          .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, canva_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, yeargroups');
         
         if (allActivitiesQuery.error) throw allActivitiesQuery.error;
         data = allActivitiesQuery.data;
@@ -64,6 +64,7 @@ export const activitiesApi = {
         link: item.link,
         vocalsLink: item.vocals_link,
         imageLink: item.image_link,
+        canvaLink: item.canva_link || '',
         teachingUnit: item.teaching_unit,
         category: item.category,
         level: item.level,
@@ -131,6 +132,7 @@ export const activitiesApi = {
         link: data.link,
         vocalsLink: data.vocals_link,
         imageLink: data.image_link,
+        canvaLink: data.canva_link || '',
         teachingUnit: data.teaching_unit,
         category: data.category,
         level: data.level,
@@ -161,6 +163,7 @@ export const activitiesApi = {
         link: activityData.link,
         vocals_link: activityData.vocalsLink,
         image_link: activityData.imageLink,
+        canva_link: activityData.canvaLink || '',
         teaching_unit: activityData.teachingUnit,
         category: activityData.category,
         level: activityData.level,
@@ -200,6 +203,7 @@ export const activitiesApi = {
         link: data.link,
         vocalsLink: data.vocals_link,
         imageLink: data.image_link,
+        canvaLink: data.canva_link || '',
         teachingUnit: data.teaching_unit,
         category: data.category,
         level: data.level,
@@ -244,6 +248,7 @@ export const activitiesApi = {
         link: activity.link,
         vocals_link: activity.vocalsLink,
         image_link: activity.imageLink,
+        canva_link: activity.canvaLink || '',
         teaching_unit: activity.teachingUnit,
         category: activity.category,
         level: activity.level,
@@ -1268,6 +1273,7 @@ export const dataApi = {
           link: activity.link,
           vocals_link: activity.vocalsLink,
           image_link: activity.imageLink,
+          canva_link: activity.canvaLink || '',
           teaching_unit: activity.teachingUnit,
           category: activity.category,
           level: activity.level,

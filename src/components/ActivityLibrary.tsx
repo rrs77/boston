@@ -73,9 +73,22 @@ export function ActivityLibrary({
       return [];
     }
     
-    const yearGroup = customYearGroups.find(yg => yg.id === sheetId);
+    // Try to find by ID first
+    let yearGroup = customYearGroups.find(yg => yg.id === sheetId);
+    
+    // If not found by ID, try to find by name (handles cases like "Example KS1 Maths")
+    if (!yearGroup) {
+      yearGroup = customYearGroups.find(yg => 
+        yg.name === sheetId || 
+        yg.name.toLowerCase() === sheetId.toLowerCase() ||
+        sheetId.includes(yg.name) ||
+        yg.name.includes(sheetId)
+      );
+    }
+    
     if (yearGroup) {
-      return [yearGroup.id];
+      // Return both ID and name as potential keys for matching
+      return [yearGroup.id, yearGroup.name].filter(Boolean);
     }
     return [];
   }, [className, currentSheetInfo, customYearGroups]);
@@ -83,21 +96,31 @@ export function ActivityLibrary({
   // Get categories available for current year group
   const availableCategoriesForYearGroup = React.useMemo(() => {
     if (!categories || categories.length === 0) {
+      console.log('📚 ActivityLibrary: No categories available');
       return [];
     }
     
     const yearGroupKeys = getCurrentYearGroupKeys();
+    const currentSheet = className || currentSheetInfo?.sheet;
+    
+    console.log('📚 ActivityLibrary: Filtering categories for year group:', {
+      currentSheet,
+      yearGroupKeys,
+      totalCategories: categories.length
+    });
+    
     if (yearGroupKeys.length === 0) {
       // If no year group selected, show all categories
+      console.log('📚 ActivityLibrary: No year group selected, showing all categories');
       return categories.map(c => c.name);
     }
     
-    const primaryKey = yearGroupKeys[0];
-    
     // Filter categories that are assigned to this year group
+    // Check against all potential keys (ID and name)
     const filteredCategories = categories
       .filter(category => {
         if (!category || !category.yearGroups || Object.keys(category.yearGroups).length === 0) {
+          console.log(`❌ Category "${category.name}" has no yearGroups assigned - excluding`);
           return false;
         }
         
@@ -108,16 +131,27 @@ export function ActivityLibrary({
           category.yearGroups.Reception === true &&
           Object.keys(category.yearGroups).length === 3;
         if (hasOldDefaults) {
+          console.log(`❌ Category "${category.name}" has old defaults - excluding`);
           return false;
         }
         
-        // Check if this category is assigned to the current year group
-        return category.yearGroups[primaryKey] === true;
+        // Check if this category is assigned to any of the year group keys
+        const isAssigned = yearGroupKeys.some(key => category.yearGroups[key] === true);
+        
+        if (isAssigned) {
+          console.log(`✅ Category "${category.name}" is assigned to year group (keys: ${yearGroupKeys.join(', ')})`);
+        } else {
+          console.log(`❌ Category "${category.name}" is NOT assigned to year group. Available keys in category:`, Object.keys(category.yearGroups));
+        }
+        
+        return isAssigned;
       })
       .map(c => c.name);
     
+    console.log(`📚 ActivityLibrary: Found ${filteredCategories.length} categories for year group:`, filteredCategories);
+    
     return filteredCategories;
-  }, [categories, getCurrentYearGroupKeys]);
+  }, [categories, getCurrentYearGroupKeys, className, currentSheetInfo]);
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [localSelectedCategory, setLocalSelectedCategory] = useState(selectedCategory);

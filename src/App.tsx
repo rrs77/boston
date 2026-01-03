@@ -12,6 +12,7 @@ import { useAuth } from './hooks/useAuth';
 import { HelpGuide } from './components/HelpGuide';
 import { initializeSupabaseKeepAlive } from './utils/supabaseKeepAlive';
 import './utils/setupKS1Maths'; // Make setupKS1MathsExample available in browser console
+import './utils/setupDanceObjectives'; // Make setupDanceObjectives available in browser console
 
 function AppContent() {
   const { user, loading } = useAuth();

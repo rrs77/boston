@@ -15,7 +15,7 @@ interface UserSettingsProps {
 
 export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const { user } = useAuth();
-  const { settings, updateSettings, resetToDefaults, categories, updateCategories, resetCategoriesToDefaults, customYearGroups, updateYearGroups, resetYearGroupsToDefaults, categoryGroups, addCategoryGroup, removeCategoryGroup, updateCategoryGroup, forceSyncYearGroups, forceSyncToSupabase, forceRefreshFromSupabase, forceSyncCurrentYearGroups, forceSafariSync, startUserChange, endUserChange } = useSettings();
+  const { settings, updateSettings, resetToDefaults, categories, updateCategories, resetCategoriesToDefaults, customYearGroups, updateYearGroups, resetYearGroupsToDefaults, forceSyncYearGroups, forceSyncToSupabase, forceRefreshFromSupabase, forceSyncCurrentYearGroups, forceSafariSync, startUserChange, endUserChange } = useSettings();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tempSettings, setTempSettings] = useState(settings);
   const [tempCategories, setTempCategories] = useState(categories);
@@ -25,8 +25,6 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [editingCategoryYearGroups, setEditingCategoryYearGroups] = useState<string | null>(null); // Track which category's year groups are being edited
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState('#6B7280');
-  const [newCategoryGroup, setNewCategoryGroup] = useState<string | undefined>(undefined);
-  const [newCategoryGroups, setNewCategoryGroups] = useState<string[]>([]);
   const [newCategoryYearGroups, setNewCategoryYearGroups] = useState<{[key: string]: boolean}>({
     LKG: false,
     UKG: false,
@@ -41,9 +39,6 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [newYearGroupColor, setNewYearGroupColor] = useState('#3B82F6');
   const [editingYearGroup, setEditingYearGroup] = useState<string | null>(null);
   const [draggedYearGroup, setDraggedYearGroup] = useState<string | null>(null);
-  const [newGroupName, setNewGroupName] = useState('');
-  const [editingGroup, setEditingGroup] = useState<string | null>(null);
-  const [editingGroupName, setEditingGroupName] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showCustomObjectivesAdmin, setShowCustomObjectivesAdmin] = useState(false);
   const [showYearGroupsModal, setShowYearGroupsModal] = useState(false);
@@ -58,14 +53,22 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   }, [settings]);
 
   // Update temp categories when categories change
+  // BUT: Skip if we're in the middle of a deletion to prevent restoring deleted items
+  const [isDeletingCategory, setIsDeletingCategory] = React.useState(false);
   React.useEffect(() => {
-    setTempCategories(categories);
-  }, [categories]);
+    if (!isDeletingCategory) {
+      setTempCategories(categories);
+    }
+  }, [categories, isDeletingCategory]);
 
   // Update temp classes when classes change
+  // BUT: Skip if we're in the middle of a deletion to prevent restoring deleted items
+  const [isDeletingYearGroup, setIsDeletingYearGroup] = React.useState(false);
   React.useEffect(() => {
-    setTempYearGroups(customYearGroups);
-  }, [customYearGroups]);
+    if (!isDeletingYearGroup) {
+      setTempYearGroups(customYearGroups);
+    }
+  }, [customYearGroups, isDeletingYearGroup]);
 
   // Immediate update for categories to ensure group assignments are saved
   React.useEffect(() => {
@@ -183,8 +186,6 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
         name: newCategoryName,
         color: newCategoryColor,
         position: tempCategories.length,
-        group: newCategoryGroup, // Keep for backward compatibility
-        groups: newCategoryGroups.length > 0 ? newCategoryGroups : undefined, // New multiple groups
         yearGroups: {
           LKG: newCategoryYearGroups.LKG || false,
           UKG: newCategoryYearGroups.UKG || false,
@@ -203,9 +204,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     // Reset form
     setNewCategoryName('');
     setNewCategoryColor('#6B7280');
-      setNewCategoryGroup(undefined);
-      setNewCategoryGroups([]);
-      setNewCategoryYearGroups({ LKG: false, UKG: false, Reception: false });
+    setNewCategoryYearGroups({ LKG: false, UKG: false, Reception: false });
       
       console.log('✅ Category added and persisted:', newCategory.name);
       
@@ -223,6 +222,9 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const handleDeleteCategory = async (index: number) => {
     if (confirm('Are you sure you want to delete this category? This may affect existing activities.')) {
       try {
+        // Set deletion flag to prevent useEffect from resetting tempCategories
+        setIsDeletingCategory(true);
+        
         // Start user change to pause real-time sync
         startUserChange();
         
@@ -269,17 +271,24 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
         
         console.log('✅ Category deleted and persisted');
         
+        // Wait a bit before clearing the deletion flag to ensure state is stable
+        setTimeout(() => {
+          setIsDeletingCategory(false);
+        }, 1000);
+        
         // End user change after a longer delay to ensure all sync operations complete
         // This prevents reloads from Supabase from restoring the deleted category
         setTimeout(() => {
-          endUserChange();
+        endUserChange();
         }, 3000); // 3 seconds instead of immediate
       } catch (error: unknown) {
         console.error('❌ Failed to delete category:', error);
         alert('Failed to delete category. Please try again.');
+        // Clear deletion flag on error
+        setIsDeletingCategory(false);
         // End user change even on error, but after a delay
         setTimeout(() => {
-          endUserChange();
+        endUserChange();
         }, 2000);
       }
     }
@@ -404,13 +413,28 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
 
   const handleDeleteYearGroup = async (index: number) => {
     if (confirm('Are you sure you want to delete this year group? This may affect existing lessons.')) {
-      const updatedYearGroups = tempYearGroups.filter((_, i) => i !== index);
-      setTempYearGroups(updatedYearGroups);
-      
-      // Immediately persist changes
-      console.log('🔄 Deleting year group and persisting immediately');
-      await updateYearGroups(updatedYearGroups);
-      console.log('✅ Year group deleted and persisted');
+      try {
+        // Set deletion flag to prevent useEffect from resetting tempYearGroups
+        setIsDeletingYearGroup(true);
+        
+        const updatedYearGroups = tempYearGroups.filter((_, i) => i !== index);
+        setTempYearGroups(updatedYearGroups);
+        
+        // Immediately persist changes
+        console.log('🔄 Deleting year group and persisting immediately');
+        await updateYearGroups(updatedYearGroups);
+        console.log('✅ Year group deleted and persisted');
+        
+        // Wait a bit before clearing the deletion flag to ensure state is stable
+        setTimeout(() => {
+          setIsDeletingYearGroup(false);
+        }, 1000);
+      } catch (error) {
+        console.error('❌ Failed to delete year group:', error);
+        alert('Failed to delete year group. Please try again.');
+        // Clear deletion flag on error
+        setIsDeletingYearGroup(false);
+      }
     }
   };
 
@@ -485,37 +509,6 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
     }
   };
 
-  // Group management handlers
-  const handleAddGroup = async () => {
-    if (newGroupName.trim() && !categoryGroups.groups.includes(newGroupName.trim())) {
-      await addCategoryGroup(newGroupName.trim());
-      setNewGroupName('');
-    }
-  };
-
-  const handleEditGroup = (groupName: string) => {
-    setEditingGroup(groupName);
-    setEditingGroupName(groupName);
-  };
-
-  const handleSaveGroupEdit = async () => {
-    if (editingGroup && editingGroupName.trim() && editingGroupName.trim() !== editingGroup) {
-      await updateCategoryGroup(editingGroup, editingGroupName.trim());
-      setEditingGroup(null);
-      setEditingGroupName('');
-    }
-  };
-
-  const handleCancelGroupEdit = () => {
-    setEditingGroup(null);
-    setEditingGroupName('');
-  };
-
-  const handleDeleteGroup = async (groupName: string) => {
-    if (window.confirm(`Are you sure you want to delete the group "${groupName}"? Categories in this group will become ungrouped.`)) {
-      await removeCategoryGroup(groupName);
-    }
-  };
 
 
   if (!isOpen) return null;
@@ -936,43 +929,6 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                         dir="ltr"
                       />
                     </div>
-                      <div className="flex-1 min-w-[200px]">
-                        <div className="flex flex-wrap gap-1 min-h-[40px] px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500">
-                          {newCategoryGroups.map((groupName, groupIndex) => (
-                            <span
-                              key={groupIndex}
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-md"
-                            >
-                              {groupName}
-                              <button
-                                onClick={() => {
-                                  setNewCategoryGroups(newCategoryGroups.filter(g => g !== groupName));
-                                }}
-                                className="text-teal-600 hover:text-teal-800"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                          <select
-                            id="newCategoryGroupSelect"
-                            name="newCategoryGroupSelect"
-                            onChange={(e) => {
-                              if (e.target.value && !newCategoryGroups.includes(e.target.value)) {
-                                setNewCategoryGroups([...newCategoryGroups, e.target.value]);
-                                e.target.value = ''; // Reset select
-                              }
-                            }}
-                            className="border border-gray-300 rounded outline-none text-sm bg-white text-gray-900 flex-1 px-2 py-1 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-                            defaultValue=""
-                          >
-                            <option value="" disabled>Add group...</option>
-                            {categoryGroups.groups.filter(group => !newCategoryGroups.includes(group)).map((group, index) => (
-                              <option key={`${group}-${index}`} value={group}>{group}</option>
-                            ))}
-                          </select>
-                        </div>
-                    </div>
                     <div className="w-24">
                       <label htmlFor="newCategoryColor" className="sr-only">Category color</label>
                       <input
@@ -1135,118 +1091,6 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                     Drag and drop to reorder categories. Changes will affect how categories are displayed throughout the application.
                   </p>
 
-                  {/* Category Groups Management */}
-                  <div className="bg-gray-50 rounded-lg  p-4 mb-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium text-gray-900">Category Groups</h4>
-                      <button
-                        onClick={() => {
-                          console.log('💾 Manually saving category group assignments...');
-                          updateCategories(tempCategories);
-                        }}
-                        className="flex items-center gap-2 px-3 py-1 text-sm rounded-md transition-colors"
-                        style={{backgroundColor: '#E6F7F5', color: '#0BA596'}}
-                        title="Save category group assignments"
-                      >
-                        <Database className="h-4 w-4" />
-                        Save Groups
-                      </button>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Create groups to organize categories in dropdowns. Categories can be assigned to groups when creating or editing them.
-                    </p>
-                    
-                    {/* Add New Group */}
-                    <div className="flex gap-2 mb-4">
-                      <label htmlFor="newGroupName" className="sr-only">Group name</label>
-                      <input
-                        id="newGroupName"
-                        name="newGroupName"
-                        type="text"
-                        value={newGroupName}
-                        onChange={(e) => setNewGroupName(e.target.value)}
-                        placeholder="Group name"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                        onKeyPress={(e) => e.key === 'Enter' && handleAddGroup()}
-                      />
-                      <button
-                        onClick={handleAddGroup}
-                        disabled={!newGroupName.trim()}
-                        className="px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span>Add Group</span>
-                      </button>
-                    </div>
-
-                    {/* Groups List */}
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                      {categoryGroups.groups.map((groupName, index) => (
-                        <div
-                          key={`${groupName}-${index}`}
-                          className="flex items-center justify-between p-3 bg-white  rounded-lg"
-                        >
-                          {editingGroup === groupName ? (
-                            <div className="flex items-center gap-2 flex-1">
-                              <input
-                                id={`editGroupName-${groupName}`}
-                                name={`editGroupName-${groupName}`}
-                                type="text"
-                                value={editingGroupName}
-                                onChange={(e) => setEditingGroupName(e.target.value)}
-                                className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
-                                onKeyPress={(e) => e.key === 'Enter' && handleSaveGroupEdit()}
-                                autoFocus
-                              />
-                              <button
-                                onClick={handleSaveGroupEdit}
-                                className="px-2 py-1 text-white rounded text-sm"
-                                style={{backgroundColor: '#0BA596'}}
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelGroupEdit}
-                                className="px-2 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <>
-                              <span className="font-medium text-gray-900">{groupName}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500">
-                                  {tempCategories.filter(cat => 
-                                    cat.group === groupName || 
-                                    (cat.groups && cat.groups.includes(groupName))
-                                  ).length} categories
-                                </span>
-                                <button
-                                  onClick={() => handleEditGroup(groupName)}
-                                  className="px-2 py-1 text-teal-600 hover:bg-teal-100 rounded text-sm"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteGroup(groupName)}
-                                  className="px-2 py-1 text-red-600 hover:bg-red-100 rounded text-sm"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                      {categoryGroups.groups.length === 0 && (
-                        <p className="text-gray-500 text-sm text-center py-4">
-                          No groups created yet. Create a group to organize your categories.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  
                   {/* Bulk Year Group Assignment Section */}
                   {bulkYearGroupMode && (
                     <div className="mb-6 p-5 bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-300 rounded-xl shadow-sm">
@@ -1514,66 +1358,6 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                   className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
                                 dir="ltr"
                               />
-                              <div className="relative">
-                                <div className="flex flex-wrap gap-1 min-h-[32px] px-2 py-1 border border-gray-300 rounded text-sm bg-white focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500">
-                                    {(tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : [])).map((groupName, groupIndex) => (
-                                    <span
-                                      key={groupIndex}
-                                      className="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-md"
-                                    >
-                                      {groupName}
-                                      <button
-                                        onClick={() => {
-                                          const updatedCategories = [...tempCategories];
-                                            const currentGroups = tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : []);
-                                          const newGroups = currentGroups.filter(g => g !== groupName);
-                                          updatedCategories[index] = { 
-                                            ...updatedCategories[index], 
-                                            groups: newGroups.length > 0 ? newGroups : undefined,
-                                              group: undefined
-                                          };
-                                          setTempCategories(updatedCategories);
-                                          updateCategories(updatedCategories);
-                                        }}
-                                        className="text-teal-600 hover:text-teal-800"
-                                      >
-                                        ×
-                                      </button>
-                                    </span>
-                                  ))}
-                                  <select
-                                    id={`editCategoryGroupSelect-${index}`}
-                                    name={`editCategoryGroupSelect-${index}`}
-                                    onChange={(e) => {
-                                      if (e.target.value) {
-                                        startUserChange();
-                                        const updatedCategories = [...tempCategories];
-                                          const currentGroups = tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : []);
-                                        if (!currentGroups.includes(e.target.value)) {
-                                          const newGroups = [...currentGroups, e.target.value];
-                                          updatedCategories[index] = { 
-                                            ...updatedCategories[index], 
-                                            groups: newGroups,
-                                              group: undefined
-                                            };
-                                          setTempCategories(updatedCategories);
-                                          endUserChange();
-                                        }
-                                          e.target.value = '';
-                                      }
-                                    }}
-                                      className="border border-gray-300 rounded outline-none text-sm bg-white text-gray-900 w-24 px-2 py-1 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-                                    defaultValue=""
-                                  >
-                                    <option value="" disabled>Add group...</option>
-                                      {categoryGroups && categoryGroups.groups && Array.isArray(categoryGroups.groups) ? categoryGroups.groups.filter(group => 
-                                        !(tempCategories[index]?.groups || (tempCategories[index]?.group ? [tempCategories[index].group] : [])).includes(group)
-                                    ).map(group => (
-                                      <option key={group} value={group}>{group}</option>
-                                      )) : null}
-                                  </select>
-                                </div>
-                              </div>
                               <input
                                 id={`editCategoryColor-${index}`}
                                 name={`editCategoryColor-${index}`}
@@ -1656,25 +1440,6 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                             <div className="flex-1 min-w-0">
                                 <div className="font-semibold text-gray-900 mb-2" dir="ltr">{category.name}</div>
                                 
-                                {/* Groups Display */}
-                              {(category.groups && category.groups.length > 0) ? (
-                                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                                    <span className="text-xs text-gray-500 font-medium">Groups:</span>
-                                    {category.groups.map((group, idx) => (
-                                      <span key={idx} className="inline-flex items-center px-2 py-0.5 bg-teal-100 text-teal-800 text-xs rounded-md font-medium">
-                                        {group}
-                                      </span>
-                                    ))}
-                                </div>
-                              ) : category.group ? (
-                                  <div className="flex items-center gap-1.5 mb-2">
-                                    <span className="text-xs text-gray-500 font-medium">Group:</span>
-                                    <span className="inline-flex items-center px-2 py-0.5 bg-teal-100 text-teal-800 text-xs rounded-md font-medium">
-                                      {category.group}
-                                    </span>
-                                </div>
-                              ) : null}
-                                
                                 {/* Year Groups Display */}
                                 <div className="flex flex-wrap items-center gap-1.5">
                                   {editingCategoryYearGroups === `category-index-${index}` ? (
@@ -1693,17 +1458,17 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                             type="checkbox"
                                             checked={isEnabled}
                                             onChange={(e) => {
-                                              const updatedCategories = [...tempCategories];
-                                              updatedCategories[index] = {
-                                                ...updatedCategories[index],
+                                          const updatedCategories = [...tempCategories];
+                                          updatedCategories[index] = { 
+                                            ...updatedCategories[index], 
                                                 yearGroups: {
                                                   ...(updatedCategories[index].yearGroups || {}),
                                                   [yearGroupKey]: e.target.checked
                                                 }
-                                              };
-                                              setTempCategories(updatedCategories);
-                                              updateCategories(updatedCategories);
-                                            }}
+                                          };
+                                          setTempCategories(updatedCategories);
+                                          updateCategories(updatedCategories);
+                                        }}
                                             className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                                           />
                                           <span className={`text-xs ${isEnabled ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>{yearGroup.name}</span>
@@ -1713,9 +1478,9 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                     <div className="flex gap-2 items-center">
                                       <button
                                         onClick={() => {
-                                          const updatedCategories = [...tempCategories];
-                                          updatedCategories[index] = {
-                                            ...updatedCategories[index],
+                                        const updatedCategories = [...tempCategories];
+                                          updatedCategories[index] = { 
+                                            ...updatedCategories[index], 
                                             yearGroups: {} // Clear all year group assignments
                                           };
                                           setTempCategories(updatedCategories);
@@ -1732,8 +1497,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                       >
                                         Done
                                       </button>
-                                    </div>
-                                  </div>
+                                </div>
+                              </div>
                                 ) : (
                                   // View mode: show year group tags (clickable to edit)
                                   <>
@@ -1766,93 +1531,9 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                     )}
                                   </>
                                   )}
-                                </div>
+                            </div>
                               </div>
                             </div>
-                            <div className="flex items-center justify-end space-x-2 flex-shrink-0">
-                              <div className="relative">
-                                <div className="flex flex-wrap gap-1 min-h-[32px] px-2 py-1 border border-gray-300 rounded text-sm bg-white focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500">
-                                  {(category.groups || (category.group ? [category.group] : [])).map((groupName, groupIndex) => (
-                                    <span
-                                      key={groupIndex}
-                                      className="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-md"
-                                    >
-                                      {groupName}
-                                      <button
-                                        onClick={() => {
-                                          const updatedCategories = [...tempCategories];
-                                          const currentGroups = category.groups || (category.group ? [category.group] : []);
-                                          const newGroups = currentGroups.filter(g => g !== groupName);
-                                          updatedCategories[index] = { 
-                                            ...updatedCategories[index], 
-                                            groups: newGroups.length > 0 ? newGroups : undefined,
-                                            group: undefined // Clear single group when using multiple groups
-                                          };
-                                          setTempCategories(updatedCategories);
-                                          updateCategories(updatedCategories);
-                                        }}
-                                        className="text-teal-600 hover:text-teal-800"
-                                      >
-                                        ×
-                                      </button>
-                                    </span>
-                                  ))}
-                                  <select
-                                    id={`viewCategoryGroupSelect-${index}`}
-                                    name={`viewCategoryGroupSelect-${index}`}
-                                    onChange={(e) => {
-                                      if (e.target.value) {
-                                        console.log('🎯 User selecting group:', e.target.value, 'for category:', category.name);
-                                        
-                                        // Start user change to pause real-time sync
-                                        startUserChange();
-                                        
-                                        const updatedCategories = [...tempCategories];
-                                        const currentGroups = category.groups || (category.group ? [category.group] : []);
-                                        console.log('🎯 Current groups before:', currentGroups);
-                                        
-                                        if (!currentGroups.includes(e.target.value)) {
-                                          const newGroups = [...currentGroups, e.target.value];
-                                          console.log('🎯 New groups after adding:', newGroups);
-                                          
-                                          updatedCategories[index] = { 
-                                            ...updatedCategories[index], 
-                                            groups: newGroups,
-                                            group: undefined // Clear single group when using multiple groups
-                                          };
-                                          
-                                          console.log('🎯 Setting temp categories with updated group:', updatedCategories[index]);
-                                          console.log('🎯 Full updated categories array:', updatedCategories.map(cat => ({
-                                            name: cat.name,
-                                            groups: cat.groups,
-                                            group: cat.group
-                                          })));
-                                          setTempCategories(updatedCategories);
-                                          // Don't call updateCategories immediately - let the useEffect handle it
-                                          // This prevents race conditions when assigning multiple categories quickly
-                                          
-                                          // End user change after a delay to allow persistence
-                                          endUserChange();
-                                        } else {
-                                          console.log('🎯 Group already exists, not adding');
-                                        }
-                                        e.target.value = ''; // Reset select
-                                      }
-                                    }}
-                                    className="border border-gray-300 rounded outline-none text-sm bg-white text-gray-900 w-24 px-2 py-1 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-                                    defaultValue=""
-                                  >
-                                    <option value="" disabled>Add group...</option>
-                                    {categoryGroups.groups.filter(group => 
-                                      !(category.groups || (category.group ? [category.group] : [])).includes(group)
-                                    ).map(group => (
-                                      <option key={group} value={group}>{group}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
-                            </div>
-                            
                             {/* Edit/Delete Actions */}
                             <div className="flex items-center gap-1 flex-shrink-0">
                               {bulkYearGroupMode ? (

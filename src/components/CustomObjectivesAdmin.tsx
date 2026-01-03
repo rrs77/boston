@@ -21,6 +21,7 @@ import type {
   CustomObjectiveFormData,
   CustomObjectiveCSVRow 
 } from '../types/customObjectives';
+import { useAuth } from '../hooks/useAuth';
 
 interface CustomObjectivesAdminProps {
   isOpen: boolean;
@@ -28,6 +29,9 @@ interface CustomObjectivesAdminProps {
 }
 
 export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdminProps) {
+  const { user } = useAuth();
+  const isAdmin = user?.email === 'rob.reichstorer@gmail.com' || user?.role === 'administrator';
+  
   const [yearGroups, setYearGroups] = useState<CustomObjectiveYearGroupWithAreas[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedYearGroup, setSelectedYearGroup] = useState<string | null>(null);
@@ -309,6 +313,13 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
   };
 
   const handleDeleteYearGroup = async (id: string) => {
+    // Check if year group is locked
+    const yearGroup = yearGroups.find(yg => yg.id === id);
+    if (yearGroup?.is_locked) {
+      setMessage({ type: 'error', text: 'Cannot delete locked year group. Only admins can unlock it first.' });
+      return;
+    }
+    
     if (confirm('Are you sure you want to delete this year group? This will also delete all associated areas and objectives.')) {
       try {
         await customObjectivesApi.yearGroups.delete(id);
@@ -318,6 +329,30 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
         console.error('Failed to delete year group:', error);
         setMessage({ type: 'error', text: 'Failed to delete year group' });
       }
+    }
+  };
+
+  const handleToggleLock = async (id: string) => {
+    if (!isAdmin) {
+      setMessage({ type: 'error', text: 'Only administrators can lock/unlock year groups.' });
+      return;
+    }
+    
+    const yearGroup = yearGroups.find(yg => yg.id === id);
+    if (!yearGroup) return;
+    
+    const newLockStatus = !yearGroup.is_locked;
+    
+    try {
+      await customObjectivesApi.yearGroups.update(id, { is_locked: newLockStatus });
+      setMessage({ 
+        type: 'success', 
+        text: `Year group ${newLockStatus ? 'locked' : 'unlocked'} successfully` 
+      });
+      await loadData();
+    } catch (error) {
+      console.error('Failed to toggle lock status:', error);
+      setMessage({ type: 'error', text: 'Failed to update lock status' });
     }
   };
 
@@ -550,6 +585,22 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                           >
                             <Copy className="h-3 w-3" />
                           </button>
+                          {isAdmin && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleLock(yearGroup.id);
+                              }}
+                              className={`p-1 ${yearGroup.is_locked ? 'text-amber-500 hover:text-amber-600' : 'text-gray-400 hover:text-gray-600'}`}
+                              title={yearGroup.is_locked ? 'Unlock (Admin only)' : 'Lock (Admin only)'}
+                            >
+                              {yearGroup.is_locked ? (
+                                <Lock className="h-3 w-3" />
+                              ) : (
+                                <Unlock className="h-3 w-3" />
+                              )}
+                            </button>
+                          )}
                           {!yearGroup.is_locked && (
                             <>
                               <button

@@ -75,7 +75,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              © 2025 Rhythmstix
+              © 2026 Rhythmstix
             </a>
           </div>
           

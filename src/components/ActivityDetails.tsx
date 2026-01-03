@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Clock, Video, Music, FileText, Link as LinkIcon, Image, Volume2, Maximize2, Minimize2, ExternalLink, Tag, Plus, Save, Upload, Edit3, Check, Trash2, Info, BookOpen, FolderOpen } from 'lucide-react';
+import { X, Clock, Video, Music, FileText, Link as LinkIcon, Image, Volume2, Maximize2, Minimize2, ExternalLink, Tag, Plus, Save, Upload, Edit3, Check, Trash2, Info, BookOpen, FolderOpen, Palette } from 'lucide-react';
 import { EditableText } from './EditableText';
 import { RichTextEditor } from './RichTextEditor';
 import { LinkViewer } from './LinkViewer';
+import { CanvaViewer } from './CanvaViewer';
 import { NestedStandardsBrowser } from './NestedStandardsBrowser';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import type { Activity } from '../contexts/DataContext';
@@ -60,11 +61,13 @@ export function ActivityDetails({
   const { nestedStandards, lessonStandards, addStandardToLesson, removeStandardFromLesson, updateActivity: updateActivityGlobal } = useData();
   const { customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   const [selectedLink, setSelectedLink] = useState<{ url: string; title: string; type: string } | null>(null);
+  const [selectedCanvaLink, setSelectedCanvaLink] = useState<{ url: string; title: string } | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showStandardsSelector, setShowStandardsSelector] = useState(false);
   const [selectedStandards, setSelectedStandards] = useState<string[]>(activity.standards || activity.eyfsStandards || []);
   const [editedActivity, setEditedActivity] = useState<Activity>({
     ...activity,
+    canvaLink: activity.canvaLink || '', // Initialize canvaLink
     yearGroups: Array.isArray(activity.yearGroups) ? activity.yearGroups : (activity.level ? [activity.level] : []) // Initialize yearGroups from level for backward compatibility
   });
   const [isEditMode, setIsEditMode] = useState(isLessonBuilderContext ? initialEditMode : isEditing);
@@ -291,10 +294,20 @@ export function ActivityDetails({
     { label: 'Link', url: isEditMode ? editedActivity.link : activity.link, icon: LinkIcon, color: 'text-gray-600 bg-gray-50 border-gray-200', type: 'link' },
     { label: 'Vocals', url: isEditMode ? editedActivity.vocalsLink : activity.vocalsLink, icon: Volume2, color: 'text-orange-600 bg-orange-50 border-orange-200', type: 'vocals' },
     { label: 'Image', url: isEditMode ? editedActivity.imageLink : activity.imageLink, icon: Image, color: 'text-pink-600 bg-pink-50 border-pink-200', type: 'image' },
+    { label: 'Canva', url: isEditMode ? editedActivity.canvaLink : activity.canvaLink, icon: Palette, color: 'text-indigo-600 bg-indigo-50 border-indigo-200', type: 'canva' },
   ].filter(resource => resource.url && resource.url.trim());
 
   const handleResourceClick = (resource: any) => {
-    // Open resource link directly in browser, not in PWA context
+    // If it's a Canva link, open in modal
+    if (resource.type === 'canva') {
+      setSelectedCanvaLink({
+        url: resource.url,
+        title: `${activity.activity} - ${resource.label}`
+      });
+      return;
+    }
+    
+    // For other resources, open in browser
     const url = resource.url;
     
     // Force open in browser window - bypass PWA context
@@ -392,72 +405,81 @@ export function ActivityDetails({
                   <p className="text-sm text-[#2D3748]">{activity.category}</p>
                 )}
                 {/* Display year groups */}
-                {!isEditMode && editedActivity.yearGroups && editedActivity.yearGroups.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {editedActivity.yearGroups.map(yearGroup => {
-                      // Create abbreviation: "Lower Kindergarten Music" → "LKG M"
-                      // Also handles old labels like "EYFS U", "EYFS L", etc.
-                      // Handles comma-separated values like "EYFS U, Reception"
-                      const abbreviate = (label: string) => {
-                        if (!label) return label;
-                        
-                        // Handle comma-separated values (e.g., "EYFS U, Reception")
-                        if (label.includes(',')) {
-                          return label.split(',').map(part => abbreviate(part.trim())).join(', ');
-                        }
-                        
-                        // Handle old "EYFS U" format → "UKG"
-                        if (label === 'EYFS U' || label === 'Upper EYFS' || label.startsWith('EYFS U')) {
-                          const parts = label.split(' ');
-                          if (parts.length > 2) {
-                            const category = parts.slice(2).join(' ').trim();
-                            const catAbbr = category ? category.charAt(0) : '';
-                            return `UKG ${catAbbr}`.trim();
-                          }
-                          return 'UKG';
-                        }
-                        
-                        // Handle old "EYFS L" format → "LKG"
-                        if (label === 'EYFS L' || label === 'Lower EYFS' || label.startsWith('EYFS L')) {
-                          const parts = label.split(' ');
-                          if (parts.length > 2) {
-                            const category = parts.slice(2).join(' ').trim();
-                            const catAbbr = category ? category.charAt(0) : '';
-                            return `LKG ${catAbbr}`.trim();
-                          }
-                          return 'LKG';
-                        }
-                        
-                        // Handle "Lower Kindergarten" → "LKG"
-                        if (label.includes('Lower Kindergarten')) {
-                          const category = label.replace('Lower Kindergarten', '').trim();
-                          const catAbbr = category ? category.charAt(0) : '';
-                          return `LKG ${catAbbr}`.trim();
-                        }
-                        // Handle "Upper Kindergarten" → "UKG"
-                        if (label.includes('Upper Kindergarten')) {
-                          const category = label.replace('Upper Kindergarten', '').trim();
+                {(() => {
+                  if (!isEditMode && editedActivity.yearGroups && editedActivity.yearGroups.length > 0) {
+                    // Filter out "All" and empty values from year groups
+                    const validYearGroups = editedActivity.yearGroups.filter(
+                      group => group && group.trim() !== '' && group.toLowerCase() !== 'all'
+                    );
+                    
+                    // Only show if there are valid year groups
+                    if (validYearGroups.length === 0) return null;
+                    
+                    // Create abbreviation function
+                    const abbreviate = (label: string) => {
+                      if (!label) return label;
+                      
+                      // Handle comma-separated values (e.g., "EYFS U, Reception")
+                      if (label.includes(',')) {
+                        return label.split(',').map(part => abbreviate(part.trim())).join(', ');
+                      }
+                      
+                      // Handle old "EYFS U" format → "UKG"
+                      if (label === 'EYFS U' || label === 'Upper EYFS' || label.startsWith('EYFS U')) {
+                        const parts = label.split(' ');
+                        if (parts.length > 2) {
+                          const category = parts.slice(2).join(' ').trim();
                           const catAbbr = category ? category.charAt(0) : '';
                           return `UKG ${catAbbr}`.trim();
                         }
-                        // Handle "Reception" → "Reception M/D/etc"
-                        if (label.includes('Reception')) {
-                          const category = label.replace('Reception', '').trim();
-                          const catAbbr = category ? category.charAt(0) : '';
-                          return `Reception ${catAbbr}`.trim();
-                        }
-                        // Fallback: return original
-                        return label;
-                      };
+                        return 'UKG';
+                      }
                       
-                      return (
-                        <span key={yearGroup} className="px-2 py-1 bg-[#D4F1EF] text-[#17A697] text-xs font-medium rounded-full whitespace-nowrap">
-                          {abbreviate(yearGroup)}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
+                      // Handle old "EYFS L" format → "LKG"
+                      if (label === 'EYFS L' || label === 'Lower EYFS' || label.startsWith('EYFS L')) {
+                        const parts = label.split(' ');
+                        if (parts.length > 2) {
+                          const category = parts.slice(2).join(' ').trim();
+                          const catAbbr = category ? category.charAt(0) : '';
+                          return `LKG ${catAbbr}`.trim();
+                        }
+                        return 'LKG';
+                      }
+                      
+                      // Handle "Lower Kindergarten" → "LKG"
+                      if (label.includes('Lower Kindergarten')) {
+                        const category = label.replace('Lower Kindergarten', '').trim();
+                        const catAbbr = category ? category.charAt(0) : '';
+                        return `LKG ${catAbbr}`.trim();
+                      }
+                      // Handle "Upper Kindergarten" → "UKG"
+                      if (label.includes('Upper Kindergarten')) {
+                        const category = label.replace('Upper Kindergarten', '').trim();
+                        const catAbbr = category ? category.charAt(0) : '';
+                        return `UKG ${catAbbr}`.trim();
+                      }
+                      // Handle "Reception" → "Reception M/D/etc"
+                      if (label.includes('Reception')) {
+                        const category = label.replace('Reception', '').trim();
+                        const catAbbr = category ? category.charAt(0) : '';
+                        return `Reception ${catAbbr}`.trim();
+                      }
+                      // Fallback: return original
+                      return label;
+                    };
+                    
+                    return (
+                      <div className="flex flex-wrap gap-1">
+                        {validYearGroups.map(yearGroup => (
+                          <span key={yearGroup} className="px-2 py-1 bg-[#D4F1EF] text-[#17A697] text-xs font-medium rounded-full whitespace-nowrap">
+                            {abbreviate(yearGroup)}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
                 {/* Edit year groups */}
                 {isEditMode && !isReadOnly && (
                   <div 
@@ -804,6 +826,7 @@ export function ActivityDetails({
                     { key: 'resourceLink', label: 'Resource URL', icon: FileText },
                     { key: 'link', label: 'Additional Link', icon: LinkIcon },
                     { key: 'vocalsLink', label: 'Vocals URL', icon: Volume2 },
+                    { key: 'canvaLink', label: 'Canva Design URL', icon: Palette },
                   ].map(({ key, label, icon: Icon }) => (
                     <div key={key} className="flex items-center space-x-3">
                       <Icon className="h-5 w-5 text-gray-500 flex-shrink-0" />
@@ -948,6 +971,15 @@ export function ActivityDetails({
           title={selectedLink.title}
           type={selectedLink.type as 'video' | 'music' | 'backing' | 'resource' | 'link' | 'vocals' | 'image'}
           onClose={() => setSelectedLink(null)}
+        />
+      )}
+
+      {/* CanvaViewer Modal */}
+      {selectedCanvaLink && (
+        <CanvaViewer
+          url={selectedCanvaLink.url}
+          title={selectedCanvaLink.title}
+          onClose={() => setSelectedCanvaLink(null)}
         />
       )}
 
