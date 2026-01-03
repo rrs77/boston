@@ -2434,10 +2434,19 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
               lessonEntries.forEach(([lessonNum, lesson]) => {
                 // Type assertion for lesson data
                 const typedLesson = lesson as LessonData;
-                // If lesson has no academic year set, assume it belongs to current year
+                // If lesson has no academic year set, include it (assume it belongs to current year)
+                // Also include lessons from previous academic year (2025-2026) if current year is 2026-2027
                 const lessonAcademicYear = typedLesson.academicYear || currentAcademicYear;
                 
-                if (lessonAcademicYear === currentAcademicYear) {
+                // Include lesson if:
+                // 1. Academic year matches current year
+                // 2. No academic year is set (legacy lessons)
+                // 3. Current year is 2026-2027 and lesson is from 2025-2026 (to handle transition)
+                const shouldInclude = lessonAcademicYear === currentAcademicYear || 
+                                     !typedLesson.academicYear ||
+                                     (currentAcademicYear === '2026-2027' && lessonAcademicYear === '2025-2026');
+                
+                if (shouldInclude) {
                   filteredLessonsData[lessonNum] = typedLesson;
                   filteredLessonNumbers.push(lessonNum);
                 }
