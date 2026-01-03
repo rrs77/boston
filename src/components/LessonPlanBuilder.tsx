@@ -198,7 +198,7 @@ export function LessonPlanBuilder({
       .map(c => c.name);
     
     console.log('📋 Lesson Builder: Filtered categories:', {
-      yearGroupId: primaryKey,
+      yearGroupKeys: yearGroupKeys,
       matchedCategories: filteredCategories.length,
       categoryNames: filteredCategories
     });
