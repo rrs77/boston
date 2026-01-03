@@ -2408,6 +2408,15 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
               academicYear: currentAcademicYear,
               lessonDataKeys: Object.keys(lessonData),
               allLessonsDataKeys: Object.keys(lessonData.allLessonsData || {}),
+              allLessonsDataType: typeof lessonData.allLessonsData,
+              allLessonsDataIsArray: Array.isArray(lessonData.allLessonsData),
+              lessonDataStructure: {
+                hasAllLessonsData: !!lessonData.allLessonsData,
+                allLessonsDataKeys: lessonData.allLessonsData ? Object.keys(lessonData.allLessonsData) : [],
+                hasLessonNumbers: !!lessonData.lessonNumbers,
+                lessonNumbersLength: lessonData.lessonNumbers?.length || 0,
+                lessonNumbersSample: lessonData.lessonNumbers?.slice(0, 3) || []
+              },
               sampleLesson: lessonData.allLessonsData ? Object.values(lessonData.allLessonsData)[0] : null
             });
             
@@ -2417,6 +2426,13 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
             
             // Check if lessons are in allLessonsData or directly on the object
             const lessonsSource = lessonData.allLessonsData || lessonData;
+            
+            console.log('🔍 DEBUG: Lessons source structure:', {
+              lessonsSourceType: typeof lessonsSource,
+              lessonsSourceIsArray: Array.isArray(lessonsSource),
+              lessonsSourceKeys: Object.keys(lessonsSource),
+              lessonsSourceKeysSample: Object.keys(lessonsSource).slice(0, 10)
+            });
             
             // Extract lesson numbers (numeric keys only, exclude metadata like "teachingUnits", "lessonStandards")
             const metadataKeys = ['teachingUnits', 'lessonStandards', 'allLessonsData'];
