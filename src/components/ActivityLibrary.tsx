@@ -59,9 +59,65 @@ export function ActivityLibrary({
     deleteActivityStack,
     addActivitiesToStack,
     removeActivityFromStack,
-    unstackActivities
+    unstackActivities,
+    currentSheetInfo
   } = useData();
   const { getCategoryColor, categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
+  
+  // Get categories assigned to current year group (same logic as LessonPlanBuilder)
+  const getCurrentYearGroupKeys = React.useCallback((): string[] => {
+    const sheetId = className || currentSheetInfo?.sheet;
+    if (!sheetId) return [];
+    
+    if (!customYearGroups || !Array.isArray(customYearGroups)) {
+      return [];
+    }
+    
+    const yearGroup = customYearGroups.find(yg => yg.id === sheetId);
+    if (yearGroup) {
+      return [yearGroup.id];
+    }
+    return [];
+  }, [className, currentSheetInfo, customYearGroups]);
+  
+  // Get categories available for current year group
+  const availableCategoriesForYearGroup = React.useMemo(() => {
+    if (!categories || categories.length === 0) {
+      return [];
+    }
+    
+    const yearGroupKeys = getCurrentYearGroupKeys();
+    if (yearGroupKeys.length === 0) {
+      // If no year group selected, show all categories
+      return categories.map(c => c.name);
+    }
+    
+    const primaryKey = yearGroupKeys[0];
+    
+    // Filter categories that are assigned to this year group
+    const filteredCategories = categories
+      .filter(category => {
+        if (!category || !category.yearGroups || Object.keys(category.yearGroups).length === 0) {
+          return false;
+        }
+        
+        // Check for old defaults (LKG, UKG, Reception all true with only 3 keys)
+        const hasOldDefaults = 
+          category.yearGroups.LKG === true && 
+          category.yearGroups.UKG === true && 
+          category.yearGroups.Reception === true &&
+          Object.keys(category.yearGroups).length === 3;
+        if (hasOldDefaults) {
+          return false;
+        }
+        
+        // Check if this category is assigned to the current year group
+        return category.yearGroups[primaryKey] === true;
+      })
+      .map(c => c.name);
+    
+    return filteredCategories;
+  }, [categories, getCurrentYearGroupKeys]);
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [localSelectedCategory, setLocalSelectedCategory] = useState(selectedCategory);
@@ -110,11 +166,15 @@ export function ActivityLibrary({
     }
   };
 
-  // Get unique categories and levels
+  // Get unique categories - only show categories assigned to current year group
   const uniqueCategories = useMemo(() => {
-    const cats = new Set(allActivities.map(a => a.category));
+    // Filter activities to only those assigned to current year group, then get unique categories
+    const filteredActivities = allActivities.filter(activity => 
+      availableCategoriesForYearGroup.includes(activity.category)
+    );
+    const cats = new Set(filteredActivities.map(a => a.category));
     return Array.from(cats).sort();
-  }, [allActivities]);
+  }, [allActivities, availableCategoriesForYearGroup]);
 
   const uniqueLevels = useMemo(() => {
     // Use custom year groups from settings instead of database levels
@@ -151,14 +211,13 @@ export function ActivityLibrary({
       // Level filtering removed - show all levels
       const matchesLevel = true;
       
-      // Show ALL activities regardless of year group
-      // Remove year group filtering to show all 328 activities
-      const matchesYearGroup = true;
+      // CRITICAL: Only show activities whose categories are assigned to the current year group
+      const categoryIsAssignedToYearGroup = availableCategoriesForYearGroup.includes(activity.category);
       
       // Check if user owns required pack (if activity requires one)
       const hasPackAccess = !activity.requiredPack || userOwnedPacks.includes(activity.requiredPack);
       
-      return matchesSearch && matchesCategory && matchesLevel && matchesYearGroup && hasPackAccess;
+      return matchesSearch && matchesCategory && matchesLevel && categoryIsAssignedToYearGroup && hasPackAccess;
     });
 
     // Filter stacks - only show stacks with activities for the current year group
@@ -237,7 +296,7 @@ export function ActivityLibrary({
     });
 
     return { filteredAndSortedActivities: filteredActivities, filteredAndSortedStacks: filteredStacks };
-  }, [allActivities, activityStacks, searchQuery, localSelectedCategory, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup, userOwnedPacks]);
+  }, [allActivities, activityStacks, searchQuery, localSelectedCategory, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup, userOwnedPacks, availableCategoriesForYearGroup]);
 
   const toggleSort = (field: 'name' | 'category' | 'time' | 'level') => {
     if (sortBy === field) {

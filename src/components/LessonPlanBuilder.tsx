@@ -542,7 +542,7 @@ export function LessonPlanBuilder({
       return {};
     }
     
-    // Filter activities by search query only (show ALL activities, no category/year group restrictions)
+    // Filter activities by search query, category, AND year group assignment
     let filtered = allActivities.filter(activity => {
       const matchesSearch = searchQuery === '' || 
         activity.activity.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -551,7 +551,10 @@ export function LessonPlanBuilder({
       // Filter by selected category if one is chosen (but still show all if 'all' is selected)
       const matchesCategory = selectedCategory === 'all' || activity.category === selectedCategory;
       
-      return matchesSearch && matchesCategory;
+      // CRITICAL: Only show activities whose categories are assigned to the current year group
+      const categoryIsAssignedToYearGroup = availableCategoriesForYearGroup.includes(activity.category);
+      
+      return matchesSearch && matchesCategory && categoryIsAssignedToYearGroup;
     });
 
     // Sort activities within each category
@@ -586,11 +589,19 @@ export function LessonPlanBuilder({
       grouped[category].push(activity);
     });
 
-    // Sort categories by name
-    const sortedCategories = Object.keys(grouped).sort();
+    // Sort categories by the order they appear in availableCategoriesForYearGroup
+    // Only show categories that are assigned to the current year group
+    const sortedCategories = availableCategoriesForYearGroup
+      .filter(categoryName => grouped[categoryName] && grouped[categoryName].length > 0)
+      .concat(
+        Object.keys(grouped).filter(cat => 
+          !availableCategoriesForYearGroup.includes(cat) &&
+          !categories.some(c => c.name === cat)
+        )
+      );
 
     return { grouped, sortedCategories };
-  }, [allActivities, searchQuery, selectedCategory, sortBy, sortOrder]);
+  }, [allActivities, searchQuery, selectedCategory, sortBy, sortOrder, availableCategoriesForYearGroup, categories]);
 
   const toggleSort = (field: typeof sortBy) => {
     if (sortBy === field) {
