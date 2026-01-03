@@ -77,10 +77,38 @@ export function LessonPlanBuilder({
       return [];
     }
     
-    const yearGroup = customYearGroups.find(yg => yg.id === sheetId);
+    // Try exact match first
+    let yearGroup = customYearGroups.find(yg => yg.id === sheetId);
+    
+    // If no exact match, try to find by name match (e.g., "Reception Music" contains "Reception")
+    if (!yearGroup) {
+      yearGroup = customYearGroups.find(yg => {
+        // Check if sheet name contains year group name or vice versa
+        const sheetLower = sheetId.toLowerCase();
+        const ygNameLower = yg.name.toLowerCase();
+        const ygIdLower = yg.id.toLowerCase();
+        return sheetLower.includes(ygNameLower) || 
+               sheetLower.includes(ygIdLower) ||
+               ygNameLower.includes(sheetLower) ||
+               ygIdLower.includes(sheetLower);
+      });
+    }
+    
     if (yearGroup) {
-      // Use the year group ID directly - this should match what's in category.yearGroups
-      return [yearGroup.id];
+      // Return both the ID and name as potential keys to check
+      // This handles cases where category.yearGroups might use either format
+      const keys = [yearGroup.id];
+      // Also add common year group names that might be in category.yearGroups
+      if (yearGroup.name.toLowerCase().includes('reception')) {
+        keys.push('Reception');
+      }
+      if (yearGroup.name.toLowerCase().includes('lower kindergarten') || yearGroup.name.toLowerCase().includes('lkg')) {
+        keys.push('LKG');
+      }
+      if (yearGroup.name.toLowerCase().includes('upper kindergarten') || yearGroup.name.toLowerCase().includes('ukg')) {
+        keys.push('UKG');
+      }
+      return keys;
     }
     return [];
   };
@@ -100,9 +128,8 @@ export function LessonPlanBuilder({
       return categories.map(c => c.name);
     }
     
-    const primaryKey = yearGroupKeys[0];
     console.log('📋 Lesson Builder: Filtering categories for year group:', {
-      yearGroupId: primaryKey,
+      yearGroupKeys,
       currentSheet: currentSheetInfo?.sheet,
       totalCategories: categories.length,
       categoriesWithYearGroups: categories.filter(c => c.yearGroups && Object.keys(c.yearGroups).length > 0).length
@@ -111,8 +138,9 @@ export function LessonPlanBuilder({
     // Filter categories that are assigned to this year group
     const filteredCategories = categories
       .filter(category => {
+        // CRITICAL: Categories without yearGroups assigned should NEVER be shown
         if (!category || !category.yearGroups || Object.keys(category.yearGroups).length === 0) {
-          // Categories without yearGroups assigned should not be shown
+          console.log(`❌ Category "${category.name}" has no yearGroups assigned - excluding`);
           return false;
         }
         
@@ -123,15 +151,49 @@ export function LessonPlanBuilder({
           category.yearGroups.Reception === true &&
           Object.keys(category.yearGroups).length === 3;
         if (hasOldDefaults) {
+          console.log(`❌ Category "${category.name}" has old default assignments - excluding`);
           return false;
         }
         
-        // Check if this category is assigned to the current year group
-        const isAssigned = category.yearGroups[primaryKey] === true;
+        // Check if this category is assigned to ANY of the year group keys
+        // This handles cases where the sheet name is "Reception Music" but category.yearGroups uses "Reception"
+        const isAssigned = yearGroupKeys.some(key => {
+          // Check exact match
+          if (category.yearGroups[key] === true) {
+            return true;
+          }
+          
+          // Also check if any key in category.yearGroups matches any of our year group keys
+          return Object.keys(category.yearGroups).some(catKey => {
+            // Exact match
+            if (catKey === key && category.yearGroups[catKey] === true) {
+              return true;
+            }
+            // Partial match: if key contains catKey (e.g., "Reception Music" contains "Reception")
+            if (key.toLowerCase().includes(catKey.toLowerCase()) && category.yearGroups[catKey] === true) {
+              return true;
+            }
+            // Reverse partial match: if catKey contains key (e.g., "Reception" in "Reception Music")
+            if (catKey.toLowerCase().includes(key.toLowerCase()) && category.yearGroups[catKey] === true) {
+              return true;
+            }
+            return false;
+          });
+        });
+        
         if (isAssigned) {
-          console.log(`✅ Category "${category.name}" is assigned to ${primaryKey}`);
+          console.log(`✅ Category "${category.name}" is assigned to year group`, {
+            yearGroupKeys,
+            categoryYearGroupKeys: Object.keys(category.yearGroups).filter(k => category.yearGroups[k] === true)
+          });
+          return true;
         }
-        return isAssigned;
+        
+        console.log(`❌ Category "${category.name}" is NOT assigned to any of ${yearGroupKeys.join(', ')}`, {
+          categoryYearGroupKeys: Object.keys(category.yearGroups),
+          categoryYearGroupValues: Object.keys(category.yearGroups).filter(k => category.yearGroups[k] === true)
+        });
+        return false;
       })
       .map(c => c.name);
     
