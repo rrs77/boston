@@ -843,14 +843,19 @@ export const halfTermsApi = {
               .eq('sheet_name', sheet)
               .eq('academic_year', year)
               .eq('term_id', halfTermId)
-              .select()
-              .single();
+              .select();
             
             if (retryResult.error) {
               throw retryResult.error;
             }
-            data = retryResult.data;
-            console.log(`✅ Updated half-term ${halfTermId} for ${sheet} (${year}) after retry`);
+            if (retryResult.data && retryResult.data.length > 0) {
+              data = retryResult.data[0];
+              console.log(`✅ Updated half-term ${halfTermId} for ${sheet} (${year}) after retry`);
+            } else {
+              // Still no record found after retry - this shouldn't happen but handle gracefully
+              console.warn(`⚠️ No record found for half-term ${halfTermId} after retry - record may have been deleted`);
+              throw new Error(`Failed to update half-term ${halfTermId} - record not found`);
+            }
           } else {
             throw error;
           }
