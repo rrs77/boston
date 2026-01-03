@@ -332,13 +332,22 @@ export const lessonsApi = {
           
           console.log('🔍 DEBUG: Processing Supabase result:', {
             dataKeys: Object.keys(data),
+            dataKeysFull: Object.keys(data),
             hasDataField: !!data.data,
             dataDataType: typeof data.data,
             dataDataIsArray: Array.isArray(data.data),
+            dataDataIsNull: data.data === null,
+            dataDataIsUndefined: data.data === undefined,
+            dataDataValue: data.data,
             dataDataKeys: data.data ? Object.keys(data.data).slice(0, 10) : [],
+            dataDataKeysLength: data.data ? Object.keys(data.data).length : 0,
             hasLessonNumbers: !!data.lesson_numbers,
             lessonNumbersLength: data.lesson_numbers?.length || 0,
-            hasTeachingUnits: !!data.teaching_units
+            lessonNumbersValue: data.lesson_numbers,
+            hasTeachingUnits: !!data.teaching_units,
+            teachingUnitsValue: data.teaching_units,
+            sheetName: data.sheet_name,
+            academicYear: data.academic_year
           });
           
           // Merge lesson data
