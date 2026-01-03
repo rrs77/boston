@@ -352,11 +352,21 @@ export const lessonsApi = {
       }
       
       if (!hasData) {
-        console.log('✅ Lessons query successful: no data found');
+        console.log('✅ Lessons query successful: no data found', {
+          sheet,
+          academicYear,
+          academicYearsToQuery,
+          queriesExecuted: queries.length
+        });
         return null;
       }
       
-      console.log('✅ Lessons query successful: merged data from', academicYearsToQuery.length || 1, 'academic year(s)');
+      console.log('✅ Lessons query successful: merged data from', academicYearsToQuery.length || 1, 'academic year(s)', {
+        sheet,
+        academicYear,
+        lessonCount: Object.keys(mergedData.allLessonsData).length,
+        lessonNumbers: mergedData.lessonNumbers.length
+      });
       
       return mergedData;
     } catch (error) {
