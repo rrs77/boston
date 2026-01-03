@@ -281,8 +281,14 @@ export const lessonsApi = {
         .eq('sheet_name', sheet);
       
       // Filter by academic year if provided
+      // Also include lessons from previous year (2025-2026) when querying for 2026-2027
       if (academicYear) {
-        query.eq('academic_year', academicYear);
+        if (academicYear === '2026-2027') {
+          // Include both 2026-2027 and 2025-2026 lessons
+          query.in('academic_year', ['2026-2027', '2025-2026']);
+        } else {
+          query.eq('academic_year', academicYear);
+        }
       }
       
       const { data, error } = await query.maybeSingle();
