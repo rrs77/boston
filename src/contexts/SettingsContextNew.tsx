@@ -450,6 +450,8 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
       if (isSupabaseConfigured()) {
         loadingFromSupabase.current = true;
         try {
+          // Wrap in try-catch to prevent 500 errors from breaking the app
+          // Errors are handled gracefully with localStorage fallback
           console.log('🔄 Attempting to load year groups from Supabase...');
           
           // Enhanced Safari-specific retry logic
@@ -775,17 +777,22 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
               console.log('📦 No categories anywhere, using fixed categories');
             }
           }
-        } catch (error) {
-          console.error('❌ Failed to load data from Supabase:', error);
-          console.error('❌ Error details for Safari debugging:', {
-            message: error.message,
-            code: error.code,
-            stack: error.stack,
-            userAgent: navigator.userAgent
-          });
+        } catch (error: any) {
+          // Silently handle Supabase errors - fallback to localStorage
+          // This prevents 500 errors from showing in console as failures
+          if (isDevelopment) {
+            console.warn('⚠️ Supabase load failed (using localStorage fallback):', error?.message || error);
+            console.warn('⚠️ Error details:', {
+              message: error?.message,
+              code: error?.code,
+              userAgent: navigator.userAgent
+            });
+          }
           
           // Enhanced fallback for Safari compatibility
-          console.log('📦 Supabase failed, falling back to localStorage with Safari-safe approach...');
+          if (isDevelopment) {
+            console.log('📦 Supabase failed, falling back to localStorage with Safari-safe approach...');
+          }
           
           // Try multiple localStorage keys in case of browser differences
           const possibleKeys = ['custom-year-groups', 'year-groups', 'customYearGroups'];
@@ -1119,38 +1126,41 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
       
       // Also check for categories in Supabase that should be deleted
       // (custom categories that are no longer in the current list)
-      if (isSupabaseConfigured() && dataLoadedFromSupabase.current) {
-        try {
-          const supabaseCategories = await customCategoriesApi.getAll();
-          const currentCategoryNames = new Set(categoriesToSave.map(c => c.name));
-          
-          // Find custom categories in Supabase that are no longer in the current list
-          const categoriesToDelete = supabaseCategories
-            .filter(supabaseCat => {
-              const isFixed = FIXED_CATEGORIES.some(fixed => fixed.name === supabaseCat.name);
-              const isInCurrentList = currentCategoryNames.has(supabaseCat.name);
-              // Delete if it's a custom category (not fixed) and not in current list
-              return !isFixed && !isInCurrentList;
-            })
-            .map(cat => cat.name);
-          
-          if (categoriesToDelete.length > 0) {
-            console.log('🗑️ Deleting categories from Supabase that are no longer in the list:', categoriesToDelete);
-            // Delete each category
-            for (const categoryName of categoriesToDelete) {
-              try {
-                await customCategoriesApi.delete(categoryName);
+      // Wrap in async IIFE since updateCategories is not async
+      (async () => {
+        if (isSupabaseConfigured() && dataLoadedFromSupabase.current) {
+          try {
+            const supabaseCategories = await customCategoriesApi.getAll();
+            const currentCategoryNames = new Set(categoriesToSave.map(c => c.name));
+            
+            // Find custom categories in Supabase that are no longer in the current list
+            const categoriesToDelete = supabaseCategories
+              .filter(supabaseCat => {
+                const isFixed = FIXED_CATEGORIES.some(fixed => fixed.name === supabaseCat.name);
+                const isInCurrentList = currentCategoryNames.has(supabaseCat.name);
+                // Delete if it's a custom category (not fixed) and not in current list
+                return !isFixed && !isInCurrentList;
+              })
+              .map(cat => cat.name);
+            
+            if (categoriesToDelete.length > 0) {
+              console.log('🗑️ Deleting categories from Supabase that are no longer in the list:', categoriesToDelete);
+              // Delete each category
+              for (const categoryName of categoriesToDelete) {
+                try {
+                  await customCategoriesApi.delete(categoryName);
                 console.log('✅ Deleted category from Supabase:', categoryName);
               } catch (deleteError) {
                 console.error('❌ Failed to delete category from Supabase:', categoryName, deleteError);
               }
             }
           }
-        } catch (error) {
-          console.error('❌ Error checking for categories to delete:', error);
-          // Continue with save even if delete check fails
+          } catch (error) {
+            console.error('❌ Error checking for categories to delete:', error);
+            // Continue with save even if delete check fails
+          }
         }
-      }
+      })();
       
       // Queue Supabase save
       queueSave('categories', categoriesForSupabase);

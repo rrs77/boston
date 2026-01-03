@@ -1146,7 +1146,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         <span>Copy Link</span>
                       </>
                   )}
-                </button>
+                </div>
               </div>
             </div>
           </div>
