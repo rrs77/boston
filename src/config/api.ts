@@ -808,22 +808,21 @@ export const halfTermsApi = {
           .eq('sheet_name', sheet)
           .eq('academic_year', year)
           .eq('term_id', halfTermId)
-          .select()
-          .maybeSingle();
+          .select();
       
       let data, error;
       
-      // If update found a record, use that result
-      if (updateResult.data) {
-        data = updateResult.data;
-        error = updateResult.error;
-        if (error) throw error;
-        console.log(`✅ Updated half-term ${halfTermId} for ${sheet} (${year})`);
-      } else if (updateResult.error && updateResult.error.code !== 'PGRST116') {
-        // If there was an error other than "not found", throw it
+      // Check if update found and modified any records
+      // Supabase returns an array, empty if no rows matched
+      if (updateResult.error) {
+        // If there was an error, throw it
         throw updateResult.error;
+      } else if (updateResult.data && updateResult.data.length > 0) {
+        // Update found and modified a record
+        data = updateResult.data[0];
+        console.log(`✅ Updated half-term ${halfTermId} for ${sheet} (${year})`);
       } else {
-        // No existing record found, insert new one
+        // No existing record found, try to insert new one
         const insertResult = await supabase
           .from(TABLES.HALF_TERMS)
           .insert(upsertData)
@@ -832,9 +831,11 @@ export const halfTermsApi = {
         
         data = insertResult.data;
         error = insertResult.error;
+        
         if (error) {
-          // If insert fails with duplicate key, try update again (race condition)
-          if (error.code === '23505') {
+          // If insert fails with duplicate key, record was created between check and insert
+          // Retry the update (this handles race conditions)
+          if (error.code === '23505' || error.message?.includes('duplicate key')) {
             console.log('⚠️ Insert failed with duplicate key, retrying update...');
             const retryResult = await supabase
               .from(TABLES.HALF_TERMS)
@@ -844,9 +845,11 @@ export const halfTermsApi = {
               .eq('term_id', halfTermId)
               .select()
               .single();
+            
+            if (retryResult.error) {
+              throw retryResult.error;
+            }
             data = retryResult.data;
-            error = retryResult.error;
-            if (error) throw error;
             console.log(`✅ Updated half-term ${halfTermId} for ${sheet} (${year}) after retry`);
           } else {
             throw error;
