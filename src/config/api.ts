@@ -644,6 +644,23 @@ const lessonPlansApi = {
       console.warn('Failed to delete lesson plan from Supabase:', error);
       throw error;
     }
+  },
+  
+  // Delete all lesson plans from Supabase (use with caution!)
+  deleteAll: async () => {
+    try {
+      const { error } = await supabase
+        .from(TABLES.LESSON_PLANS)
+        .delete()
+        .neq('id', ''); // Delete all rows
+      
+      if (error) throw error;
+      console.log('✅ Deleted all lesson plans from Supabase');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Failed to delete all lesson plans:', error);
+      throw error;
+    }
   }
 };
 
