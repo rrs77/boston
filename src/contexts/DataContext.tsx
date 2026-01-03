@@ -1664,36 +1664,69 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
         return;
       }
       
-      // First try to load from Supabase if connected
+      // Load from lesson_plans table but filter by academic year
+      // Academic year 2025-2026 includes dates from Sept 2025 to Aug 2026
       if (isSupabaseConfigured()) {
+        const academicYear = currentAcademicYear || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+        
         supabase
           .from(TABLES.LESSON_PLANS)
           .select('*')
+          .eq('class_name', currentSheetInfo.sheet)
           .then(({ data, error }) => {
             if (error) {
               console.warn('Failed to load lesson plans from Supabase:', error);
               loadUserCreatedLessonPlansFromLocalStorage();
             } else if (data) {
-              // Convert dates and snake_case to camelCase
-              const plans = data.map(plan => ({
-                id: plan.id,
-                date: new Date(plan.date),
-                week: plan.week,
-                className: plan.class_name,
-                activities: plan.activities || [],
-                duration: plan.duration || 0,
-                notes: plan.notes || '',
-                status: plan.status || 'planned',
-                unitId: plan.unit_id,
-                unitName: plan.unit_name,
-                lessonNumber: plan.lesson_number,
-                title: plan.title,
-                term: plan.term,
-                time: plan.time,
-                createdAt: new Date(plan.created_at),
-                updatedAt: new Date(plan.updated_at)
-              }));
-              setUserCreatedLessonPlans(plans);
+              // Filter by academic year - dates in 2025 should be in 2025-2026 academic year
+              const filteredPlans = data
+                .filter(plan => {
+                  if (!plan.date) return false;
+                  const planDate = new Date(plan.date);
+                  const planYear = planDate.getFullYear();
+                  const planMonth = planDate.getMonth(); // 0-11 (Jan = 0, Dec = 11)
+                  
+                  // Parse academic year (e.g., "2025-2026")
+                  const [startYear, endYear] = academicYear.split('-').map(Number);
+                  
+                  // Academic year typically runs Sept (month 8) to Aug (month 7)
+                  // So 2025-2026 = Sept 2025 (month 8, year 2025) to Aug 2026 (month 7, year 2026)
+                  if (planYear === startYear) {
+                    // If it's the start year, include Sept-Dec (months 8-11)
+                    return planMonth >= 8; // September onwards
+                  } else if (planYear === endYear) {
+                    // If it's the end year, include Jan-Aug (months 0-7)
+                    return planMonth <= 7; // Up to August
+                  } else if (planYear > startYear && planYear < endYear) {
+                    // Years in between are fully included
+                    return true;
+                  }
+                  
+                  return false;
+                })
+                .map(plan => ({
+                  id: plan.id,
+                  date: new Date(plan.date),
+                  week: plan.week,
+                  className: plan.class_name,
+                  activities: plan.activities || [],
+                  duration: plan.duration || 0,
+                  notes: plan.notes || '',
+                  status: plan.status || 'planned',
+                  unitId: plan.unit_id,
+                  unitName: plan.unit_name,
+                  lessonNumber: plan.lesson_number,
+                  title: plan.title,
+                  term: plan.term,
+                  time: plan.time,
+                  createdAt: plan.created_at ? new Date(plan.created_at) : new Date(),
+                  updatedAt: plan.updated_at ? new Date(plan.updated_at) : new Date()
+                }));
+              
+              console.log(`✅ Loaded ${filteredPlans.length} lesson plans for ${currentSheetInfo.sheet} (academic year ${academicYear})`);
+              setUserCreatedLessonPlans(filteredPlans);
+            } else {
+              loadUserCreatedLessonPlansFromLocalStorage();
             }
           });
       } else {
