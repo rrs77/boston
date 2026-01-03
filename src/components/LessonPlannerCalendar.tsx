@@ -597,7 +597,7 @@ export function LessonPlannerCalendar({
     handleDateClick: (date: Date) => void;
     units: any[];
     theme: any;
-  }) => {
+  }): React.ReactElement => {
     const plansForDate = getLessonPlansForDate(date);
     const eventsForDate = getEventsForDate(date);
     const isSelected = selectedDate && isSameDay(date, selectedDate);
@@ -764,7 +764,7 @@ export function LessonPlannerCalendar({
         </div>
       </div>
     );
-  });
+  }, () => true);
 
   // WeekTimeSlot component - separate component to allow hooks
   const WeekTimeSlot = React.memo(({ 
