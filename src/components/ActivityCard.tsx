@@ -68,6 +68,7 @@ export function ActivityCard({
   const { getCategoryColor, categories } = useSettings();
   const [editedActivity, setEditedActivity] = useState<Activity>(activity);
   const [showResources, setShowResources] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   // Normalize category name to match what's in the categories list (same logic as dropdown)
   const getNormalizedCategoryName = (categoryName: string) => {
@@ -97,6 +98,8 @@ export function ActivityCard({
   
   useEffect(() => {
     setEditedActivity(activity);
+    // Reset expanded state when activity changes
+    setIsExpanded(false);
   }, [activity]);
 
   const handleSave = () => {
@@ -166,13 +169,25 @@ export function ActivityCard({
   const cardColor = getCategoryColor(normalizedCategory) || categoryColor || '#6B7280';
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't trigger card click if clicking on a button or link
-    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('a')) {
+    // Don't trigger card click if clicking on a button, link, or selector
+    if ((e.target as HTMLElement).closest('button') || 
+        (e.target as HTMLElement).closest('a') ||
+        (e.target as HTMLElement).closest('input[type="checkbox"]') ||
+        (e.target as HTMLElement).closest('[role="button"]')) {
       return;
     }
     
-    // Always open the modal if onActivityClick is provided, otherwise do nothing
-    if (onActivityClick) {
+    // In compact mode: first click expands, second click opens modal
+    if (viewMode === 'compact' && onActivityClick) {
+      if (!isExpanded) {
+        // First click: expand to show details
+        setIsExpanded(true);
+      } else {
+        // Second click: open modal
+        onActivityClick(activity);
+      }
+    } else if (onActivityClick) {
+      // Other view modes: always open modal
       onActivityClick(activity);
     }
   };
@@ -224,91 +239,91 @@ className={`bg-white rounded-card shadow-soft border-l-4 p-3 transition-all dura
         ref={draggable ? drag : undefined}
         className={`bg-white rounded-card shadow-soft border transition-all duration-200 hover:shadow-hover cursor-pointer ${
           isEditing ? 'ring-2 ring-blue-300' : 'border-gray-200 hover:border-gray-300'
-        } ${isDragging ? 'opacity-50' : ''} flex flex-col`}
+        } ${isDragging ? 'opacity-50' : ''} ${isExpanded ? 'border-teal-300' : ''} flex flex-col`}
         style={{ borderLeftColor: cardColor, borderLeftWidth: '4px' }}
         onClick={handleCardClick}
       >
         <div className="flex-1 p-1.5 flex flex-col">
-          <h4 className="font-semibold text-gray-900 text-xs leading-tight mb-0.5" dir="ltr">
-            {activity.activity}
-          </h4>
-          <p className="text-xs text-gray-500 mb-1" dir="ltr">{normalizedCategory}</p>
-          
-          <div className="mt-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                {activity.time > 0 && (
-                  <span className="text-xs text-gray-500">
-                    {activity.time}m
-                  </span>
-                )}
-                {resources.length > 0 && (
-                  <div className="flex items-center space-x-1">
-                    {resources.slice(0, 2).map((resource, index) => {
-                      const IconComponent = resource.icon;
-                      return (
-                        <button
-                          key={index}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (onResourceClick) onResourceClick(resource.url, `${activity.activity} - ${resource.label}`, resource.type);
-                          }}
-                          className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
-                          title={`${resource.label} - Click to open`}
-                        >
-                          <IconComponent className="h-3 w-3 text-gray-600" />
-                        </button>
-                      );
-                    })}
-                    {resources.length > 2 && (
-                      <span className="text-xs text-gray-500">+{resources.length - 2}</span>
-                    )}
-                  </div>
-                )}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-gray-900 text-xs leading-tight mb-0.5" dir="ltr">
+                {activity.activity}
+              </h4>
+              <p className="text-xs text-gray-500" dir="ltr">{normalizedCategory}</p>
+            </div>
+            {/* Selector icon - centered vertically */}
+            {selectable && (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onSelectionChange) {
+                    onSelectionChange(activity._id || activity.id || '', !isSelected);
+                  }
+                }}
+                className={`w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-colors flex-shrink-0 ${
+                  isSelected ? 'bg-teal-600' : 'border-2 border-gray-300 hover:border-teal-400'
+                }`}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (onSelectionChange) {
+                      onSelectionChange(activity._id || activity.id || '', !isSelected);
+                    }
+                  }
+                }}
+              >
+                {isSelected && <Check className="h-3 w-3 text-white" />}
               </div>
-              <div className="flex items-center space-x-1">
-                {selectable && (
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onSelectionChange) {
-                        onSelectionChange(activity._id || activity.id || '', !isSelected);
-                      }
-                    }}
-                    className={`w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
-                      isSelected ? 'bg-teal-600' : 'border-2 border-gray-300 hover:border-teal-400'
-                    }`}
-                  >
-                    {isSelected && <Check className="h-3 w-3 text-white" />}
-                  </div>
-                )}
-                {onEditToggle && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onEditToggle) onEditToggle();
-                    }}
-                    className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors duration-200"
-                    title="Edit activity"
-                  >
-                    <Edit3 className="h-3 w-3" />
-                  </button>
-                )}
-                {onDelete && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onDelete) onDelete(activity._id || activity.id || '');
-                    }}
-                    className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors duration-200"
-                    title="Delete activity"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                )}
+            )}
+          </div>
+          
+          {/* Expanded content - only show when expanded */}
+          {isExpanded && (
+            <div className="mt-2 pt-2 border-t border-gray-100">
+              {activity.time > 0 && (
+                <div className="mb-2">
+                  <span className="text-xs text-gray-500">
+                    Duration: {activity.time}m
+                  </span>
+                </div>
+              )}
+              {activity.description && (
+                <div className="mb-2">
+                  <div 
+                    className="text-xs text-gray-600 leading-relaxed line-clamp-2"
+                    dangerouslySetInnerHTML={{ __html: formatDescription(activity.description) }}
+                    dir="ltr"
+                  />
+                </div>
+              )}
+              {resources.length > 0 && (
+                <div className="flex items-center space-x-1 flex-wrap">
+                  {resources.map((resource, index) => {
+                    const IconComponent = resource.icon;
+                    return (
+                      <button
+                        key={index}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onResourceClick) onResourceClick(resource.url, `${activity.activity} - ${resource.label}`, resource.type);
+                        }}
+                        className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                        title={`${resource.label} - Click to open`}
+                      >
+                        <IconComponent className="h-3 w-3 text-gray-600" />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="mt-2 text-xs text-gray-400 italic">
+                Click again to view full details
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     );
