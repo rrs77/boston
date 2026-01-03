@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { 
   Calendar as CalendarIcon, 
   ChevronLeft, 
@@ -563,7 +563,7 @@ export function LessonPlannerCalendar({
   };
 
   // CalendarDay component - separate component to allow hooks
-  const CalendarDay = React.memo(({ 
+  const CalendarDay = memo(({ 
     date, 
     isCurrentMonth,
     getLessonPlansForDate,
@@ -767,7 +767,7 @@ export function LessonPlannerCalendar({
   });
 
   // WeekTimeSlot component - separate component to allow hooks
-  const WeekTimeSlot = React.memo(({ 
+  const WeekTimeSlot = memo(({ 
     date, 
     hour,
     getLessonPlansForDate,
