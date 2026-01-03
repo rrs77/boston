@@ -833,15 +833,15 @@ export const halfTermsApi = {
         error = insertResult.error;
         
         if (error) {
-          // If insert fails with duplicate key, record was created between check and insert
-          // Retry the update (this handles race conditions)
+          // If insert fails with duplicate key, record exists but update didn't find it
+          // This can happen if the record has a different academic_year
+          // Since unique constraint is on (sheet_name, term_id), update using those fields only
           if (error.code === '23505' || error.message?.includes('duplicate key')) {
-            console.log('⚠️ Insert failed with duplicate key, retrying update...');
+            console.log('⚠️ Insert failed with duplicate key, retrying update (unique constraint is on sheet_name + term_id)...');
             const retryResult = await supabase
               .from(TABLES.HALF_TERMS)
               .update(upsertData)
               .eq('sheet_name', sheet)
-              .eq('academic_year', year)
               .eq('term_id', halfTermId)
               .select();
             
@@ -850,11 +850,11 @@ export const halfTermsApi = {
             }
             if (retryResult.data && retryResult.data.length > 0) {
               data = retryResult.data[0];
-              console.log(`✅ Updated half-term ${halfTermId} for ${sheet} (${year}) after retry`);
+              console.log(`✅ Updated half-term ${halfTermId} for ${sheet} (matched by sheet_name and term_id, updated academic_year to ${year})`);
             } else {
-              // Still no record found after retry - this shouldn't happen but handle gracefully
-              console.warn(`⚠️ No record found for half-term ${halfTermId} after retry - record may have been deleted`);
-              throw new Error(`Failed to update half-term ${halfTermId} - record not found`);
+              // Still no record found - this shouldn't happen if duplicate key error occurred
+              console.warn(`⚠️ No record found for half-term ${halfTermId} after retry - this is unexpected`);
+              throw new Error(`Failed to update half-term ${halfTermId} - record not found despite duplicate key error`);
             }
           } else {
             throw error;
