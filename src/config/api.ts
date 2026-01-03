@@ -275,50 +275,90 @@ export const lessonsApi = {
     try {
       console.log(`🔍 Fetching lessons for ${sheet} (${academicYear || 'default'}) from Supabase...`);
       
-      const query = supabase
-        .from(TABLES.LESSONS)
-        .select('*')
-        .eq('sheet_name', sheet);
-      
-      // Filter by academic year if provided
-      // Also include lessons from previous year (2025-2026) when querying for 2026-2027
+      // Determine which academic years to query
+      const academicYearsToQuery: string[] = [];
       if (academicYear) {
+        academicYearsToQuery.push(academicYear);
+        // Also include 2025-2026 when querying for 2026-2027
         if (academicYear === '2026-2027') {
-          // Include both 2026-2027 and 2025-2026 lessons
-          query.in('academic_year', ['2026-2027', '2025-2026']);
-        } else {
-          query.eq('academic_year', academicYear);
+          academicYearsToQuery.push('2025-2026');
         }
       }
       
-      const { data, error } = await query.maybeSingle();
+      // Query for all relevant academic years
+      const queries = academicYearsToQuery.length > 0
+        ? academicYearsToQuery.map(year => 
+            supabase
+              .from(TABLES.LESSONS)
+              .select('*')
+              .eq('sheet_name', sheet)
+              .eq('academic_year', year)
+              .maybeSingle()
+          )
+        : [
+            supabase
+              .from(TABLES.LESSONS)
+              .select('*')
+              .eq('sheet_name', sheet)
+              .maybeSingle()
+          ];
       
-      if (error) {
-        console.error('❌ Supabase lessons query error:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-          sheet,
-          academicYear
-        });
-        throw error;
+      const results = await Promise.all(queries);
+      
+      // Merge data from all academic years
+      let mergedData: any = {
+        allLessonsData: {},
+        lessonNumbers: [],
+        teachingUnits: [],
+        lessonStandards: {}
+      };
+      
+      let hasData = false;
+      
+      for (const result of results) {
+        const { data, error } = result;
+        
+        if (error) {
+          console.warn('⚠️ Supabase lessons query error for one academic year:', {
+            message: error.message,
+            sheet,
+            academicYear
+          });
+          continue; // Skip this year but continue with others
+        }
+        
+        if (data) {
+          hasData = true;
+          // Merge lesson data
+          if (data.data) {
+            mergedData.allLessonsData = {
+              ...mergedData.allLessonsData,
+              ...data.data
+            };
+          }
+          // Merge lesson numbers (deduplicate)
+          if (data.lesson_numbers) {
+            mergedData.lessonNumbers = [
+              ...new Set([...mergedData.lessonNumbers, ...data.lesson_numbers])
+            ];
+          }
+          // Merge teaching units (deduplicate)
+          if (data.teaching_units) {
+            mergedData.teachingUnits = [
+              ...new Set([...mergedData.teachingUnits, ...data.teaching_units])
+            ];
+          }
+        }
       }
       
-      console.log('✅ Lessons query successful:', data ? 'data found' : 'no data found');
-      
-      if (!data) {
-        // No data found for this sheet and academic year
+      if (!hasData) {
+        console.log('✅ Lessons query successful: no data found');
         return null;
       }
       
-      return {
-        allLessonsData: data.data || {},
-        lessonNumbers: data.lesson_numbers || [],
-        teachingUnits: data.teaching_units || [],
-        // lessonStandards are stored within the lesson data itself, not as a separate field
-        lessonStandards: {}
-      };
+      console.log('✅ Lessons query successful: merged data from', academicYearsToQuery.length || 1, 'academic year(s)');
+      
+      return mergedData;
     } catch (error) {
       console.error(`❌ Failed to get lessons for ${sheet} (${academicYear || 'default'}) from Supabase:`, error);
       throw error;
