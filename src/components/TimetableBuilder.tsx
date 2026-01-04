@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Plus, Save, Trash2, Clock, MapPin, GripVertical, Edit3, Users, BookOpen, Settings, Calendar } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContextNew';
-import { useDrop, useDrag } from 'react-dnd';
+import { useDrop, useDrag, DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { supabase, TABLES, isSupabaseConfigured } from '../config/supabase';
 
 interface TimetableClass {
@@ -256,8 +257,9 @@ export function TimetableBuilder({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
-      <div className="bg-white rounded-lg shadow-xl max-w-[95vw] w-full max-h-[95vh] flex flex-col">
+    <DndProvider backend={HTML5Backend}>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
+        <div className="bg-white rounded-lg shadow-xl max-w-[95vw] w-full max-h-[95vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600 text-white">
           <div>
@@ -417,29 +419,23 @@ export function TimetableBuilder({
 
           {/* Timetable Grid */}
           <div className="flex-1 overflow-auto bg-white">
-            {/* Header Row */}
-            <div className="sticky top-0 bg-white border-b-2 border-gray-300 z-10">
+            {/* Grid Container */}
+            <div className="flex-1 overflow-auto">
               <table className="w-full border-collapse">
-                <thead>
+                <thead className="sticky top-0 bg-white z-10 border-b-2 border-gray-300">
                   <tr>
-                    <th className="w-24 p-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300 bg-gray-50">
+                    <th className="w-24 p-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300 bg-gray-50 sticky left-0 z-20">
                       <button className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
                         Rotation
                       </button>
                     </th>
-                    {displayDays.map((day, index) => (
-                      <th key={index} className="p-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-300 bg-gray-50">
-                        {viewMode === 'days' ? `Day ${index + 1}` : day}
+                    {displayDayIndices.map((dayIndex, index) => (
+                      <th key={dayIndex} className="p-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-300 bg-gray-50">
+                        {viewMode === 'days' ? `Day ${index + 1}` : displayDays[index]}
                       </th>
                     ))}
                   </tr>
                 </thead>
-              </table>
-            </div>
-
-            {/* Grid Body */}
-            <div className="relative">
-              <table className="w-full border-collapse">
                 <tbody>
                   {TIME_SLOTS.map((slot, slotIndex) => (
                     <tr key={slotIndex} className="border-b border-gray-200">
@@ -483,8 +479,9 @@ export function TimetableBuilder({
             isNew={editingClass.id.startsWith('new-')}
           />
         )}
+        </div>
       </div>
-    </div>
+    </DndProvider>
   );
 }
 
@@ -553,68 +550,6 @@ function TimetableGridCell({
     return startHour === slotHour && startMinute === slotMinute;
   });
 
-  // Check if this cell is occupied by a class that started earlier
-  const isOccupied = classes.some(cls => {
-    const startHour = parseInt(cls.startTime.split(':')[0]);
-    const startMinute = parseInt(cls.startTime.split(':')[1] || '0');
-    const endHour = parseInt(cls.endTime.split(':')[0]);
-    const endMinute = parseInt(cls.endTime.split(':')[1] || '0');
-    
-    const startTotalMinutes = startHour * 60 + startMinute;
-    const endTotalMinutes = endHour * 60 + endMinute;
-    const currentTotalMinutes = slotHour * 60 + slotMinute;
-    
-    return currentTotalMinutes >= startTotalMinutes && currentTotalMinutes < endTotalMinutes && 
-           (startHour !== slotHour || startMinute !== slotMinute);
-  });
-
-  // If occupied by a class that started earlier, render empty (the class block will span from its start)
-  if (isOccupied) {
-    return (
-      <td className="border-r border-gray-200 relative min-h-[60px] p-0" />
-    );
-  }
-
-  // If there's a class starting here, calculate its height
-  if (startingClasses.length > 0) {
-    const cls = startingClasses[0];
-    const startHour = parseInt(cls.startTime.split(':')[0]);
-    const startMinute = parseInt(cls.startTime.split(':')[1] || '0');
-    const endHour = parseInt(cls.endTime.split(':')[0]);
-    const endMinute = parseInt(cls.endTime.split(':')[1] || '0');
-    
-    const startTotalMinutes = startHour * 60 + startMinute;
-    const endTotalMinutes = endHour * 60 + endMinute;
-    const durationMinutes = endTotalMinutes - startTotalMinutes;
-    const rowSpan = Math.max(1, Math.ceil(durationMinutes / 60)); // Each row is 1 hour
-    
-    return (
-      <td
-        rowSpan={rowSpan}
-        className="border-r border-gray-200 relative p-0 align-top"
-        style={{ backgroundColor: cls.color }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onEdit(cls);
-        }}
-      >
-        <div className="h-full min-h-[60px] px-2 py-1 text-xs font-medium text-white cursor-pointer hover:opacity-90 transition-opacity flex items-center justify-between">
-          <span className="truncate flex-1">{cls.className}</span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(cls.id);
-            }}
-            className="ml-2 opacity-0 hover:opacity-100 p-0.5"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </div>
-      </td>
-    );
-  }
-
-  // Empty cell - can accept drops
   return (
     <td
       ref={drop}
@@ -623,13 +558,58 @@ function TimetableGridCell({
       } transition-colors cursor-pointer`}
       onClick={onSelect}
     >
-      <div className="h-full min-h-[60px] flex items-center justify-center">
-        {isOver ? (
-          <div className="text-xs text-teal-600 font-medium">Drop here</div>
-        ) : (
-          <div className="text-xs text-gray-300 opacity-0 hover:opacity-100 transition-opacity">Drop here</div>
-        )}
-      </div>
+      {/* Render class blocks that start at this time slot */}
+      {startingClasses.map((cls) => {
+        const startHour = parseInt(cls.startTime.split(':')[0]);
+        const startMinute = parseInt(cls.startTime.split(':')[1] || '0');
+        const endHour = parseInt(cls.endTime.split(':')[0]);
+        const endMinute = parseInt(cls.endTime.split(':')[1] || '0');
+        
+        const startTotalMinutes = startHour * 60 + startMinute;
+        const endTotalMinutes = endHour * 60 + endMinute;
+        const durationMinutes = endTotalMinutes - startTotalMinutes;
+        const heightPx = (durationMinutes / 60) * 60; // Each hour is 60px
+        
+        return (
+          <div
+            key={cls.id}
+            className="absolute left-0 right-0 rounded px-2 py-1 text-xs font-medium text-white cursor-pointer hover:opacity-90 transition-opacity flex items-center justify-between z-10"
+            style={{
+              backgroundColor: cls.color,
+              top: '2px',
+              height: `${heightPx - 4}px`,
+              minHeight: '58px'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(cls);
+            }}
+            title={`${cls.className} (${cls.startTime} - ${cls.endTime})`}
+          >
+            <span className="truncate flex-1">{cls.className}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(cls.id);
+              }}
+              className="ml-2 opacity-0 hover:opacity-100 p-0.5"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        );
+      })}
+      
+      {/* Show drop indicator when dragging */}
+      {classes.length === 0 && (
+        <div className="h-full min-h-[60px] flex items-center justify-center">
+          {isOver ? (
+            <div className="text-xs text-teal-600 font-medium">Drop here</div>
+          ) : (
+            <div className="text-xs text-gray-300 opacity-0 hover:opacity-100 transition-opacity">Drop here</div>
+          )}
+        </div>
+      )}
     </td>
   );
 }
