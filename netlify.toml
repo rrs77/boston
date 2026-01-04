@@ -38,6 +38,10 @@
 [functions]
   directory = "netlify/functions"
 
+# Plugin to install function dependencies
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
+
 [[headers]]
   for = "/assets/*"
   [headers.values]
