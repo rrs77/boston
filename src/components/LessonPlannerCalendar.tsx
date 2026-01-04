@@ -58,10 +58,12 @@ import { useDrop, useDrag } from 'react-dnd';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { TimetableModal } from './TimetableModal';
+import { TimetableBuilder } from './TimetableBuilder';
 import { EventModal } from './EventModal';
 import { LessonDetailsModal } from './LessonDetailsModal';
 import { LessonPrintModal } from './LessonPrintModal';
 import { CalendarLessonAssignmentModal } from './CalendarLessonAssignmentModal';
+import { TimeSlotLessonModal } from './TimeSlotLessonModal';
 import { useLessonStacks } from '../hooks/useLessonStacks';
 import type { Activity, LessonPlan } from '../contexts/DataContext';
 
@@ -128,7 +130,7 @@ export function LessonPlannerCalendar({
   const { allLessonsData, units: dataContextUnits, halfTerms, updateHalfTerm } = useData();
   const { getThemeForClass, getCategoryColor, customYearGroups } = useSettings();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day' | 'week-lessons'>('month');
   const [editingPlan, setEditingPlan] = useState<LessonPlan | null>(null);
   const [unitFilter, setUnitFilter] = useState<string>('all');
   const [selectedPlan, setSelectedPlan] = useState<LessonPlan | null>(null);
@@ -142,6 +144,9 @@ export function LessonPlannerCalendar({
   const [selectedLessonForDetails, setSelectedLessonForDetails] = useState<string | null>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{day: number, date: Date, hour: number} | null>(null);
+  const [showTimeSlotLessonModal, setShowTimeSlotLessonModal] = useState(false);
+  const [showTimetableBuilder, setShowTimetableBuilder] = useState(false);
+  const [editingTimetableClass, setEditingTimetableClass] = useState<TimetableClass | null>(null);
   const [dayViewDate, setDayViewDate] = useState<Date>(new Date());
   const [units, setUnits] = useState<any[]>([]); // Units from UnitViewer
   const [termTimeConfigs, setTermTimeConfigs] = useState<Array<{termId: string, startDate: Date, endDate: Date, startTime?: string, endTime?: string}>>([]);
@@ -472,7 +477,7 @@ export function LessonPlannerCalendar({
   // Handle time slot click in day view
   const handleTimeSlotClick = (day: number, date: Date, hour: number) => {
     setSelectedTimeSlot({ day, date, hour });
-    setShowTimetableModal(true);
+    setShowTimeSlotLessonModal(true);
   };
 
   // Handle view lesson details
@@ -1054,15 +1059,23 @@ export function LessonPlannerCalendar({
             {timetableClassesForSlot.map((tClass, idx) => (
               <div 
                 key={idx}
-                className="text-xs px-1 py-0.5 truncate rounded-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingTimetableClass(tClass);
+                  setShowTimetableBuilder(true);
+                }}
+                className="text-xs px-1 py-0.5 truncate rounded-sm cursor-pointer hover:opacity-80 transition-opacity group"
                 style={{ 
                   backgroundColor: `${tClass.color}20`,
                   color: tClass.color,
                   borderLeft: `2px solid ${tClass.color}`
                 }}
-                title={`${tClass.className} (${tClass.startTime}-${tClass.endTime})`}
+                title={`${tClass.className} (${tClass.startTime}-${tClass.endTime}) - Click to edit`}
               >
-                {tClass.className}
+                <div className="flex items-center justify-between">
+                  <span>{tClass.className}</span>
+                  <Edit3 className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1" />
+                </div>
               </div>
             ))}
           </div>
@@ -1394,14 +1407,23 @@ export function LessonPlannerCalendar({
                       {timetableClassesForSlot.map((tClass, idx) => (
                         <div 
                           key={idx}
-                          className="text-sm p-1 rounded"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTimetableClass(tClass);
+                            setShowTimetableBuilder(true);
+                          }}
+                          className="text-sm p-1 rounded cursor-pointer hover:opacity-80 transition-opacity group"
                           style={{ 
                             backgroundColor: `${tClass.color}10`,
                             color: tClass.color,
                             borderLeft: `3px solid ${tClass.color}`
                           }}
+                          title="Click to edit timetable entry"
                         >
-                          <div className="font-medium">{tClass.className}</div>
+                          <div className="font-medium flex items-center justify-between">
+                            <span>{tClass.className}</span>
+                            <Edit3 className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
                           <div className="text-xs">{tClass.startTime} - {tClass.endTime}</div>
                           {tClass.location && (
                             <div className="text-xs">{tClass.location}</div>
@@ -1637,17 +1659,17 @@ export function LessonPlannerCalendar({
                                       <Edit3 className="h-4 w-4" />
                                     </button>
                                   ) : (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDateSelect(date);
-                                        setIsLessonSummaryOpen(false);
-                                      }}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onDateSelect(date);
+                                      setIsLessonSummaryOpen(false);
+                                    }}
                                       className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-button transition-colors duration-200"
                                       title="Edit Lesson Plan"
-                                    >
-                                      <Edit3 className="h-4 w-4" />
-                                    </button>
+                                  >
+                                    <Edit3 className="h-4 w-4" />
+                                  </button>
                                   )}
                                   <button
                                     onClick={(e) => {
@@ -1808,6 +1830,15 @@ export function LessonPlannerCalendar({
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
+            {/* Timetable Builder Button */}
+            <button
+              onClick={() => setShowTimetableBuilder(true)}
+              className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
+            >
+              <Users className="h-4 w-4" />
+              <span>Timetable Builder</span>
+            </button>
+            
             {/* View Mode Selector */}
             <div className="flex bg-white bg-opacity-20 rounded-lg overflow-hidden">
               <button
@@ -1825,6 +1856,14 @@ export function LessonPlannerCalendar({
                 }`}
               >
                 Week
+              </button>
+              <button
+                onClick={() => setViewMode('week-lessons')}
+                className={`px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
+                  viewMode === 'week-lessons' ? 'bg-white text-teal-600' : 'text-white hover:bg-white hover:bg-opacity-10'
+                }`}
+              >
+                Week Lessons
               </button>
               <button
                 onClick={() => setViewMode('day')}
@@ -1906,7 +1945,7 @@ export function LessonPlannerCalendar({
               onClick={() => {
                 if (viewMode === 'month') {
                   setCurrentDate(addMonths(currentDate, 1));
-                } else if (viewMode === 'week') {
+                } else if (viewMode === 'week' || viewMode === 'week-lessons') {
                   setCurrentDate(addWeeks(currentDate, 1));
                 } else {
                   setDayViewDate(addDays(dayViewDate, 1));
@@ -1918,23 +1957,47 @@ export function LessonPlannerCalendar({
             </button>
           </div>
           
-          <h3 className="text-lg font-semibold">
-            {viewMode === 'month' 
-              ? format(currentDate, 'MMMM yyyy')
-              : viewMode === 'week'
-              ? `Week of ${format(weekStart, 'MMM d, yyyy')}`
-              : format(dayViewDate, 'MMMM d, yyyy')
-            }
-          </h3>
+          {viewMode !== 'week-lessons' && (
+            <h3 className="text-lg font-semibold">
+              {viewMode === 'month' 
+                ? format(currentDate, 'MMMM yyyy')
+                : viewMode === 'week'
+                ? `Week of ${format(weekStart, 'MMM d, yyyy')}`
+                : format(dayViewDate, 'MMMM d, yyyy')
+              }
+            </h3>
+          )}
           
           <div className="w-24"></div> {/* Spacer for alignment */}
         </div>
       </div>
 
       {/* Calendar Grid */}
-      <div className="p-4">
-        {viewMode === 'month' ? renderMonthView() : viewMode === 'week' ? renderWeekView() : renderDayView()}
-      </div>
+      {viewMode === 'week-lessons' ? (
+        <WeekLessonView
+          currentDate={currentDate}
+          lessonPlans={filteredLessonPlans}
+          onDateChange={setCurrentDate}
+          onLessonClick={(plan) => {
+            if (plan.lessonNumber) {
+              handleViewLessonDetails(plan.lessonNumber);
+            } else {
+              setSelectedDateWithPlans({ date: new Date(plan.date), plans: [plan] });
+              setIsLessonSummaryOpen(true);
+            }
+          }}
+          onAddLesson={(date) => {
+            onDateSelect(date);
+          }}
+          className={className}
+          timetableClasses={timetableClasses}
+          allLessonsData={allLessonsData}
+        />
+      ) : (
+        <div className="p-4">
+          {viewMode === 'month' ? renderMonthView() : viewMode === 'week' ? renderWeekView() : renderDayView()}
+        </div>
+      )}
 
       {/* Legend */}
       <div className="px-4 pb-4">
@@ -2158,6 +2221,38 @@ export function LessonPlannerCalendar({
           onAssignLesson={handleAssignLesson}
           onAssignStack={handleAssignStack}
           timetableClasses={timetableClasses}
+        />
+      )}
+
+      {/* Time Slot Lesson Selection Modal */}
+      {showTimeSlotLessonModal && selectedTimeSlot && (
+        <TimeSlotLessonModal
+          isOpen={showTimeSlotLessonModal}
+          onClose={() => {
+            setShowTimeSlotLessonModal(false);
+            setSelectedTimeSlot(null);
+          }}
+          date={selectedTimeSlot.date}
+          hour={selectedTimeSlot.hour}
+          className={className}
+          onAddLesson={onUpdateLessonPlan}
+          timetableClasses={timetableClasses}
+        />
+      )}
+
+      {/* Timetable Builder Modal */}
+      {showTimetableBuilder && (
+        <TimetableBuilder
+          isOpen={showTimetableBuilder}
+          onClose={() => {
+            setShowTimetableBuilder(false);
+            setEditingTimetableClass(null);
+          }}
+          className={className}
+          onTimetableUpdate={(classes) => {
+            saveTimetableClasses(classes);
+          }}
+          initialEditClass={editingTimetableClass}
         />
       )}
     </div>

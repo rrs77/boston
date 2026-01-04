@@ -31,10 +31,20 @@ export function YearNavigation({
   };
 
   const isCurrentAcademicYear = () => {
-    const currentDate = new Date();
-    const currentYearNum = currentDate.getFullYear();
-    const nextYearNum = currentYearNum + 1;
-    const currentAcademicYear = `${currentYearNum}-${nextYearNum}`;
+    const now = new Date();
+    const currentMonth = now.getMonth(); // 0-11 (0 = January, 8 = September)
+    const currentYearNum = now.getFullYear();
+    
+    // Academic year runs from September to August
+    // If we're in September-December (month 8-11), use current year to next year
+    // If we're in January-August (month 0-7), use previous year to current year
+    let currentAcademicYear: string;
+    if (currentMonth >= 8) { // September (8) to December (11)
+      currentAcademicYear = `${currentYearNum}-${currentYearNum + 1}`;
+    } else { // January (0) to August (7)
+      currentAcademicYear = `${currentYearNum - 1}-${currentYearNum}`;
+    }
+    
     return currentYear === currentAcademicYear;
   };
 

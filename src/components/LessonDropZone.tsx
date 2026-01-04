@@ -295,6 +295,10 @@ export function LessonDropZone({
         <div className={`${headerPadding} text-white transition-all duration-200`}>
           <div className={`flex items-start justify-between ${headerCompact ? 'mb-2' : 'mb-4'}`}>
             <div className="flex-1">
+              {/* Your Lesson Title */}
+              <h2 className={`text-white font-semibold mb-2 ${headerCompact ? 'text-sm' : 'text-base'}`} style={{ opacity: 0.9 }}>
+                Your Lesson
+              </h2>
               {/* Lesson Name Input */}
               <input
                 type="text"

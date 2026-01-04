@@ -18,7 +18,8 @@ import {
   Tag,
   Edit3,
   BookOpen,
-  FolderOpen
+  FolderOpen,
+  Check
 } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { useDrag } from 'react-dnd';
@@ -246,10 +247,9 @@ className={`bg-white rounded-card shadow-soft border-l-4 p-3 transition-all dura
         <div className="flex-1 p-1.5 flex flex-col">
           <div className="flex items-center justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 text-xs leading-tight mb-0.5" dir="ltr">
+              <h4 className="font-semibold text-gray-900 text-xs leading-tight" dir="ltr">
                 {activity.activity}
               </h4>
-              <p className="text-xs text-gray-500" dir="ltr">{normalizedCategory}</p>
             </div>
             {/* Selector icon - centered vertically */}
             {selectable && (
@@ -333,8 +333,8 @@ className={`bg-white rounded-card shadow-soft border-l-4 p-3 transition-all dura
     return (
       <div
         ref={draggable ? drag : undefined}
-        className={`bg-white rounded-card shadow-soft border transition-all duration-200 hover:shadow-hover ${draggable ? 'cursor-move' : 'cursor-pointer'} ${
-          isEditing ? 'ring-2 ring-blue-300' : 'border-gray-200 hover:border-gray-300'
+        className={`bg-white rounded-card shadow-soft border transition-all duration-200 ${draggable ? 'cursor-move' : 'cursor-pointer'} ${
+          isEditing ? 'ring-2 ring-blue-300' : 'border-gray-200 hover:border-teal-400 hover:shadow-lg hover:shadow-teal-100 hover:-translate-y-1 hover:bg-teal-50/30'
         } ${isDragging ? 'opacity-50' : ''} h-full flex flex-col`}
         style={{ cursor: draggable ? 'move' : 'pointer', borderLeftColor: cardColor, borderLeftWidth: '4px' }}
         onClick={handleCardClick}

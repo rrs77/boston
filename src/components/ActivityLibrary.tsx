@@ -96,8 +96,9 @@ export function ActivityLibrary({
   // Get categories available for current year group
   const availableCategoriesForYearGroup = React.useMemo(() => {
     if (!categories || categories.length === 0) {
-      console.log('📚 ActivityLibrary: No categories available');
-      return [];
+      console.log('📚 ActivityLibrary: No categories available - showing all activities');
+      // Return null to indicate "show all" instead of empty array
+      return null;
     }
     
     const yearGroupKeys = getCurrentYearGroupKeys();
@@ -112,7 +113,7 @@ export function ActivityLibrary({
     if (yearGroupKeys.length === 0) {
       // If no year group selected, show all categories
       console.log('📚 ActivityLibrary: No year group selected, showing all categories');
-      return categories.map(c => c.name);
+      return null; // null means "show all"
     }
     
     // Filter categories that are assigned to this year group
@@ -149,6 +150,12 @@ export function ActivityLibrary({
       .map(c => c.name);
     
     console.log(`📚 ActivityLibrary: Found ${filteredCategories.length} categories for year group:`, filteredCategories);
+    
+    // If no categories are assigned, show all activities (fallback)
+    if (filteredCategories.length === 0) {
+      console.log('⚠️ ActivityLibrary: No categories assigned to year group - showing ALL activities as fallback');
+      return null; // null means "show all"
+    }
     
     return filteredCategories;
   }, [categories, getCurrentYearGroupKeys, className, currentSheetInfo]);
@@ -202,6 +209,12 @@ export function ActivityLibrary({
 
   // Get unique categories - only show categories assigned to current year group
   const uniqueCategories = useMemo(() => {
+    // If availableCategoriesForYearGroup is null, show all categories
+    if (availableCategoriesForYearGroup === null) {
+      const cats = new Set(allActivities.map(a => a.category));
+      return Array.from(cats).sort();
+    }
+    
     // Filter activities to only those assigned to current year group, then get unique categories
     const filteredActivities = allActivities.filter(activity => 
       availableCategoriesForYearGroup.includes(activity.category)
@@ -246,7 +259,9 @@ export function ActivityLibrary({
       const matchesLevel = true;
       
       // CRITICAL: Only show activities whose categories are assigned to the current year group
-      const categoryIsAssignedToYearGroup = availableCategoriesForYearGroup.includes(activity.category);
+      // If availableCategoriesForYearGroup is null, show all activities (fallback)
+      const categoryIsAssignedToYearGroup = availableCategoriesForYearGroup === null || 
+                                             availableCategoriesForYearGroup.includes(activity.category);
       
       // Check if user owns required pack (if activity requires one)
       const hasPackAccess = !activity.requiredPack || userOwnedPacks.includes(activity.requiredPack);
@@ -709,64 +724,55 @@ export function ActivityLibrary({
         ) : (
           viewMode === 'list' ? (
           // List View - Compact cards in grid layout with full functionality
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
             {filteredAndSortedActivities.map((activity, index) => (
               <div 
                 key={generateActivityKey(activity, index)}
-                className="bg-white rounded-card shadow-soft hover:shadow-hover transition-shadow duration-200 p-3 relative group"
+                className="bg-white shadow-soft hover:shadow-hover transition-shadow duration-200 p-2 relative group"
                 style={{
                   borderLeft: `4px solid ${getCategoryColor(activity.category)}`,
-                  minHeight: '120px'
+                  borderRadius: '4px',
+                  minHeight: '50px'
                 }}
               >
 
                 {/* Activity content */}
                 <div 
-                  className="h-full flex flex-col cursor-pointer"
+                  className="h-full flex items-center cursor-pointer"
                   onClick={() => handleActivityClick(activity)}
                 >
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2">
+                  <div className="flex items-center justify-between gap-3 flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-gray-900 leading-tight flex-1 truncate" title={activity.activity}>
                       {activity.activity}
                     </h3>
-                  </div>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {activity.category}
+                    <div className="flex items-center space-x-2 text-xs text-gray-500 flex-shrink-0">
+                      <span className="flex items-center whitespace-nowrap">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {activity.time || 0}m
                       </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center space-x-2">
-                        <span className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {activity.time || 0}m
-                        </span>
-                        {/* Action buttons - positioned next to time */}
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditActivity(activity);
-                            }}
-                            className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                            title="Edit activity"
-                          >
-                            <Edit3 className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleActivityDelete(activity._id || activity.id);
-                            }}
-                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                            title="Delete activity"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
+                      {/* Action buttons - positioned next to time */}
+                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditActivity(activity);
+                          }}
+                          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          title="Edit activity"
+                        >
+                          <Edit3 className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleActivityDelete(activity._id || activity.id);
+                          }}
+                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Delete activity"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
                       </div>
-                      <span>{activity.level || 'All'}</span>
                     </div>
                   </div>
                 </div>

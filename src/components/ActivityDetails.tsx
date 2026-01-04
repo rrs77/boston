@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Clock, Video, Music, FileText, Link as LinkIcon, Image, Volume2, Maximize2, Minimize2, ExternalLink, Tag, Plus, Save, Upload, Edit3, Check, Trash2, Info, BookOpen, FolderOpen, Palette } from 'lucide-react';
 import { EditableText } from './EditableText';
 import { RichTextEditor } from './RichTextEditor';
-import { LinkViewer } from './LinkViewer';
-import { CanvaViewer } from './CanvaViewer';
+import { ResourceViewer } from './ResourceViewer';
 import { NestedStandardsBrowser } from './NestedStandardsBrowser';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import type { Activity } from '../contexts/DataContext';
@@ -60,8 +59,7 @@ export function ActivityDetails({
   
   const { nestedStandards, lessonStandards, addStandardToLesson, removeStandardFromLesson, updateActivity: updateActivityGlobal } = useData();
   const { customYearGroups, mapActivityLevelToYearGroup } = useSettings();
-  const [selectedLink, setSelectedLink] = useState<{ url: string; title: string; type: string } | null>(null);
-  const [selectedCanvaLink, setSelectedCanvaLink] = useState<{ url: string; title: string } | null>(null);
+  const [selectedResource, setSelectedResource] = useState<{ url: string; title: string; type: string } | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showStandardsSelector, setShowStandardsSelector] = useState(false);
   const [selectedStandards, setSelectedStandards] = useState<string[]>(activity.standards || activity.eyfsStandards || []);
@@ -84,7 +82,7 @@ export function ActivityDetails({
   // Set the initial resource if provided
   useEffect(() => {
     if (initialResource) {
-      setSelectedLink(initialResource);
+      setSelectedResource(initialResource);
     }
   }, [initialResource]);
 
@@ -298,16 +296,12 @@ export function ActivityDetails({
   ].filter(resource => resource.url && resource.url.trim());
 
   const handleResourceClick = (resource: any) => {
-    // If it's a Canva link, open in modal
-    if (resource.type === 'canva') {
-      setSelectedCanvaLink({
-        url: resource.url,
-        title: `${activity.activity} - ${resource.label}`
-      });
-      return;
-    }
-    
-    // For other resources, open in browser
+    // Open all resources in ResourceViewer modal
+    setSelectedResource({
+      url: resource.url,
+      title: `${activity.activity} - ${resource.label}`,
+      type: resource.type
+    });
     const url = resource.url;
     
     // Force open in browser window - bypass PWA context
@@ -964,22 +958,13 @@ export function ActivityDetails({
         </div>
       </div>
 
-      {/* LinkViewer Modal - Replaced ResourceViewer with LinkViewer */}
-      {selectedLink && (
-        <LinkViewer
-          url={selectedLink.url}
-          title={selectedLink.title}
-          type={selectedLink.type as 'video' | 'music' | 'backing' | 'resource' | 'link' | 'vocals' | 'image'}
-          onClose={() => setSelectedLink(null)}
-        />
-      )}
-
-      {/* CanvaViewer Modal */}
-      {selectedCanvaLink && (
-        <CanvaViewer
-          url={selectedCanvaLink.url}
-          title={selectedCanvaLink.title}
-          onClose={() => setSelectedCanvaLink(null)}
+      {/* ResourceViewer Modal */}
+      {selectedResource && (
+        <ResourceViewer
+          url={selectedResource.url}
+          title={selectedResource.title}
+          type={selectedResource.type}
+          onClose={() => setSelectedResource(null)}
         />
       )}
 

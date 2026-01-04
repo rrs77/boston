@@ -20,38 +20,32 @@ export const activitiesApi = {
   getAll: async () => {
     try {
       const userId = getCurrentUserId();
-      if (!userId) {
-        console.warn('No user ID found - user may not be logged in');
+      
+      console.log('🔄 Loading activities from Supabase...', { userId, hasUserId: !!userId });
+      
+      // Always load ALL activities (for backwards compatibility and shared activities)
+      // This ensures activities are visible even if user_id filtering would hide them
+      // Use select('*') to get all columns automatically (avoids column name issues)
+      let { data, error } = await supabase
+        .from(TABLES.ACTIVITIES)
+        .select('*');
+      
+      if (error) {
+        console.error('❌ Error loading activities:', error);
+        // Log the full error for debugging
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        throw error;
+      }
+      
+      console.log(`📦 Loaded ${data?.length || 0} activities from Supabase (all users)`);
+      
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No activities found in Supabase');
         return [];
       }
       
-      console.log('🔄 Loading activities for user:', userId);
-      
-      // First, try to load activities for this user
-      let { data, error } = await supabase
-        .from(TABLES.ACTIVITIES)
-        .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, canva_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, yeargroups')
-        .eq('user_id', userId);
-      
-      if (error) throw error;
-      
-      // If no activities found for this user, load ALL activities (for backwards compatibility)
-      if (!data || data.length === 0) {
-        console.log('⚠️ No activities found for user', userId, '- loading all activities');
-        const allActivitiesQuery = await supabase
-          .from(TABLES.ACTIVITIES)
-          .select('id, activity, description, activity_text, time, video_link, music_link, backing_link, resource_link, link, vocals_link, image_link, canva_link, teaching_unit, category, level, unit_name, lesson_number, eyfs_standards, user_id, yeargroups');
-        
-        if (allActivitiesQuery.error) throw allActivitiesQuery.error;
-        data = allActivitiesQuery.data;
-        
-        console.log(`📦 Loaded ${data?.length || 0} activities (all users)`);
-      } else {
-        console.log(`✅ Loaded ${data?.length || 0} activities for user ${userId}`);
-      }
-      
       // Convert snake_case to camelCase for frontend
-      return (data || []).map(item => ({
+      return data.map(item => ({
         _id: item.id,
         activity: item.activity,
         description: item.description,
@@ -71,7 +65,7 @@ export const activitiesApi = {
         unitName: item.unit_name,
         lessonNumber: item.lesson_number,
         eyfsStandards: item.eyfs_standards,
-        yearGroups: item.yeargroups || [] // Map yeargroups from database
+        yearGroups: (item.yeargroups || item.year_groups || []) // Map yeargroups from database (handle both column names)
       }));
     } catch (error) {
       console.warn('Failed to get activities from Supabase:', error);
@@ -95,6 +89,7 @@ export const activitiesApi = {
         link: activityData.link,
         vocals_link: activityData.vocalsLink,
         image_link: activityData.imageLink,
+        canva_link: activityData.canvaLink || '',
         teaching_unit: activityData.teachingUnit,
         category: activityData.category,
         level: activityData.level,
@@ -535,7 +530,7 @@ export const lessonsApi = {
 };
 
 // API endpoints for lesson plans
-const lessonPlansApi = {
+export const lessonPlansApi = {
   getAll: async () => {
     try {
       const { data, error } = await supabase

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { X, ExternalLink } from 'lucide-react';
+import { X, ExternalLink, ArrowLeft } from 'lucide-react';
 
 interface CanvaViewerProps {
   url: string;
@@ -97,6 +97,16 @@ export function CanvaViewer({ url, title, onClose }: CanvaViewerProps) {
         {/* Header - Fixed at top */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white z-10">
           <div className="flex items-center space-x-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Back to CC Designer"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">C</span>
             </div>
@@ -137,6 +147,27 @@ export function CanvaViewer({ url, title, onClose }: CanvaViewerProps) {
             allow="fullscreen"
             title={title}
           />
+          
+          {/* CC Designer Logo Overlay - Return to App */}
+          <div 
+            className="absolute top-4 left-4 z-20 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer group"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            title="Return to CC Designer"
+          >
+            <div className="p-2 flex items-center space-x-2">
+              <img 
+                src="/cd-logo.svg" 
+                alt="CC Designer Logo" 
+                className="h-8 w-8"
+              />
+              <span className="text-sm font-semibold text-gray-700 group-hover:text-teal-600 transition-colors hidden sm:inline">
+                CC Designer
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Footer - Fixed at bottom */}

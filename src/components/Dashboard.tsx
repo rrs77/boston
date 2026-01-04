@@ -185,16 +185,36 @@ export function Dashboard() {
     setActiveTab('lesson-builder');
   };
 
-  const handleUpdateLessonPlan = (updatedPlan: any) => {
+  const handleUpdateLessonPlan = async (updatedPlan: any) => {
+    const planWithTimestamp = { ...updatedPlan, updatedAt: new Date() };
+    
     const updatedPlans = lessonPlans.map(plan => 
-      plan.id === updatedPlan.id ? { ...updatedPlan, updatedAt: new Date() } : plan
+      plan.id === updatedPlan.id ? planWithTimestamp : plan
     );
     
     if (!lessonPlans.find(plan => plan.id === updatedPlan.id)) {
-      updatedPlans.push({ ...updatedPlan, updatedAt: new Date() });
+      updatedPlans.push(planWithTimestamp);
     }
     
+    // Save to localStorage
     saveLessonPlans(updatedPlans);
+    setLessonPlans(updatedPlans);
+    
+    // Save to Supabase
+    try {
+      const { lessonPlansApi } = await import('../config/api');
+      if (updatedPlan.id && updatedPlan.id.startsWith('plan-')) {
+        // New plan - create it
+        await lessonPlansApi.create(planWithTimestamp);
+      } else if (updatedPlan.id) {
+        // Existing plan - update it
+        await lessonPlansApi.update(updatedPlan.id, planWithTimestamp);
+      }
+      console.log('✅ Lesson plan saved to Supabase');
+    } catch (error) {
+      console.error('❌ Failed to save lesson plan to Supabase:', error);
+      // Don't throw - keep local changes
+    }
   };
 
   const handleActivityAdd = (activity: Activity) => {

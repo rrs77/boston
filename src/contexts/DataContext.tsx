@@ -434,9 +434,18 @@ export function DataProvider({ children }: DataProviderProps) {
   const [halfTerms, setHalfTerms] = useState<HalfTerm[]>(DEFAULT_HALF_TERMS); // Keep for backward compatibility
   // Academic Year Management
   const [currentAcademicYear, setCurrentAcademicYear] = useState<string>(() => {
-    const currentYear = new Date().getFullYear();
-    const nextYear = currentYear + 1;
-    return `${currentYear}-${nextYear}`;
+    const now = new Date();
+    const currentMonth = now.getMonth(); // 0-11 (0 = January, 8 = September)
+    const currentYear = now.getFullYear();
+    
+    // Academic year runs from September to August
+    // If we're in September-December (month 8-11), use current year to next year
+    // If we're in January-August (month 0-7), use previous year to current year
+    if (currentMonth >= 8) { // September (8) to December (11)
+      return `${currentYear}-${currentYear + 1}`;
+    } else { // January (0) to August (7)
+      return `${currentYear - 1}-${currentYear}`;
+    }
   });
   const [academicYearData, setAcademicYearData] = useState<Record<string, AcademicYearData>>({});
   const [supabaseHalfTermsLoaded, setSupabaseHalfTermsLoaded] = useState(false);
@@ -1417,7 +1426,10 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
       // Try to load from Supabase if connected
       if (isSupabaseConfigured()) {
         try {
+          console.log('🔄 Attempting to load activities from Supabase...');
           const activities = await activitiesApi.getAll();
+          console.log('📦 Activities received from API:', activities?.length || 0);
+          
           if (activities && activities.length > 0) {
             // Ensure yearGroups is always an array for each activity
             const normalizedActivities = activities.map((activity: any) => ({
@@ -1428,10 +1440,14 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
             setAllActivities(normalizedActivities);
             console.log('✅ Activities set in DataContext state:', normalizedActivities.length);
             return;
+          } else {
+            console.warn('⚠️ No activities returned from Supabase API');
           }
         } catch (error) {
-          console.warn('Failed to load activities from Supabase:', error);
+          console.error('❌ Failed to load activities from Supabase:', error);
         }
+      } else {
+        console.log('⚠️ Supabase not configured, trying localStorage...');
       }
       
       // Fallback to localStorage

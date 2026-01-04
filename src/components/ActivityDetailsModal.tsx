@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Clock, Video, Music, FileText, Link as LinkIcon, Image, Volume2, Tag, Users, ExternalLink, Edit3, Palette } from 'lucide-react';
 import type { Activity } from '../contexts/DataContext';
-import { CanvaViewer } from './CanvaViewer';
+import { ResourceViewer } from './ResourceViewer';
 
 interface ActivityDetailsModalProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface ActivityDetailsModalProps {
 }
 
 export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: ActivityDetailsModalProps) {
-  const [selectedCanvaLink, setSelectedCanvaLink] = useState<{ url: string; title: string } | null>(null);
+  const [selectedResource, setSelectedResource] = useState<{ url: string; title: string; type: string } | null>(null);
   
   if (!isOpen || !activity) {
     console.log('ActivityDetailsModal: Not rendering', { isOpen, hasActivity: !!activity });
@@ -83,40 +83,36 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
               <Clock className="h-4 w-4 text-gray-500" />
               <span className="text-sm text-gray-600">Duration: {activity.time || 0} minutes</span>
             </div>
-            
-            {(() => {
-              // Filter out "All" and empty values from year groups for display
-              const validYearGroups = activity.yearGroups?.filter(
-                group => group && group.trim() !== '' && group.toLowerCase() !== 'all'
-              ) || [];
-              
-              // Only show if there are valid year groups
-              if (validYearGroups.length > 0) {
-                return (
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">
-                      Level: {validYearGroups.join(', ')}
-                    </span>
-                  </div>
-                );
-              }
-              
-              // Fallback to level if it exists and is not "All"
-              if (activity.level && activity.level.toLowerCase() !== 'all') {
-                return (
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">
-                      Level: {activity.level}
-                    </span>
-                  </div>
-                );
-              }
-              
-              return null;
-            })()}
           </div>
+
+          {/* Year Groups - Moved to top */}
+          {activity.yearGroups && activity.yearGroups.length > 0 && (
+            (() => {
+              // Filter out "All" and empty values from year groups
+              const validYearGroups = activity.yearGroups.filter(
+                group => group && group.trim() !== '' && group.toLowerCase() !== 'all'
+              );
+              
+              // Only show section if there are valid year groups
+              if (validYearGroups.length === 0) return null;
+              
+              return (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Year Groups</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {validYearGroups.map((group, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-teal-100 text-teal-800 text-sm rounded-full"
+                      >
+                        {group}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()
+          )}
           
           {/* Fallback message if no content */}
           {(() => {
@@ -125,9 +121,7 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
               group => group && group.trim() !== '' && group.toLowerCase() !== 'all'
             ) || [];
             
-            const hasValidLevel = activity.level && activity.level.toLowerCase() !== 'all';
-            
-            if (!activity.description && !activity.activityText && resources.length === 0 && validYearGroups.length === 0 && !hasValidLevel) {
+            if (!activity.description && !activity.activityText && resources.length === 0 && validYearGroups.length === 0) {
               return (
                 <div className="text-center py-8 text-gray-500">
                   <Tag className="h-12 w-12 mx-auto mb-3 text-gray-400" />
@@ -161,35 +155,6 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
             </div>
           )}
 
-          {/* Year Groups */}
-          {activity.yearGroups && activity.yearGroups.length > 0 && (
-            (() => {
-              // Filter out "All" and empty values from year groups
-              const validYearGroups = activity.yearGroups.filter(
-                group => group && group.trim() !== '' && group.toLowerCase() !== 'all'
-              );
-              
-              // Only show section if there are valid year groups
-              if (validYearGroups.length === 0) return null;
-              
-              return (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Year Groups</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {validYearGroups.map((group, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-teal-100 text-teal-800 text-sm rounded-full"
-                      >
-                        {group}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()
-          )}
-
           {/* Resources */}
           {resources.length > 0 && (
             <div>
@@ -198,35 +163,17 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
                 {resources.map((resource, index) => {
                   const IconComponent = resource.icon;
                   
-                  // Handle resource click - ensure it opens in browser, not PWA
+                  // Handle resource click - open in ResourceViewer modal
                   const handleResourceClick = (e: React.MouseEvent, url: string, type: string) => {
                     e.preventDefault();
                     e.stopPropagation();
                     
-                    // If it's a Canva link, open in modal
-                    if (type === 'canva') {
-                      setSelectedCanvaLink({
-                        url: url,
-                        title: `${activity.activity} - ${resource.label}`
-                      });
-                      return;
-                    }
-                    
-                    // For other resources, force open in browser window, not PWA context
-                    // Use window.open with explicit flags to ensure browser opens it
-                    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-                    
-                    // Fallback if popup blocked
-                    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-                      // If popup blocked, try creating a temporary link and clicking it
-                      const link = document.createElement('a');
-                      link.href = url;
-                      link.target = '_blank';
-                      link.rel = 'noopener noreferrer';
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }
+                    // Open all resources in modal
+                    setSelectedResource({
+                      url: url,
+                      title: `${activity.activity} - ${resource.label}`,
+                      type: type
+                    });
                   };
                   
                   return (
@@ -274,12 +221,13 @@ export function ActivityDetailsModal({ isOpen, onClose, activity, onEdit }: Acti
         </div>
       </div>
       
-      {/* CanvaViewer Modal */}
-      {selectedCanvaLink && (
-        <CanvaViewer
-          url={selectedCanvaLink.url}
-          title={selectedCanvaLink.title}
-          onClose={() => setSelectedCanvaLink(null)}
+      {/* ResourceViewer Modal */}
+      {selectedResource && (
+        <ResourceViewer
+          url={selectedResource.url}
+          title={selectedResource.title}
+          type={selectedResource.type}
+          onClose={() => setSelectedResource(null)}
         />
       )}
     </div>

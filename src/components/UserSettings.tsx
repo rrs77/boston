@@ -57,7 +57,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [isDeletingCategory, setIsDeletingCategory] = React.useState(false);
   React.useEffect(() => {
     if (!isDeletingCategory) {
-      setTempCategories(categories);
+    setTempCategories(categories);
     }
   }, [categories, isDeletingCategory]);
 
@@ -66,7 +66,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [isDeletingYearGroup, setIsDeletingYearGroup] = React.useState(false);
   React.useEffect(() => {
     if (!isDeletingYearGroup) {
-      setTempYearGroups(customYearGroups);
+    setTempYearGroups(customYearGroups);
     }
   }, [customYearGroups, isDeletingYearGroup]);
 
@@ -417,13 +417,13 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
         // Set deletion flag to prevent useEffect from resetting tempYearGroups
         setIsDeletingYearGroup(true);
         
-        const updatedYearGroups = tempYearGroups.filter((_, i) => i !== index);
-        setTempYearGroups(updatedYearGroups);
-        
-        // Immediately persist changes
-        console.log('🔄 Deleting year group and persisting immediately');
-        await updateYearGroups(updatedYearGroups);
-        console.log('✅ Year group deleted and persisted');
+      const updatedYearGroups = tempYearGroups.filter((_, i) => i !== index);
+      setTempYearGroups(updatedYearGroups);
+      
+      // Immediately persist changes
+      console.log('🔄 Deleting year group and persisting immediately');
+      await updateYearGroups(updatedYearGroups);
+      console.log('✅ Year group deleted and persisted');
         
         // Wait a bit before clearing the deletion flag to ensure state is stable
         setTimeout(() => {
@@ -1102,18 +1102,18 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                             Select categories below, then choose year groups to assign them to
                           </p>
                         </div>
-                        <button
-                          onClick={() => {
+                      <button
+                        onClick={() => {
                             setBulkYearGroupMode(false);
                             setSelectedCategoriesForBulk(new Set());
                             setSelectedYearGroupsForBulk(new Set());
-                          }}
+                        }}
                           className="ml-4 p-1.5 text-gray-500 hover:text-gray-700 hover:bg-white rounded-lg transition-colors"
                           title="Close bulk assignment"
-                        >
+                      >
                           <X className="h-5 w-5" />
-                        </button>
-                      </div>
+                      </button>
+                    </div>
 
                       {/* Step 1: Year Groups Selection */}
                       <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
@@ -1131,7 +1131,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                             const isSelected = selectedYearGroupsForBulk.has(yearGroupKey);
                             
                             return (
-                              <button
+                      <button
                                 key={yearGroup.id}
                                 onClick={() => {
                                   // Toggle year group selection
@@ -1151,10 +1151,10 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                 title={`${isSelected ? 'Deselect' : 'Select'} ${yearGroup.name}`}
                               >
                                 {yearGroup.name}
-                              </button>
+                      </button>
                             );
                           }) : null}
-                        </div>
+                    </div>
                         <div className="flex items-center justify-between">
                           <div className="text-xs text-gray-500">
                             {selectedYearGroupsForBulk.size > 0 ? (
@@ -1166,16 +1166,16 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                             )}
                           </div>
                           {selectedYearGroupsForBulk.size > 0 && (
-                            <button
+                              <button
                               onClick={() => {
                                 setSelectedYearGroupsForBulk(new Set());
                               }}
                               className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
                             >
                               Clear Selection
-                            </button>
+                              </button>
                           )}
-                        </div>
+                            </div>
                       </div>
 
                       {/* Step 2: Category Selection Status */}
@@ -1187,7 +1187,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                           {selectedCategoriesForBulk.size > 0 ? (
                             <span className="text-teal-600 font-semibold">
                               {selectedCategoriesForBulk.size} categor{selectedCategoriesForBulk.size !== 1 ? 'ies' : 'y'} selected
-                            </span>
+                                </span>
                           ) : (
                             <span>Click on categories below to select them</span>
                           )}
@@ -1201,7 +1201,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                             Step 3: Apply Changes
                           </label>
                           <div className="flex flex-wrap gap-3">
-                            <button
+                                <button
                               onClick={() => {
                                 // Apply selected year groups to selected categories
                                 const updatedCategories = tempCategories.map(cat => {
@@ -1228,8 +1228,8 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                             >
                               <Plus className="h-4 w-4" />
                               Assign Selected Year Groups
-                            </button>
-                            <button
+                                </button>
+                                <button
                               onClick={() => {
                                 if (confirm('Remove all selected year groups from selected categories?')) {
                                   const updatedCategories = tempCategories.map(cat => {
@@ -1257,11 +1257,11 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                             >
                               <X className="h-4 w-4" />
                               Remove Selected Year Groups
-                            </button>
-                          </div>
+                                </button>
+                              </div>
                         </div>
-                      )}
-                    </div>
+                          )}
+                        </div>
                   )}
 
                   {/* Bulk Assignment Toggle Button */}

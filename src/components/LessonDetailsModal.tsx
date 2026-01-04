@@ -6,7 +6,7 @@ import { ActivityDetails } from './ActivityDetails';
 import { EditableText } from './EditableText';
 import { NestedStandardsBrowser } from './NestedStandardsBrowser';
 import { LessonPrintModal } from './LessonPrintModal';
-import { LinkViewer } from './LinkViewer';
+import { ResourceViewer } from './ResourceViewer';
 import { useShareLesson } from '../hooks/useShareLesson';
 import toast from 'react-hot-toast';
 import type { Activity, LessonData } from '../contexts/DataContext';
@@ -46,6 +46,7 @@ export function LessonDetailsModal({
   const { shareLesson, isSharing, shareUrl } = useShareLesson();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [initialResource, setInitialResource] = useState<{url: string, title: string, type: string} | null>(null);
+  const [selectedResource, setSelectedResource] = useState<{url: string, title: string, type: string} | null>(null);
   const [showEyfsSelector, setShowEyfsSelector] = useState(false);
   const [editingLessonTitle, setEditingLessonTitle] = useState(false);
   const [lessonTitleValue, setLessonTitleValue] = useState('');
@@ -53,33 +54,12 @@ export function LessonDetailsModal({
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [localShareUrl, setLocalShareUrl] = useState<string | null>(null);
   
-  // LinkViewer modal state
-  const [showLinkViewer, setShowLinkViewer] = useState(false);
-  const [linkViewerProps, setLinkViewerProps] = useState({ 
-    url: '', 
-    title: '', 
-    type: 'link' as 'video' | 'music' | 'backing' | 'resource' | 'link' | 'vocals' | 'image'
-  });
 
   const lessonData = allLessonsData[lessonNumber];
 
-  // Handle resource clicks - open directly in browser, not PWA
+  // Handle resource clicks - open in ResourceViewer modal
   const handleResourceClick = (url: string, title: string, type: string) => {
-    // Force open in browser window, bypassing PWA context
-    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-    
-    // Fallback if popup blocked - create temporary link and click it
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        document.body.removeChild(link);
-      }, 100);
-    }
+    setSelectedResource({ url, title, type });
   };
 
   // Initialize lesson title when component mounts
@@ -560,13 +540,13 @@ export function LessonDetailsModal({
         />
       )}
 
-      {/* LinkViewer Modal */}
-      {showLinkViewer && (
-        <LinkViewer
-          url={linkViewerProps.url}
-          title={linkViewerProps.title}
-          type={linkViewerProps.type}
-          onClose={() => setShowLinkViewer(false)}
+      {/* ResourceViewer Modal */}
+      {selectedResource && (
+        <ResourceViewer
+          url={selectedResource.url}
+          title={selectedResource.title}
+          type={selectedResource.type}
+          onClose={() => setSelectedResource(null)}
         />
       )}
 

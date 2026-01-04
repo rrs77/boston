@@ -763,28 +763,12 @@ export function LessonPlanBuilder({
           )}
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Lesson Plan Details */}
-            <div className="lg:col-span-1 flex flex-col">
-              <div className="flex-1">
-                <LessonDropZone
-                  lessonPlan={currentLessonPlan}
-                  onActivityAdd={handleActivityAdd}
-                  onActivityRemove={handleActivityRemove}
-                  onActivityReorder={handleActivityReorder}
-                  onLessonPlanFieldUpdate={handleLessonPlanFieldUpdate}
-                  isEditing={true}
-                  onActivityClick={(activity) => setSelectedActivity(activity)}
-                  onSave={handleSaveLessonPlan}
-                />
-              </div>
-            </div>
-
             {/* Activity Library Panel */}
             <div className="lg:col-span-1 flex flex-col">
               <div className="bg-white rounded-card shadow-soft overflow-hidden sticky top-8 flex flex-col max-h-[calc(100vh-4rem)]">
                 {/* Library Header */}
                 <div className="p-6 border-b border-gray-200 text-white h-[180px] flex flex-col justify-between" style={{ background: 'linear-gradient(to right, #14B8A6, #0D9488)' }}>
-                  <h3 className="text-lg font-semibold mb-4">Activity Library</h3>
+                  <h3 className="text-lg font-semibold mb-4">Activity Library Build Your Lesson</h3>
                   
                   {/* Search and Category Filter - On one line */}
                   <div className="flex space-x-2">
@@ -921,10 +905,10 @@ export function LessonPlanBuilder({
                               </button>
                             </div>
                             
-                            {/* Category Activities - Grid layout underneath header */}
+                            {/* Category Activities - One per line */}
                             {isExpanded && (
                               <div className="bg-white border-t border-gray-200">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 p-2">
+                                <div className="grid grid-cols-1 gap-2 p-2">
                                   {categoryActivities.map((activity, index) => {
                                     const activityId = `${activity.activity}-${activity.category}`;
                                     const isSelected = selectedActivities.includes(activityId);
@@ -961,6 +945,22 @@ export function LessonPlanBuilder({
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Lesson Plan Details */}
+            <div className="lg:col-span-1 flex flex-col">
+              <div className="flex-1">
+                <LessonDropZone
+                  lessonPlan={currentLessonPlan}
+                  onActivityAdd={handleActivityAdd}
+                  onActivityRemove={handleActivityRemove}
+                  onActivityReorder={handleActivityReorder}
+                  onLessonPlanFieldUpdate={handleLessonPlanFieldUpdate}
+                  isEditing={true}
+                  onActivityClick={(activity) => setSelectedActivity(activity)}
+                  onSave={handleSaveLessonPlan}
+                />
               </div>
             </div>
           </div>

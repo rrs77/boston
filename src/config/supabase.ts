@@ -41,6 +41,7 @@ export const TABLES = {
   ACTIVITY_CUSTOM_OBJECTIVES: 'activity_custom_objectives',
   LESSON_STACKS: 'lesson_stacks',
   ACTIVITY_STACKS: 'activity_stacks',
+  TIMETABLE_CLASSES: 'timetable_classes',
   
   // Unused tables (commented out for safety - can be deleted later)
   // ACTIVITIES_ROWS: 'activities_rows',
