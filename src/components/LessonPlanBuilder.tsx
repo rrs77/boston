@@ -30,6 +30,7 @@ import { ActivityDetails } from './ActivityDetails';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
+import { useIsViewOnly } from '../hooks/useIsViewOnly';
 import type { Activity, LessonPlan, ActivityStack } from '../contexts/DataContext';
 
 // Define half-term periods
@@ -53,6 +54,7 @@ export function LessonPlanBuilder({
   onEditComplete,
   onUnsavedChangesChange 
 }: LessonPlanBuilderProps = {}) {
+  const isViewOnly = useIsViewOnly();
   const { currentSheetInfo, allLessonsData, addOrUpdateUserLessonPlan, userCreatedLessonPlans, allActivities, activityStacks } = useData();
   const { categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   
@@ -308,6 +310,10 @@ export function LessonPlanBuilder({
   }, [hasUnsavedChanges, onUnsavedChangesChange]);
 
   const handleUpdateLessonPlan = (updatedPlan: LessonPlan) => {
+    if (isViewOnly) {
+      alert('View-only mode: Cannot save lesson plans.');
+      return;
+    }
     try {
       // Validate that the plan has a title
       if (!updatedPlan.title.trim()) {

@@ -45,6 +45,15 @@ const localUsers = [
   //   name: 'Sarah Teacher',
   //   avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
   //   role: 'teacher'
+  // },
+  // Example view-only user:
+  // {
+  //   id: '3',
+  //   email: 'viewer@rhythmstix.co.uk',
+  //   password: 'viewer123',
+  //   name: 'View Only User',
+  //   avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+  //   role: 'viewer'
   // }
 ];
 

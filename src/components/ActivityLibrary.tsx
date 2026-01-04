@@ -28,6 +28,7 @@ import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { useAuth } from '../hooks/useAuth';
+import { useIsViewOnly } from '../hooks/useIsViewOnly';
 import { activityPacksApi } from '../config/api';
 import type { Activity, ActivityStack } from '../contexts/DataContext';
 
@@ -46,6 +47,7 @@ export function ActivityLibrary({
   selectedCategory = 'all',
   onCategoryChange
 }: ActivityLibraryProps) {
+  const isViewOnly = useIsViewOnly();
   const { 
     allActivities, 
     addActivity, 
@@ -373,6 +375,10 @@ export function ActivityLibrary({
   };
 
   const handleActivityDelete = async (activityId: string) => {
+    if (isViewOnly) {
+      alert('View-only mode: Cannot delete activities.');
+      return;
+    }
     setShowDeleteConfirm(activityId);
   };
 
@@ -458,6 +464,10 @@ export function ActivityLibrary({
   };
 
   const handleEditActivity = (activity: Activity) => {
+    if (isViewOnly) {
+      alert('View-only mode: Cannot edit activities.');
+      return;
+    }
     // Convert any "EYFS U" levels to "UKG"
     if (activity.level === "EYFS U") {
       activity.level = "UKG";
@@ -501,6 +511,10 @@ export function ActivityLibrary({
   };
 
   const handleCreateActivity = async (newActivity: Activity) => {
+    if (isViewOnly) {
+      alert('View-only mode: Cannot create activities.');
+      return;
+    }
     const loadingToast = toast.loading('Creating activity...');
     
     try {
@@ -576,8 +590,15 @@ export function ActivityLibrary({
           
           <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap gap-2">
             <button
-              onClick={() => setShowCreator(true)}
-              className="btn-accent px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm"
+              onClick={() => {
+                if (isViewOnly) {
+                  alert('View-only mode: Cannot create activities.');
+                  return;
+                }
+                setShowCreator(true);
+              }}
+              disabled={isViewOnly}
+              className={`btn-accent px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm ${isViewOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Create Activity</span>
@@ -713,8 +734,15 @@ export function ActivityLibrary({
             )}
             {!searchQuery && localSelectedCategory === 'all' && (
               <button 
-                onClick={() => setShowCreator(true)}
-                className="mt-4 px-4 py-2 btn-primary text-white rounded-lg text-sm flex items-center space-x-2 mx-auto"
+                onClick={() => {
+                  if (isViewOnly) {
+                    alert('View-only mode: Cannot create activities.');
+                    return;
+                  }
+                  setShowCreator(true);
+                }}
+                disabled={isViewOnly}
+                className={`mt-4 px-4 py-2 btn-primary text-white rounded-lg text-sm flex items-center space-x-2 mx-auto ${isViewOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Plus className="h-4 w-4" />
                 <span>Create First Activity</span>
@@ -751,28 +779,30 @@ export function ActivityLibrary({
                         {activity.time || 0}m
                       </span>
                       {/* Action buttons - positioned next to time */}
-                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditActivity(activity);
-                          }}
-                          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                          title="Edit activity"
-                        >
-                          <Edit3 className="h-3 w-3" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleActivityDelete(activity._id || activity.id);
-                          }}
-                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Delete activity"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
+                      {!isViewOnly && (
+                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditActivity(activity);
+                            }}
+                            className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            title="Edit activity"
+                          >
+                            <Edit3 className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleActivityDelete(activity._id || activity.id);
+                            }}
+                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Delete activity"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

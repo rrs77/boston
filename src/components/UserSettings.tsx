@@ -5,6 +5,7 @@ import { DataSourceSettings } from './DataSourceSettings';
 import { CustomObjectivesAdmin } from './CustomObjectivesAdmin';
 import { ActivityPacksAdmin } from './ActivityPacksAdmin';
 import { useAuth } from '../hooks/useAuth';
+import { useIsViewOnly } from '../hooks/useIsViewOnly';
 import { isSupabaseConfigured } from '../config/supabase';
 import { customCategoriesApi } from '../config/api';
 
@@ -15,6 +16,7 @@ interface UserSettingsProps {
 
 export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const { user } = useAuth();
+  const isViewOnly = useIsViewOnly();
   const { settings, updateSettings, resetToDefaults, categories, updateCategories, resetCategoriesToDefaults, customYearGroups, updateYearGroups, resetYearGroupsToDefaults, forceSyncYearGroups, forceSyncToSupabase, forceRefreshFromSupabase, forceSyncCurrentYearGroups, forceSafariSync, startUserChange, endUserChange } = useSettings();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tempSettings, setTempSettings] = useState(settings);
@@ -90,6 +92,10 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   // Users can manually refresh if needed using the refresh buttons
 
   const handleSave = async () => {
+    if (isViewOnly) {
+      alert('View-only mode: Cannot save settings.');
+      return;
+    }
     try {
       console.log('🔄 Saving all settings...');
       console.log('📋 Current tempCategories:', tempCategories.map(cat => ({ 
@@ -220,6 +226,10 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
 
 
   const handleDeleteCategory = async (index: number) => {
+    if (isViewOnly) {
+      alert('View-only mode: Cannot delete categories.');
+      return;
+    }
     if (confirm('Are you sure you want to delete this category? This may affect existing activities.')) {
       try {
         // Set deletion flag to prevent useEffect from resetting tempCategories

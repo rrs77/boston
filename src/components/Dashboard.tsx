@@ -11,6 +11,7 @@ import { Calendar, BookOpen, Edit3, FolderOpen, Tag } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { useAuth } from '../hooks/useAuth';
+import { useIsViewOnly } from '../hooks/useIsViewOnly';
 import type { Activity } from '../contexts/DataContext';
 
 interface Unit {
@@ -36,6 +37,7 @@ const HALF_TERMS = [
 
 export function Dashboard() {
   const { user } = useAuth();
+  const isViewOnly = useIsViewOnly();
   const { 
     currentSheetInfo, 
     allLessonsData, 
@@ -186,6 +188,11 @@ export function Dashboard() {
   };
 
   const handleUpdateLessonPlan = async (updatedPlan: any) => {
+    if (isViewOnly) {
+      alert('View-only mode: Changes cannot be saved.');
+      return;
+    }
+    
     const planWithTimestamp = { ...updatedPlan, updatedAt: new Date() };
     
     const updatedPlans = lessonPlans.map(plan => 
