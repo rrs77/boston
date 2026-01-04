@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, User, LogOut, BookOpen, RefreshCw, Settings, HelpCircle, Download } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useIsViewOnly } from '../hooks/useIsViewOnly';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { UserSettings } from './UserSettings';
@@ -11,6 +12,7 @@ import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export function Header() {
   const { user, logout } = useAuth();
+  const isViewOnly = useIsViewOnly();
   const { currentSheetInfo, setCurrentSheetInfo, refreshData, loading } = useData();
   const { settings, getThemeForClass, customYearGroups } = useSettings();
   const { canInstall, isInstalled, install } = usePWAInstall();
@@ -65,11 +67,16 @@ export function Header() {
                   </text>
                 </svg>
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 flex items-center space-x-2">
                 <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-gray-900 truncate" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
                   <span className="hidden sm:inline">Creative Curriculum Designer</span>
                   <span className="sm:hidden">CCD</span>
                 </h1>
+                {isViewOnly && (
+                  <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-md border border-yellow-200">
+                    View Only
+                  </span>
+                )}
               </div>
             </div>
 

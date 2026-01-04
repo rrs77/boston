@@ -8,6 +8,7 @@ import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import type { Activity } from '../contexts/DataContext';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
+import { useIsViewOnly } from '../hooks/useIsViewOnly';
 
 interface ActivityDetailsProps {
   activity: Activity;
@@ -76,8 +77,9 @@ export function ActivityDetails({
   const containerRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  // Always allow editing - activities are live references
-  const isReadOnly = false;
+  // Check if user is in view-only mode
+  const isViewOnly = useIsViewOnly();
+  const isReadOnly = isViewOnly;
 
   // Set the initial resource if provided
   useEffect(() => {
@@ -138,6 +140,11 @@ export function ActivityDetails({
     }
   }, [editedActivity, activity, isLessonBuilderContext]);
   const handleSave = async () => {
+    if (isViewOnly) {
+      alert('View-only mode: Cannot save activity changes.');
+      return;
+    }
+    
     const updatedActivity = {
       ...editedActivity,
       standards: selectedStandards
