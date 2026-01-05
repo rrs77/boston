@@ -31,6 +31,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useIsViewOnly } from '../hooks/useIsViewOnly';
 import { activityPacksApi } from '../config/api';
 import type { Activity, ActivityStack } from '../contexts/DataContext';
+import { createAllPirateActivities } from '../utils/createPirateActivities';
 
 interface ActivityLibraryProps {
   onActivitySelect: (activity: Activity) => void;
@@ -416,6 +417,44 @@ export function ActivityLibrary({
     }
   };
 
+  const handleCreatePirateActivities = async () => {
+    if (isViewOnly) {
+      alert('View-only mode: Cannot create activities.');
+      return;
+    }
+    
+    const isAdmin = user?.email === 'rob.reichstorer@gmail.com';
+    if (!isAdmin) {
+      alert('This feature is only available to administrators.');
+      return;
+    }
+    
+    const confirmed = window.confirm(
+      'This will create 20 pirate-themed activities for LKG, UKG, and Reception.\n\n' +
+      'Are you sure you want to proceed?'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      setLoading(true);
+      console.log('🏴‍☠️ Starting to create pirate activities...');
+      
+      await createAllPirateActivities();
+      
+      // Refresh activities to show the new ones
+      await refreshData();
+      
+      alert('✅ Successfully created 20 pirate activities!');
+      console.log('✅ All pirate activities created successfully');
+    } catch (error) {
+      console.error('❌ Failed to create pirate activities:', error);
+      alert(`Failed to create pirate activities: ${error.message || 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleViewActivityDetails = (activity: Activity, initialResource?: {url: string, title: string, type: string}) => {
     // Convert any "EYFS U" levels to "UKG"
     if (activity.level === "EYFS U") {
@@ -623,6 +662,19 @@ export function ActivityLibrary({
               <span className="hidden sm:inline">Import/Export</span>
               <span className="sm:hidden">Import</span>
             </button>
+            
+            {user?.email === 'rob.reichstorer@gmail.com' && (
+              <button
+                onClick={handleCreatePirateActivities}
+                disabled={loading || isViewOnly}
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors duration-200 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-white"
+                title="Create 20 pirate-themed activities (Admin only)"
+              >
+                <Tag className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Create Pirate Activities</span>
+                <span className="sm:hidden">Pirates</span>
+              </button>
+            )}
           </div>
         </div>
 
