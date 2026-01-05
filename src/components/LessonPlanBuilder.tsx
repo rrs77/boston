@@ -394,9 +394,11 @@ export function LessonPlanBuilder({
     }
   }, [currentLessonPlan, editingLessonNumber]);
 
-  // Handle beforeunload (browser close/navigation)
+  // Handle beforeunload (browser close/navigation) - only warn on actual page close
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Only warn if there are unsaved changes AND user is actually leaving the page
+      // Don't warn on tab switches since we auto-save drafts
       if (hasUnsavedChanges && !isClearingRef.current) {
         e.preventDefault();
         e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
@@ -408,18 +410,40 @@ export function LessonPlanBuilder({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  // Handle visibility change (tab switch)
+  // Handle visibility change (tab switch) - silently save draft, no prompts
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && hasUnsavedChanges && !isClearingRef.current) {
-        // Save draft when tab becomes hidden
+      if (document.hidden && !isClearingRef.current) {
+        // Silently save draft when tab becomes hidden - no prompts
         saveDraftToStorage(currentLessonPlan);
+      } else if (!document.hidden && !editingLessonNumber) {
+        // When tab becomes visible, restore draft if needed
+        const draft = loadDraftFromStorage();
+        if (draft && (draft.activities.length > 0 || draft.title !== '')) {
+          // Check if current lesson is different from draft
+          const isDifferent = 
+            draft.activities.length !== currentLessonPlan.activities.length ||
+            draft.title !== currentLessonPlan.title ||
+            draft.notes !== currentLessonPlan.notes ||
+            draft.duration !== currentLessonPlan.duration ||
+            draft.lessonNumber !== currentLessonPlan.lessonNumber;
+          
+          if (isDifferent) {
+            // Restore the draft silently
+            setCurrentLessonPlan(draft);
+            setLessonNumber(draft.lessonNumber || lessonNumber);
+            // Only mark as unsaved if there are actual changes
+            if (draft.activities.length > 0 || draft.title !== '') {
+              setHasUnsavedChanges(true);
+            }
+          }
+        }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [hasUnsavedChanges, currentLessonPlan]);
+  }, [currentLessonPlan, editingLessonNumber, lessonNumber]);
 
   // Generate a lesson number when component mounts
   useEffect(() => {
@@ -478,6 +502,8 @@ export function LessonPlanBuilder({
       setCurrentLessonPlan(updatedPlan);
       setSaveStatus('success');
       setHasUnsavedChanges(false);
+      // Keep draft saved so user can continue editing after saving
+      saveDraftToStorage(updatedPlan);
       setTimeout(() => setSaveStatus('idle'), 3000);
       return true;
     } catch (error) {

@@ -56,17 +56,10 @@ export function Dashboard() {
   // Lesson Builder state for unsaved changes warning
   const [lessonBuilderHasUnsavedChanges, setLessonBuilderHasUnsavedChanges] = useState(false);
   
-  // Custom tab change handler with unsaved changes warning
+  // Custom tab change handler - no prompts since drafts auto-save
   const handleTabChange = (newTab: string) => {
-    // If switching away from lesson-builder tab with unsaved changes, show warning
-    if (activeTab === 'lesson-builder' && newTab !== 'lesson-builder' && lessonBuilderHasUnsavedChanges) {
-      const confirmSwitch = window.confirm(
-        'You have unsaved changes in your lesson. Are you sure you want to switch tabs? Your changes will be lost.'
-      );
-      if (!confirmSwitch) {
-        return; // Stay on current tab
-      }
-    }
+    // No prompts needed - drafts are auto-saved to localStorage
+    // User can switch tabs freely and continue working when they return
     setActiveTab(newTab);
   };
   
