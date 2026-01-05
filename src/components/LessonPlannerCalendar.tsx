@@ -1232,11 +1232,17 @@ export function LessonPlannerCalendar({
 
   // Render the day view
   const renderDayView = () => {
-    const dayOfWeek = getDay(dayViewDate);
-    const isHolidayDate = isHoliday(dayViewDate);
-    const isInsetDayDate = isInsetDay(dayViewDate);
-    const eventsForDate = getEventsForDate(dayViewDate);
-    const plansForDate = getLessonPlansForDate(dayViewDate);
+    try {
+      if (!dayViewDate) {
+        setDayViewDate(new Date());
+        return <div className="p-4">Loading...</div>;
+      }
+      
+      const dayOfWeek = getDay(dayViewDate);
+      const isHolidayDate = isHoliday(dayViewDate);
+      const isInsetDayDate = isInsetDay(dayViewDate);
+      const eventsForDate = getEventsForDate(dayViewDate);
+      const plansForDate = getLessonPlansForDate(dayViewDate);
     
     return (
       <div className="flex flex-col h-full">
@@ -1325,13 +1331,19 @@ export function LessonPlannerCalendar({
           <div className="flex flex-col">
             {dayViewHours.map(hour => {
               // Find timetable classes that overlap with this time slot
-              const timetableClassesForSlot = timetableClasses.filter(tClass => {
-                if (tClass.day !== dayOfWeek) return false;
+              const timetableClassesForSlot = (timetableClasses || []).filter(tClass => {
+                if (!tClass || tClass.day !== dayOfWeek) return false;
+                if (!tClass.startTime || !tClass.endTime) return false;
                 
-                const classStartHour = parseInt(tClass.startTime.split(':')[0]);
-                const classEndHour = parseInt(tClass.endTime.split(':')[0]);
-                
-                return hour >= classStartHour && hour < classEndHour;
+                try {
+                  const classStartHour = parseInt(tClass.startTime.split(':')[0]);
+                  const classEndHour = parseInt(tClass.endTime.split(':')[0]);
+                  
+                  return hour >= classStartHour && hour < classEndHour;
+                } catch (error) {
+                  console.error('Error parsing timetable class time:', error, tClass);
+                  return false;
+                }
               });
               
               // Find lesson plans for this time slot
@@ -1492,6 +1504,20 @@ export function LessonPlannerCalendar({
         </div>
       </div>
     );
+    } catch (error) {
+      console.error('Error rendering day view:', error);
+      return (
+        <div className="p-4 text-red-600">
+          <p>Error loading day view. Please try again.</p>
+          <button 
+            onClick={() => setViewMode('month')}
+            className="mt-2 px-4 py-2 bg-teal-600 text-white rounded-lg"
+          >
+            Return to Month View
+          </button>
+        </div>
+      );
+    }
   };
 
   // Render the month view
@@ -1842,7 +1868,15 @@ export function LessonPlannerCalendar({
             {/* View Mode Selector */}
             <div className="flex bg-white bg-opacity-20 rounded-lg overflow-hidden">
               <button
-                onClick={() => setViewMode('month')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  try {
+                    setViewMode('month');
+                  } catch (error) {
+                    console.error('Error switching to month view:', error);
+                  }
+                }}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
                   viewMode === 'month' ? 'bg-white text-teal-600' : 'text-white hover:bg-white hover:bg-opacity-10'
                 }`}
@@ -1850,7 +1884,15 @@ export function LessonPlannerCalendar({
                 Month
               </button>
               <button
-                onClick={() => setViewMode('week')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  try {
+                    setViewMode('week');
+                  } catch (error) {
+                    console.error('Error switching to week view:', error);
+                  }
+                }}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
                   viewMode === 'week' ? 'bg-white text-teal-600' : 'text-white hover:bg-white hover:bg-opacity-10'
                 }`}
@@ -1858,7 +1900,15 @@ export function LessonPlannerCalendar({
                 Week
               </button>
               <button
-                onClick={() => setViewMode('week-lessons')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  try {
+                    setViewMode('week-lessons');
+                  } catch (error) {
+                    console.error('Error switching to week-lessons view:', error);
+                  }
+                }}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
                   viewMode === 'week-lessons' ? 'bg-white text-teal-600' : 'text-white hover:bg-white hover:bg-opacity-10'
                 }`}
@@ -1866,7 +1916,15 @@ export function LessonPlannerCalendar({
                 Week Lessons
               </button>
               <button
-                onClick={() => setViewMode('day')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  try {
+                    setViewMode('day');
+                  } catch (error) {
+                    console.error('Error switching to day view:', error);
+                  }
+                }}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
                   viewMode === 'day' ? 'bg-white text-teal-600' : 'text-white hover:bg-white hover:bg-opacity-10'
                 }`}
