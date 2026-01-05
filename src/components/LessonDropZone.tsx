@@ -325,15 +325,15 @@ export function LessonDropZone({
             
             {/* Action Buttons */}
             <div className="flex items-center space-x-2 ml-4">
-              {/* Refresh/Clear Button */}
+              {/* New Lesson/Clear Button */}
               {onRefresh && (
                 <button
                   onClick={onRefresh}
                   className={`${headerCompact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md`}
-                  title="Clear lesson and start fresh"
+                  title="Clear lesson and start a new one"
                 >
                   <RefreshCw className={headerCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
-                  <span className={headerCompact ? 'hidden sm:inline' : ''}>Refresh</span>
+                  <span>New Lesson</span>
                 </button>
               )}
               
