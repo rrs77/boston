@@ -38,8 +38,13 @@ export function WeekLessonView({
 }: WeekLessonViewProps) {
   const [expandedLessons, setExpandedLessons] = useState<Set<string>>(new Set());
   const [dayNotes, setDayNotes] = useState<DayNotes>(() => {
-    const saved = localStorage.getItem(`day-notes-${className}`);
-    return saved ? JSON.parse(saved) : {};
+    try {
+      const saved = localStorage.getItem(`day-notes-${className}`);
+      return saved ? JSON.parse(saved) : {};
+    } catch (error) {
+      console.error('Error loading day notes:', error);
+      return {};
+    }
   });
   const [customObjectives, setCustomObjectives] = useState<CustomObjective[]>([]);
 
@@ -48,24 +53,49 @@ export function WeekLessonView({
     const loadObjectives = async () => {
       try {
         const structure = await customObjectivesApi.getCompleteStructure();
+        if (!Array.isArray(structure)) {
+          console.warn('Custom objectives structure is not an array:', structure);
+          return;
+        }
         const allObjectives: CustomObjective[] = [];
         structure.forEach(yearGroup => {
-          yearGroup.areas.forEach(area => {
-            allObjectives.push(...area.objectives);
-          });
+          if (yearGroup && yearGroup.areas && Array.isArray(yearGroup.areas)) {
+            yearGroup.areas.forEach(area => {
+              if (area && area.objectives && Array.isArray(area.objectives)) {
+                allObjectives.push(...area.objectives);
+              }
+            });
+          }
         });
         setCustomObjectives(allObjectives);
       } catch (error) {
         console.warn('Failed to load custom objectives:', error);
+        setCustomObjectives([]);
       }
     };
     loadObjectives();
   }, []);
 
   // Get week dates (Monday to Friday for school week)
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
-  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd }).slice(0, 5); // Monday-Friday only
+  let weekStart: Date;
+  let weekEnd: Date;
+  let weekDays: Date[];
+  
+  try {
+    if (!currentDate || !(currentDate instanceof Date) || isNaN(currentDate.getTime())) {
+      weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    } else {
+      weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+    }
+    weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+    weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd }).slice(0, 5); // Monday-Friday only
+  } catch (error) {
+    console.error('Error calculating week dates:', error);
+    const today = new Date();
+    weekStart = startOfWeek(today, { weekStartsOn: 1 });
+    weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+    weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd }).slice(0, 5);
+  }
 
   // Save notes to localStorage
   const saveNotes = (notes: DayNotes) => {
@@ -90,40 +120,78 @@ export function WeekLessonView({
 
   // Get lesson plans for a specific date, sorted by time
   const getPlansForDate = (date: Date): LessonPlan[] => {
-    return lessonPlans
-      .filter(plan => isSameDay(new Date(plan.date), date))
-      .sort((a, b) => {
-        const timeA = a.time || '00:00';
-        const timeB = b.time || '00:00';
-        return timeA.localeCompare(timeB);
-      });
+    try {
+      if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+        return [];
+      }
+      return (lessonPlans || [])
+        .filter(plan => {
+          if (!plan || !plan.date) return false;
+          try {
+            return isSameDay(new Date(plan.date), date);
+          } catch (error) {
+            console.error('Error comparing dates:', error);
+            return false;
+          }
+        })
+        .sort((a, b) => {
+          const timeA = a.time || '00:00';
+          const timeB = b.time || '00:00';
+          return timeA.localeCompare(timeB);
+        });
+    } catch (error) {
+      console.error('Error getting plans for date:', error);
+      return [];
+    }
   };
 
   // Get timetable classes for a specific date
   const getTimetableClassesForDate = (date: Date) => {
-    const dayOfWeek = date.getDay();
-    return timetableClasses.filter(tClass => tClass.day === dayOfWeek);
+    try {
+      if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+        return [];
+      }
+      const dayOfWeek = date.getDay();
+      return (timetableClasses || []).filter(tClass => {
+        if (!tClass || typeof tClass.day !== 'number') return false;
+        return tClass.day === dayOfWeek;
+      });
+    } catch (error) {
+      console.error('Error getting timetable classes for date:', error);
+      return [];
+    }
   };
 
   // Format time range
   const formatTimeRange = (startTime: string, endTime?: string) => {
-    if (!endTime) {
+    try {
+      if (!startTime) return '';
       const [hour, minute] = startTime.split(':');
       const hourNum = parseInt(hour);
+      if (isNaN(hourNum)) return startTime;
+      
       const ampm = hourNum >= 12 ? 'pm' : 'am';
       const displayHour = hourNum > 12 ? hourNum - 12 : hourNum === 0 ? 12 : hourNum;
-      return `${displayHour}:${minute} ${ampm}`;
+      
+      if (!endTime) {
+        return `${displayHour}:${minute || '00'} ${ampm}`;
+      }
+      
+      const formatTime = (time: string) => {
+        if (!time) return '';
+        const [h, m] = time.split(':');
+        const hNum = parseInt(h);
+        if (isNaN(hNum)) return time;
+        const ap = hNum >= 12 ? 'pm' : 'am';
+        const dH = hNum > 12 ? hNum - 12 : hNum === 0 ? 12 : hNum;
+        return `${dH}:${m || '00'} ${ap}`;
+      };
+      
+      return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+    } catch (error) {
+      console.error('Error formatting time range:', error);
+      return startTime || '';
     }
-    
-    const formatTime = (time: string) => {
-      const [hour, minute] = time.split(':');
-      const hourNum = parseInt(hour);
-      const ampm = hourNum >= 12 ? 'pm' : 'am';
-      const displayHour = hourNum > 12 ? hourNum - 12 : hourNum === 0 ? 12 : hourNum;
-      return `${displayHour}:${minute} ${ampm}`;
-    };
-    
-    return `${formatTime(startTime)} - ${formatTime(endTime)}`;
   };
 
   // Calculate duration from start and end time
@@ -134,10 +202,11 @@ export function WeekLessonView({
     return (endH * 60 + endM) - (startH * 60 + startM);
   };
 
-  return (
-    <div className="flex flex-col h-full bg-gray-50">
-      {/* Week Navigation */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+  try {
+    return (
+      <div className="flex flex-col h-full bg-gray-50">
+        {/* Week Navigation */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button
             onClick={() => onDateChange(subWeeks(currentDate, 1))}
@@ -199,10 +268,11 @@ export function WeekLessonView({
                 {/* Lessons */}
                 <div className="flex-1 overflow-y-auto p-3 space-y-3">
                   {/* Combine timetable classes and lesson plans */}
-                  {[...timetableClassesForDay, ...plans].map((item, idx) => {
-                    const isTimetableClass = 'startTime' in item;
+                  {[...(timetableClassesForDay || []), ...(plans || [])].map((item, idx) => {
+                    if (!item) return null;
+                    const isTimetableClass = item && 'startTime' in item && typeof (item as any).startTime === 'string';
                     const plan = isTimetableClass ? null : item as LessonPlan;
-                    const tClass = isTimetableClass ? item : null;
+                    const tClass = isTimetableClass ? item as any : null;
                     
                     const blockColor = isTimetableClass 
                       ? tClass!.color 
@@ -288,11 +358,13 @@ export function WeekLessonView({
                             {isExpanded && (
                               <div className="p-4">
                                 {/* Learning Objectives */}
-                                {plan.lessonNumber && allLessonsData[plan.lessonNumber] && (
+                                {plan.lessonNumber && allLessonsData && allLessonsData[plan.lessonNumber] && (
                                   (() => {
-                                    const lessonData = allLessonsData[plan.lessonNumber];
-                                    const hasObjectives = lessonData.customObjectives && lessonData.customObjectives.length > 0;
-                                    const hasEyfs = lessonData.lessonStandards && lessonData.lessonStandards.length > 0;
+                                    try {
+                                      const lessonData = allLessonsData[plan.lessonNumber];
+                                      if (!lessonData) return null;
+                                      const hasObjectives = lessonData.customObjectives && Array.isArray(lessonData.customObjectives) && lessonData.customObjectives.length > 0;
+                                      const hasEyfs = lessonData.lessonStandards && Array.isArray(lessonData.lessonStandards) && lessonData.lessonStandards.length > 0;
                                     
                                     if (hasObjectives || hasEyfs) {
                                       return (
@@ -324,6 +396,10 @@ export function WeekLessonView({
                                       );
                                     }
                                     return null;
+                                    } catch (error) {
+                                      console.error('Error rendering learning objectives:', error);
+                                      return null;
+                                    }
                                   })()
                                 )}
 
@@ -410,6 +486,25 @@ export function WeekLessonView({
         </div>
       </div>
     </div>
-  );
+    );
+  } catch (error) {
+    console.error('Error rendering WeekLessonView:', error);
+    return (
+      <div className="flex flex-col h-full bg-gray-50 p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Week Lessons View</h3>
+          <p className="text-sm text-red-600 mb-4">
+            There was an error loading the week lessons view. Please try refreshing the page.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 }
 
