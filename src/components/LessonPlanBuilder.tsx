@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { 
@@ -20,7 +20,8 @@ import {
   AlertCircle,
   Calendar,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from 'lucide-react';
 import { ActivityCard } from './ActivityCard';
 import { ActivityStackCard } from './ActivityStackCard';
@@ -208,6 +209,9 @@ export function LessonPlanBuilder({
     return filteredCategories;
   }, [categories, currentSheetInfo, customYearGroups]);
   
+  // Helper function to get storage key
+  const getStorageKeyHelper = (className: string) => `lesson-builder-draft-${className}`;
+
   // Initialize currentLessonPlan with a default value instead of null
   const [currentLessonPlan, setCurrentLessonPlan] = useState<LessonPlan>(() => {
     // If editing an existing lesson
@@ -236,6 +240,24 @@ export function LessonPlanBuilder({
         updatedAt: new Date(),
         isEditingExisting: true
       };
+    }
+    
+    // Check for draft in localStorage
+    const className = currentSheetInfo?.sheet || 'default';
+    const storageKey = getStorageKeyHelper(className);
+    try {
+      const draftData = localStorage.getItem(storageKey);
+      if (draftData) {
+        const parsed = JSON.parse(draftData);
+        return {
+          ...parsed,
+          date: new Date(parsed.date),
+          createdAt: new Date(parsed.createdAt),
+          updatedAt: new Date(parsed.updatedAt),
+        };
+      }
+    } catch (error) {
+      console.error('Failed to load draft from localStorage:', error);
     }
     
     // Default new lesson
@@ -276,6 +298,128 @@ export function LessonPlanBuilder({
   const [expandedStacks, setExpandedStacks] = useState<Set<string>>(new Set());
   const [showStacks, setShowStacks] = useState(true);
   const [selectedStackIds, setSelectedStackIds] = useState<Set<string>>(new Set());
+
+  // Ref to track if we're intentionally clearing (to avoid prompts)
+  const isClearingRef = useRef(false);
+  // Ref to track if we've shown the restore prompt
+  const hasShownRestorePromptRef = useRef(false);
+
+  // Get localStorage key for this class
+  const getStorageKey = () => {
+    const className = currentSheetInfo?.sheet || 'default';
+    return `lesson-builder-draft-${className}`;
+  };
+
+  // Save lesson draft to localStorage
+  const saveDraftToStorage = (lessonPlan: LessonPlan) => {
+    try {
+      const storageKey = getStorageKey();
+      const draftData = {
+        ...lessonPlan,
+        date: lessonPlan.date.toISOString(),
+        createdAt: lessonPlan.createdAt.toISOString(),
+        updatedAt: lessonPlan.updatedAt.toISOString(),
+      };
+      localStorage.setItem(storageKey, JSON.stringify(draftData));
+    } catch (error) {
+      console.error('Failed to save draft to localStorage:', error);
+    }
+  };
+
+  // Load lesson draft from localStorage
+  const loadDraftFromStorage = (): LessonPlan | null => {
+    try {
+      const storageKey = getStorageKey();
+      const draftData = localStorage.getItem(storageKey);
+      if (!draftData) return null;
+
+      const parsed = JSON.parse(draftData);
+      return {
+        ...parsed,
+        date: new Date(parsed.date),
+        createdAt: new Date(parsed.createdAt),
+        updatedAt: new Date(parsed.updatedAt),
+      };
+    } catch (error) {
+      console.error('Failed to load draft from localStorage:', error);
+      return null;
+    }
+  };
+
+  // Clear draft from localStorage
+  const clearDraftFromStorage = () => {
+    try {
+      const storageKey = getStorageKey();
+      localStorage.removeItem(storageKey);
+    } catch (error) {
+      console.error('Failed to clear draft from localStorage:', error);
+    }
+  };
+
+  // Check for draft on mount and prompt user if found
+  useEffect(() => {
+    // Only check for draft if not editing an existing lesson
+    if (!editingLessonNumber && !hasShownRestorePromptRef.current) {
+      const draft = loadDraftFromStorage();
+      // Check if we loaded a draft in initial state (has activities or title)
+      const hasDraftInState = currentLessonPlan.activities.length > 0 || currentLessonPlan.title !== '';
+      
+      if (draft && (draft.activities.length > 0 || draft.title !== '')) {
+        // If we already loaded it in initial state, silently restore it (no prompt needed)
+        // User can continue working seamlessly
+        if (hasDraftInState) {
+          hasShownRestorePromptRef.current = true;
+          // Check if there are actual changes compared to what's loaded
+          // If draft matches what's already loaded, no need to set unsaved changes
+          const hasChanges = 
+            draft.activities.length !== currentLessonPlan.activities.length ||
+            draft.title !== currentLessonPlan.title ||
+            draft.notes !== currentLessonPlan.notes ||
+            draft.duration !== currentLessonPlan.duration;
+          
+          if (hasChanges) {
+            setHasUnsavedChanges(true);
+          }
+        }
+      }
+      hasShownRestorePromptRef.current = true;
+    }
+  }, []); // Only run on mount
+
+  // Save draft whenever lesson plan changes (even after saving, so user can continue working)
+  useEffect(() => {
+    // Always save draft if not editing an existing lesson, so user can switch tabs and continue
+    if (!editingLessonNumber) {
+      saveDraftToStorage(currentLessonPlan);
+    }
+  }, [currentLessonPlan, editingLessonNumber]);
+
+  // Handle beforeunload (browser close/navigation)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && !isClearingRef.current) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Handle visibility change (tab switch)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && hasUnsavedChanges && !isClearingRef.current) {
+        // Save draft when tab becomes hidden
+        saveDraftToStorage(currentLessonPlan);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [hasUnsavedChanges, currentLessonPlan]);
 
   // Generate a lesson number when component mounts
   useEffect(() => {
@@ -482,6 +626,8 @@ export function LessonPlanBuilder({
       const success = handleUpdateLessonPlan(updatedPlan);
       if (success) {
         setHasUnsavedChanges(false);
+        // Keep draft saved so user can continue working after switching tabs
+        saveDraftToStorage(updatedPlan);
         if (currentLessonPlan.isEditingExisting && onEditComplete) {
           onEditComplete();
         }
@@ -490,11 +636,55 @@ export function LessonPlanBuilder({
       const success = handleUpdateLessonPlan(currentLessonPlan);
       if (success) {
         setHasUnsavedChanges(false);
+        // Keep draft saved so user can continue working after switching tabs
+        saveDraftToStorage(currentLessonPlan);
         if (currentLessonPlan.isEditingExisting && onEditComplete) {
           onEditComplete();
         }
       }
     }
+  };
+
+  // Handle refresh/clear button
+  const handleRefresh = () => {
+    if (hasUnsavedChanges) {
+      const confirmClear = window.confirm(
+        'Are you sure you want to clear your current lesson? All unsaved changes will be lost.'
+      );
+      if (!confirmClear) {
+        return;
+      }
+    }
+
+    isClearingRef.current = true;
+    
+    // Clear draft from storage
+    clearDraftFromStorage();
+    
+    // Reset to a new empty lesson
+    const newPlan: LessonPlan = {
+      id: crypto.randomUUID(),
+      date: new Date(),
+      week: 1,
+      className: currentSheetInfo?.sheet || '',
+      activities: [],
+      duration: 0,
+      notes: '',
+      status: 'draft',
+      title: '',
+      term: '',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    setCurrentLessonPlan(newPlan);
+    setHasUnsavedChanges(false);
+    generateNextLessonNumber();
+    
+    // Reset clearing flag after a short delay
+    setTimeout(() => {
+      isClearingRef.current = false;
+    }, 100);
   };
 
   // Create a new lesson plan after saving the current one
@@ -966,6 +1156,7 @@ export function LessonPlanBuilder({
                   isEditing={true}
                   onActivityClick={(activity) => setSelectedActivity(activity)}
                   onSave={handleSaveLessonPlan}
+                  onRefresh={handleRefresh}
                 />
               </div>
             </div>

@@ -10,7 +10,8 @@ import {
   Edit3,
   Save,
   X,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from 'lucide-react';
 import { ActivityDetails } from './ActivityDetails'; // Import the modal component
 import { useData } from '../contexts/DataContext'; // Import to access updateActivity
@@ -36,6 +37,7 @@ interface LessonDropZoneProps {
   onLessonPlanFieldUpdate: (field: string, value: any) => void; // NEW: Add this for lesson naming
   isEditing: boolean;
   onSave?: () => void; // NEW: Add save lesson functionality
+  onRefresh?: () => void; // NEW: Add refresh/clear functionality
   onAddActivitiesClick?: () => void; // NEW: Callback for opening activity modal
   notes?: string; // NEW: Lesson notes
   onNotesChange?: (notes: string) => void; // NEW: Callback for notes change
@@ -214,6 +216,7 @@ export function LessonDropZone({
   onLessonPlanFieldUpdate, // NEW: Add this prop
   isEditing,
   onSave, // NEW: Add save functionality
+  onRefresh, // NEW: Add refresh functionality
   onAddActivitiesClick, // NEW: Add activities button callback
   notes, // NEW: Lesson notes
   onNotesChange // NEW: Notes change callback
@@ -320,16 +323,31 @@ export function LessonDropZone({
               </div>
             </div>
             
-            {/* Save Lesson Button */}
-            {onSave && (
-              <button
-                onClick={onSave}
-                className={`${headerCompact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md ml-4`}
-              >
-                <Save className={headerCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
-                <span>Save Lesson</span>
-              </button>
-            )}
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-2 ml-4">
+              {/* Refresh/Clear Button */}
+              {onRefresh && (
+                <button
+                  onClick={onRefresh}
+                  className={`${headerCompact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md`}
+                  title="Clear lesson and start fresh"
+                >
+                  <RefreshCw className={headerCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+                  <span className={headerCompact ? 'hidden sm:inline' : ''}>Refresh</span>
+                </button>
+              )}
+              
+              {/* Save Lesson Button */}
+              {onSave && (
+                <button
+                  onClick={onSave}
+                  className={`${headerCompact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md`}
+                >
+                  <Save className={headerCompact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+                  <span>Save Lesson</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Lesson Notes - Integrated into header - Only show when no activities or explicitly requested */}
