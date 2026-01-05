@@ -35,7 +35,7 @@
    - Click **Save and Deploy**
    - Cloudflare will build and deploy your site
 
-### Option 2: Deploy via Wrangler CLI
+### Option 2: Deploy via Wrangler CLI (Pages)
 
 1. **Install Wrangler CLI**
    ```bash
@@ -47,10 +47,12 @@
    wrangler login
    ```
 
-3. **Deploy**
+3. **Deploy to Pages** (not Workers!)
    ```bash
    wrangler pages deploy dist --project-name=cc-designer
    ```
+
+**Important:** Make sure you're deploying to Pages, not Workers. The `wrangler.toml` file is NOT needed for Pages - it's only for Workers.
 
 ## Custom Domain Setup
 
