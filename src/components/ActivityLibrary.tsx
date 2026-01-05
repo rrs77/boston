@@ -31,7 +31,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useIsViewOnly } from '../hooks/useIsViewOnly';
 import { activityPacksApi } from '../config/api';
 import type { Activity, ActivityStack } from '../contexts/DataContext';
-import { createAllPirateActivities } from '../utils/createPirateActivities';
 
 interface ActivityLibraryProps {
   onActivitySelect: (activity: Activity) => void;
@@ -662,19 +661,6 @@ export function ActivityLibrary({
               <span className="hidden sm:inline">Import/Export</span>
               <span className="sm:hidden">Import</span>
             </button>
-            
-            {user?.email === 'rob.reichstorer@gmail.com' && (
-              <button
-                onClick={handleCreatePirateActivities}
-                disabled={loading || isViewOnly}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors duration-200 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-white"
-                title="Create 20 pirate-themed activities (Admin only)"
-              >
-                <Tag className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Create Pirate Activities</span>
-                <span className="sm:hidden">Pirates</span>
-              </button>
-            )}
           </div>
         </div>
 
