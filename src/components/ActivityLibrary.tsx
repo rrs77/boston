@@ -416,44 +416,6 @@ export function ActivityLibrary({
     }
   };
 
-  const handleCreatePirateActivities = async () => {
-    if (isViewOnly) {
-      alert('View-only mode: Cannot create activities.');
-      return;
-    }
-    
-    const isAdmin = user?.email === 'rob.reichstorer@gmail.com';
-    if (!isAdmin) {
-      alert('This feature is only available to administrators.');
-      return;
-    }
-    
-    const confirmed = window.confirm(
-      'This will create 20 pirate-themed activities for LKG, UKG, and Reception.\n\n' +
-      'Are you sure you want to proceed?'
-    );
-    
-    if (!confirmed) return;
-    
-    try {
-      setLoading(true);
-      console.log('🏴‍☠️ Starting to create pirate activities...');
-      
-      await createAllPirateActivities();
-      
-      // Refresh activities to show the new ones
-      await refreshData();
-      
-      alert('✅ Successfully created 20 pirate activities!');
-      console.log('✅ All pirate activities created successfully');
-    } catch (error) {
-      console.error('❌ Failed to create pirate activities:', error);
-      alert(`Failed to create pirate activities: ${error.message || 'Unknown error'}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleViewActivityDetails = (activity: Activity, initialResource?: {url: string, title: string, type: string}) => {
     // Convert any "EYFS U" levels to "UKG"
     if (activity.level === "EYFS U") {
