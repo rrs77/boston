@@ -761,7 +761,7 @@ export function ActivityLibrary({
                 style={{
                   borderLeft: `4px solid ${getCategoryColor(activity.category)}`,
                   borderRadius: '4px',
-                  minHeight: '50px'
+                  minHeight: '60px'
                 }}
               >
 
@@ -771,7 +771,7 @@ export function ActivityLibrary({
                   onClick={() => handleActivityClick(activity)}
                 >
                   <div className="flex items-center justify-between gap-3 flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-gray-900 leading-tight flex-1 truncate" title={activity.activity}>
+                    <h3 className="text-sm font-medium text-gray-900 leading-tight flex-1 line-clamp-2 break-words" title={activity.activity}>
                       {activity.activity}
                     </h3>
                     <div className="flex items-center space-x-2 text-xs text-gray-500 flex-shrink-0">

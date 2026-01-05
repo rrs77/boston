@@ -340,11 +340,11 @@ className={`bg-white rounded-card shadow-soft border-l-4 p-3 transition-all dura
         onClick={handleCardClick}
       >
         <div className="p-4 flex flex-col flex-grow">
-          <div className="flex items-start justify-between mb-2">
-            <h4 className="font-semibold text-gray-900 text-base leading-tight" dir="ltr">{activity.activity}</h4>
-            <div className="flex items-center space-x-2 ml-2">
+          <div className="flex items-start justify-between mb-2 gap-2">
+            <h4 className="font-semibold text-gray-900 text-base leading-tight flex-1 min-w-0 break-words" dir="ltr" title={activity.activity}>{activity.activity}</h4>
+            <div className="flex items-center space-x-2 ml-2 flex-shrink-0">
               {activity.time > 0 && (
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap">
                   {activity.time}m
                 </span>
               )}
