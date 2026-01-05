@@ -990,7 +990,10 @@ export function LessonPlanBuilder({
               <div className="bg-white rounded-card shadow-soft overflow-hidden sticky top-8 flex flex-col max-h-[calc(100vh-4rem)]">
                 {/* Library Header */}
                 <div className="p-6 border-b border-gray-200 text-white h-[180px] flex flex-col justify-between" style={{ background: 'linear-gradient(to right, #14B8A6, #0D9488)' }}>
-                  <h3 className="text-lg font-semibold mb-4">Activity Library Build Your Lesson</h3>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold">Activity Library</h3>
+                    <p className="text-sm font-medium opacity-90 mt-1">Build Your Lesson</p>
+                  </div>
                   
                   {/* Search and Category Filter - On one line */}
                   <div className="flex space-x-2">
