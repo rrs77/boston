@@ -656,6 +656,7 @@ export function ActivityLibrary({
               onCategoryChange={(category) => handleCategoryChange(category === '' ? 'all' : category)}
               placeholder="All Categories"
               className="px-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent font-semibold"
+              showAllCategories={false}
             />
           </div>
 
