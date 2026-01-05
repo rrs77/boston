@@ -7,4 +7,9 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  build: {
+    outDir: 'dist',
+    // Vite automatically copies files from public/ to dist/ during build
+    // This includes the _redirects file needed for Cloudflare Pages SPA routing
+  },
 });
