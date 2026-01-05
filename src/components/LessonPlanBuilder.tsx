@@ -991,8 +991,7 @@ export function LessonPlanBuilder({
                 {/* Library Header */}
                 <div className="p-6 border-b border-gray-200 text-white h-[180px] flex flex-col justify-between" style={{ background: 'linear-gradient(to right, #14B8A6, #0D9488)' }}>
                   <div className="mb-4">
-                    <h3 className="text-lg font-semibold">Activity Library</h3>
-                    <p className="text-sm font-medium opacity-90 mt-1">Build Your Lesson</p>
+                    <h3 className="text-lg font-semibold">Activity Library - Build Your Lesson</h3>
                   </div>
                   
                   {/* Search and Category Filter - On one line */}
