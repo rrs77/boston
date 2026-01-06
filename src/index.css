@@ -380,6 +380,46 @@ button[data-state="active"] {
   box-sizing: border-box;
 }
 
+/* Show page boundary indicators within multi-page lessons */
+.print-preview-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+  /* Repeating gradient to show page boundaries at 297mm intervals */
+  /* 297mm ≈ 1122px at 96 DPI, but we use mm for consistency */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0mm,
+    transparent 295mm,
+    rgba(239, 68, 68, 0.3) 295mm,
+    rgba(239, 68, 68, 0.3) 297mm
+  );
+  background-size: 100% 297mm;
+  background-position: top;
+}
+
+/* Page boundary label overlay */
+.print-preview-page.multi-page::after {
+  content: 'PAGE BREAK';
+  position: absolute;
+  top: calc(297mm - 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ef4444;
+  color: white;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  z-index: 20;
+  pointer-events: none;
+}
+
 .print-preview-page:last-child {
   margin-bottom: 0;
   page-break-after: auto;

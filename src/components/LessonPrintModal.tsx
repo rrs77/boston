@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Download, X, Check, Tag, ChevronDown, Share2, Copy, Link2 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { Activity } from '../contexts/DataContext';
@@ -8,6 +8,13 @@ import type { CustomObjective, CustomObjectiveArea, CustomObjectiveYearGroup } f
 import { supabase } from '../config/supabase';
 import { useShareLesson } from '../hooks/useShareLesson';
 import toast from 'react-hot-toast';
+
+// A4 page height in pixels (297mm at 96 DPI ≈ 1123px, but we use mm conversion)
+// 1mm = 3.7795275591 pixels at 96 DPI
+const A4_HEIGHT_MM = 297;
+const MM_TO_PX = 3.7795275591;
+const A4_HEIGHT_PX = A4_HEIGHT_MM * MM_TO_PX; // ~1122px
+const PAGE_CONTENT_HEIGHT_PX = A4_HEIGHT_PX - (2 * 10 * MM_TO_PX); // Subtract 2cm padding (1cm top + 1cm bottom)
 
 interface LessonPrintModalProps {
   lessonNumber?: string;
@@ -53,6 +60,38 @@ export function LessonPrintModal({
       isUnitPrint || unitId || halfTermId ? 'unit' : 'single'
   );
   const previewRef = useRef<HTMLDivElement>(null);
+  
+  // Track page counts for each lesson (for multi-page lessons)
+  const [lessonPageCounts, setLessonPageCounts] = useState<Record<string, number>>({});
+  const lessonRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  
+  // Calculate page counts for each lesson after render
+  const calculatePageCounts = useCallback(() => {
+    const newPageCounts: Record<string, number> = {};
+    
+    Object.entries(lessonRefs.current).forEach(([lessonNum, element]) => {
+      if (element) {
+        const contentHeight = element.scrollHeight;
+        // Calculate how many pages this content would span
+        // Using the page content area height (A4 minus margins)
+        const pagesNeeded = Math.ceil(contentHeight / PAGE_CONTENT_HEIGHT_PX);
+        newPageCounts[lessonNum] = Math.max(1, pagesNeeded);
+        console.log(`📄 Lesson ${lessonNum}: height=${contentHeight}px, pages=${pagesNeeded}`);
+      }
+    });
+    
+    setLessonPageCounts(newPageCounts);
+  }, []);
+  
+  // Recalculate page counts when lessons change or modal opens
+  useEffect(() => {
+    // Small delay to ensure content is rendered
+    const timer = setTimeout(() => {
+      calculatePageCounts();
+    }, 200);
+    
+    return () => clearTimeout(timer);
+  }, [lessonNumber, lessonNumbers, exportMode, calculatePageCounts, allLessonsData]);
 
   // Load custom objectives data
   useEffect(() => {
@@ -1103,7 +1142,13 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-4">
                 <div className="text-sm text-gray-600">
-                  Lessons: {lessonsToRender.map((_, index) => index + 1).join(', ')}
+                  Lessons: {lessonsToRender.length}
+                </div>
+                <div className="text-sm text-gray-600">
+                  •
+                </div>
+                <div className="text-sm text-gray-600">
+                  Total Pages: {lessonsToRender.reduce((sum, ln) => sum + (lessonPageCounts[ln] || 1), 0)}
                 </div>
               </div>
               <div className="flex space-x-3">
@@ -1244,9 +1289,19 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                 groupedEyfs[area].push(detail);
               });
 
+              // Calculate how many pages this lesson spans
+              const lessonPages = lessonPageCounts[lessonNum] || 1;
+              // Calculate the starting page number for this lesson (sum of previous lesson pages)
+              const previousPagesTotal = lessonsToRender
+                .slice(0, lessonIndex)
+                .reduce((sum, ln) => sum + (lessonPageCounts[ln] || 1), 0);
+              // Total pages across all lessons
+              const totalPagesAcrossAllLessons = lessonsToRender
+                .reduce((sum, ln) => sum + (lessonPageCounts[ln] || 1), 0);
+
               return (
                 <React.Fragment key={lessonNum}>
-                  {/* Visual page break indicator */}
+                  {/* Visual page break indicator between lessons */}
                   {lessonIndex > 0 && (
                     <div 
                       style={{
@@ -1268,13 +1323,14 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         fontWeight: '600',
                         whiteSpace: 'nowrap'
                       }}>
-                        PAGE BREAK
+                        NEW LESSON - PAGE BREAK
                       </div>
                       <div style={{ flex: 1, height: '2px', background: 'linear-gradient(to right, transparent, #9ca3af, transparent)' }}></div>
                     </div>
                   )}
                   <div
-                      className="lesson-page print-preview-page"
+                      ref={(el) => { lessonRefs.current[lessonNum] = el; }}
+                      className={`lesson-page print-preview-page ${lessonPages > 1 ? 'multi-page' : ''}`}
                       style={{
                         width: '210mm',
                         minHeight: '297mm',
@@ -1292,21 +1348,28 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                       {/* Page Header */}
                       <div className="bg-blue-50 px-6 py-3 border-b border-gray-200">
                         <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-blue-800">
-                        {(() => {
-                          // Extract numeric lesson number (handle "lesson1" format)
-                          const getLessonDisplayNumber = (num: string): string => {
-                            const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
-                            return numericPart || num;
-                          };
-                          const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
-                          const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
-                          return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - Lesson Preview`;
-                        })()}
-                      </span>
-                          <span className="text-xs text-blue-600">
-                        Page {lessonIndex + 1} of {lessonsToRender.length}
-                      </span>
+                          <span className="text-sm font-medium text-blue-800">
+                            {(() => {
+                              // Extract numeric lesson number (handle "lesson1" format)
+                              const getLessonDisplayNumber = (num: string): string => {
+                                const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+                                return numericPart || num;
+                              };
+                              const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
+                              const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
+                              return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - Preview`;
+                            })()}
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            {lessonPages > 1 && (
+                              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium">
+                                {lessonPages} pages
+                              </span>
+                            )}
+                            <span className="text-xs text-blue-600">
+                              Page {previousPagesTotal + 1}{lessonPages > 1 ? `-${previousPagesTotal + lessonPages}` : ''} of {totalPagesAcrossAllLessons}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
