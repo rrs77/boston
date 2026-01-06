@@ -807,6 +807,9 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
   };
 
   const handleShare = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    console.log('🔗 Copy Link button clicked!');
+    console.log('🔗 Current state:', { exportMode, lessonNumber, isSharing, isSharingSingle });
+    
     // Prevent default behavior and event propagation
     if (e) {
       e.preventDefault();
@@ -898,7 +901,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         });
       } finally {
         setIsSharing(false);
-        setIsSharingSingle(false);
+        // Note: isSharingSingle is managed by the useShareLesson hook internally
       }
       return;
     }
@@ -1050,13 +1053,14 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
     }
   };
 
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string): Promise<boolean> => {
     try {
       await navigator.clipboard.writeText(text);
       toast.success('Shareable URL copied to clipboard!', {
         duration: 3000,
         icon: '📋',
       });
+      return true;
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
       // Fallback: create a temporary textarea
@@ -1072,12 +1076,15 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
           duration: 3000,
           icon: '📋',
         });
+        document.body.removeChild(textarea);
+        return true;
       } catch (err) {
         toast.error(`Failed to copy URL. Here it is: ${text}`, {
           duration: 8000,
         });
+        document.body.removeChild(textarea);
+        return false;
       }
-      document.body.removeChild(textarea);
     }
   };
 
