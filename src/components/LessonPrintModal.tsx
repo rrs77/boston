@@ -1181,35 +1181,20 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                       </>
                   )}
                 </button>
-                <div 
+                <button
+                  type="button"
                   onClick={(e) => {
+                    console.log('🔗 Copy Link button onClick fired!');
                     e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
                     if (!isExporting && !isSharing && !isSharingSingle) {
-                      handleShare(e as any);
+                      handleShare(e);
                     }
                   }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  role="button"
+                  disabled={isExporting || isSharing || isSharingSingle}
                   aria-label="Copy share link to clipboard"
-                  className={`px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 cursor-pointer ${
+                  className={`px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 ${
                     isExporting || isSharing || isSharingSingle ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
-                  style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (!isExporting && !isSharing && !isSharingSingle) {
-                        handleShare(e as any);
-                      }
-                    }
-                  }}
                 >
                   {(isSharing || isSharingSingle) ? (
                       <>
@@ -1227,7 +1212,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         <span>Copy Link</span>
                       </>
                   )}
-                </div>
+                </button>
               </div>
             </div>
           </div>

@@ -175,11 +175,10 @@ export function TimetableModal({
           <div className="flex items-center justify-end space-x-2 flex-shrink-0">
             {timetableClasses.length > 0 && (
               <>
-                <div
+                <button
+                  type="button"
                   onClick={async (e) => {
                     e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
                     if (isSharing) return;
                     
                     try {
@@ -197,28 +196,12 @@ export function TimetableModal({
                       });
                     }
                   }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  role="button"
+                  disabled={isSharing}
                   aria-label="Copy timetable PDF link to clipboard"
-                  className={`px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-1.5 sm:space-x-2 cursor-pointer touch-manipulation text-xs sm:text-sm min-h-[36px] sm:min-h-[40px] ${
+                  className={`px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-1.5 sm:space-x-2 touch-manipulation text-xs sm:text-sm min-h-[36px] sm:min-h-[40px] ${
                     isSharing ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   title="Copy timetable PDF link to clipboard"
-                  style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (!isSharing) {
-                        const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
-                        (e.target as HTMLElement).dispatchEvent(clickEvent);
-                      }
-                    }
-                  }}
                 >
                   {isSharing ? (
                     <>
@@ -233,7 +216,7 @@ export function TimetableModal({
                       <span className="sm:hidden">Copy</span>
                     </>
                   )}
-                </div>
+                </button>
                 {shareUrl && (
                   <div
                     onClick={(e) => {

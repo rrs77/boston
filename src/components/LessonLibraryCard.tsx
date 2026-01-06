@@ -185,23 +185,19 @@ export function LessonLibraryCard({
         {((onAssignToUnit && halfTerms.length > 0) || onEdit || onDuplicate || true) && (
           <div className="absolute top-0 right-0 h-full flex items-center pr-2">
             <div className="flex items-center space-x-1">
-              {/* Share button - always available - using div instead of button to prevent macOS share sheet */}
-              <div
+              {/* Share button - always available */}
+              <button
+                type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  e.stopImmediatePropagation();
                   if (!isSharing) {
                     handleShare(e);
                   }
                 }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                role="button"
+                disabled={isSharing}
                 aria-label="Copy share link to clipboard"
-                className={`p-2 rounded-button shadow-soft hover:shadow-hover flex items-center space-x-1 transition-all cursor-pointer ${
+                className={`p-2 rounded-button shadow-soft hover:shadow-hover flex items-center space-x-1 transition-all ${
                   isSharing 
                     ? 'bg-gray-400 text-white cursor-not-allowed opacity-50' 
                     : localShareUrl || shareUrl
@@ -209,17 +205,6 @@ export function LessonLibraryCard({
                     : 'bg-gradient-to-r from-coral-400 to-coral-500 hover:from-coral-500 hover:to-coral-600 text-white'
                 }`}
                 title={localShareUrl || shareUrl ? "Share link created!" : "Copy link to clipboard"}
-                style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!isSharing) {
-                      handleShare(e);
-                    }
-                  }
-                }}
               >
                 {isSharing ? (
                   <>
@@ -237,7 +222,7 @@ export function LessonLibraryCard({
                     <span className="text-xs">Copy Link</span>
                   </>
                 )}
-              </div>
+              </button>
               {onAssignToUnit && halfTerms.length > 0 && (
                 <button
                   onClick={handleAssignClick}
@@ -348,23 +333,19 @@ export function LessonLibraryCard({
         {/* Action buttons - Share, Assign, Duplicate, and Edit buttons */}
         {((onAssignToUnit && halfTerms.length > 0) || onEdit || onDuplicate || true) && (
           <div className="absolute top-2 right-2 flex items-center space-x-2">
-            {/* Share button - always available - using div instead of button to prevent macOS share sheet */}
-            <div
+            {/* Share button - always available */}
+            <button
+              type="button"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                e.stopImmediatePropagation();
                 if (!isSharing) {
                   handleShare(e);
                 }
               }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              role="button"
+              disabled={isSharing}
               aria-label="Copy share link to clipboard"
-              className={`p-2 rounded-lg shadow-sm flex items-center space-x-1 cursor-pointer ${
+              className={`p-2 rounded-lg shadow-sm flex items-center space-x-1 ${
                 isSharing 
                   ? 'bg-gray-400 text-white cursor-not-allowed opacity-50' 
                   : localShareUrl || shareUrl
@@ -372,17 +353,6 @@ export function LessonLibraryCard({
                   : 'bg-gradient-to-r from-coral-400 to-coral-500 hover:from-coral-500 hover:to-coral-600 text-white'
               }`}
               title={localShareUrl || shareUrl ? "Share link created!" : "Copy link to clipboard"}
-              style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!isSharing) {
-                    handleShare(e);
-                  }
-                }
-              }}
             >
               {isSharing ? (
                 <>
@@ -400,7 +370,7 @@ export function LessonLibraryCard({
                   <span className="text-xs">Copy Link</span>
                 </>
               )}
-            </div>
+            </button>
             {onAssignToUnit && halfTerms.length > 0 && (
               <button
                 onClick={handleAssignClick}

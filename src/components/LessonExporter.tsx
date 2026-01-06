@@ -425,35 +425,19 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
                   </>
                 )}
               </button>
-              <div
+              <button
+                type="button"
                 onClick={(e) => {
                   e.preventDefault();
-                  e.stopPropagation();
-                  e.stopImmediatePropagation();
                   if (!isExporting && !isSharing) {
-                    handleShare(e as any);
+                    handleShare(e);
                   }
                 }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                role="button"
+                disabled={isExporting || isSharing}
                 aria-label="Copy share link to clipboard"
-                className={`px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 cursor-pointer ${
+                className={`px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 ${
                   isExporting || isSharing ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
-                style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!isExporting && !isSharing) {
-                      handleShare(e as any);
-                    }
-                  }
-                }}
               >
                 {isSharing ? (
                   <>
@@ -471,7 +455,7 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
                     <span>Copy Link</span>
                   </>
                 )}
-              </div>
+              </button>
             </div>
             {shareUrl && shareSuccess && (
               <div className="mt-3 p-3 bg-teal-50 border border-teal-200 rounded-lg">
