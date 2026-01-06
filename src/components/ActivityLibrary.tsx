@@ -215,7 +215,6 @@ export function ActivityLibrary({
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'time' | 'level'>('category');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedLetter, setSelectedLetter] = useState<string | null>(null); // For A-Z index navigation
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [selectedActivityDetails, setSelectedActivityDetails] = useState<Activity | null>(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
@@ -398,27 +397,6 @@ export function ActivityLibrary({
     return { filteredAndSortedActivities: filteredActivities, filteredAndSortedStacks: filteredStacks };
   }, [allActivities, activityStacks, searchQuery, localSelectedCategory, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup, userOwnedPacks, availableCategoriesForYearGroup]);
 
-  // Get available letters for A-Z index (only when sorting by name)
-  const availableLetters = useMemo(() => {
-    if (sortBy !== 'name') return [];
-    const letters = new Set<string>();
-    filteredAndSortedActivities.forEach(activity => {
-      const firstLetter = activity.activity.charAt(0).toUpperCase();
-      if (/[A-Z]/.test(firstLetter)) {
-        letters.add(firstLetter);
-      }
-    });
-    return Array.from(letters).sort();
-  }, [filteredAndSortedActivities, sortBy]);
-
-  // Scroll to activities starting with a specific letter
-  const scrollToLetter = (letter: string) => {
-    setSelectedLetter(letter);
-    const element = document.querySelector(`[data-letter-index="${letter}"]`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
 
   const toggleSort = (field: 'name' | 'category' | 'time' | 'level') => {
     if (sortBy === field) {
@@ -700,23 +678,19 @@ export function ActivityLibrary({
         {/* Search and Sort Controls */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {/* Search - Shorter width */}
-          <div className="relative" style={{ width: '200px', minWidth: '180px' }}>
+          <div className="relative" style={{ width: '220px', minWidth: '200px' }}>
             <Search 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" 
-              style={{ color: '#FFFFFF' }}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-teal-500" 
             />
             <input
               type="text"
               placeholder="Search activities..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white bg-opacity-20 border-2 border-teal-300 rounded-lg font-semibold text-sm placeholder-white"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-teal-400 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
               style={{
-                color: '#FFFFFF',
-                '--tw-placeholder-color': '#FFFFFF',
-                '::placeholder': { color: '#FFFFFF' },
-                boxShadow: '0 0 12px rgba(20, 184, 166, 0.5), 0 0 20px rgba(20, 184, 166, 0.3)'
-              } as React.CSSProperties}
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(20, 184, 166, 0.1)'
+              }}
               dir="ltr"
             />
           </div>
@@ -792,33 +766,6 @@ export function ActivityLibrary({
 
       {/* Main Content */}
       <div className="flex relative">
-        {/* A-Z Index Sidebar - Only show when sorting by name */}
-        {sortBy === 'name' && availableLetters.length > 0 && (
-          <div 
-            className="fixed top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-lg p-2 border-2 border-teal-200"
-            style={{
-              right: 'calc(50% - 520px)',
-              boxShadow: '0 4px 15px rgba(20, 184, 166, 0.25), 0 2px 6px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
-              {availableLetters.map(letter => (
-                <button
-                  key={letter}
-                  onClick={() => scrollToLetter(letter)}
-                  className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                    selectedLetter === letter
-                      ? 'bg-teal-600 text-white'
-                      : 'text-gray-700 hover:bg-teal-50 hover:text-teal-600'
-                  }`}
-                  title={`Jump to activities starting with ${letter}`}
-                >
-                  {letter}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
         
         <div className="p-6 flex-1">
         {loading || dataLoading ? (
