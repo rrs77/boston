@@ -710,11 +710,12 @@ export function ActivityLibrary({
               placeholder="Search activities..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg font-semibold text-sm placeholder-white"
+              className="w-full pl-10 pr-4 py-2 bg-white bg-opacity-20 border-2 border-teal-300 rounded-lg font-semibold text-sm placeholder-white"
               style={{
                 color: '#FFFFFF',
                 '--tw-placeholder-color': '#FFFFFF',
-                '::placeholder': { color: '#FFFFFF' }
+                '::placeholder': { color: '#FFFFFF' },
+                boxShadow: '0 0 12px rgba(20, 184, 166, 0.5), 0 0 20px rgba(20, 184, 166, 0.3)'
               } as React.CSSProperties}
               dir="ltr"
             />
@@ -793,7 +794,13 @@ export function ActivityLibrary({
       <div className="flex relative">
         {/* A-Z Index Sidebar - Only show when sorting by name */}
         {sortBy === 'name' && availableLetters.length > 0 && (
-          <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-lg shadow-lg p-2 border border-gray-200">
+          <div 
+            className="fixed top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-lg p-2 border-2 border-teal-200"
+            style={{
+              right: 'calc(50% - 520px)',
+              boxShadow: '0 4px 15px rgba(20, 184, 166, 0.25), 0 2px 6px rgba(0, 0, 0, 0.1)'
+            }}
+          >
             <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
               {availableLetters.map(letter => (
                 <button
