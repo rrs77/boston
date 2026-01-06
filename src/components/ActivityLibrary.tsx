@@ -814,7 +814,7 @@ export function ActivityLibrary({
         ) : (
           viewMode === 'list' ? (
           // List View - Compact cards in grid layout with full functionality
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredAndSortedActivities.map((activity, index) => {
               const firstLetter = activity.activity.charAt(0).toUpperCase();
               const isNewLetter = index === 0 || 
@@ -831,54 +831,54 @@ export function ActivityLibrary({
                     </div>
                   )}
                   <div 
-                    className="bg-white shadow-soft hover:shadow-hover transition-shadow duration-200 p-2 relative group"
+                    className="bg-white shadow-soft hover:shadow-hover transition-shadow duration-200 p-3 relative group"
                     style={{
                       borderLeft: `4px solid ${getCategoryColor(activity.category)}`,
-                      borderRadius: '4px',
-                      minHeight: '60px'
+                      borderRadius: '6px',
+                      minHeight: '80px'
                     }}
                   >
 
                 {/* Activity content */}
                 <div 
-                  className="h-full flex items-center cursor-pointer"
+                  className="h-full flex flex-col justify-between cursor-pointer"
                   onClick={() => handleActivityClick(activity)}
                 >
-                  <div className="flex items-center justify-between gap-3 flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-gray-900 leading-tight flex-1 line-clamp-2 break-words" title={activity.activity}>
-                      {activity.activity}
-                    </h3>
-                    <div className="flex items-center space-x-2 text-xs text-gray-500 flex-shrink-0">
+                  <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 break-words mb-2" title={activity.activity}>
+                    {activity.activity}
+                  </h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center text-xs text-gray-500">
                       <span className="flex items-center whitespace-nowrap">
                         <Clock className="h-3 w-3 mr-1" />
                         {activity.time || 0}m
                       </span>
-                      {/* Action buttons - positioned next to time */}
-                      {!isViewOnly && (
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditActivity(activity);
-                            }}
-                            className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                            title="Edit activity"
-                          >
-                            <Edit3 className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleActivityDelete(activity._id || activity.id);
-                            }}
-                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                            title="Delete activity"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
                     </div>
+                    {/* Action buttons */}
+                    {!isViewOnly && (
+                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditActivity(activity);
+                          }}
+                          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          title="Edit activity"
+                        >
+                          <Edit3 className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleActivityDelete(activity._id || activity.id);
+                          }}
+                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Delete activity"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

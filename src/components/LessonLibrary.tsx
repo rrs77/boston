@@ -949,15 +949,9 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
             
             {/* Create Lesson Button */}
             <button
-              onClick={() => {
-                if (onNavigateToBuilder) {
-                  onNavigateToBuilder();
-                } else {
-                  setShowStandaloneLessonCreator(true);
-                }
-              }}
+              onClick={() => setShowStandaloneLessonCreator(true)}
               className="flex items-center justify-center space-x-2 h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
-              title="Create a new lesson in Lesson Builder"
+              title="Create a new lesson"
             >
               <FileText className="h-4 w-4" />
               <span>Create Lesson</span>
