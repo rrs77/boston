@@ -307,6 +307,13 @@ export function UnitViewer() {
   // Handle view lesson details
   const handleViewLessonDetails = (lessonNumber: string) => {
     setSelectedLessonForDetails(lessonNumber);
+    // Find which half-term contains this lesson (for removing from term vs deleting permanently)
+    const containingHalfTerm = halfTerms.find(ht => 
+      ht.lessons && ht.lessons.includes(lessonNumber)
+    );
+    if (containingHalfTerm) {
+      setSelectedHalfTerm(containingHalfTerm.id);
+    }
   };
 
   // Create a new unit
@@ -702,23 +709,35 @@ export function UnitViewer() {
         )}
 
         {/* Lesson Details Modal */}
-        {selectedLessonForDetails && (
-          <LessonDetailsModal
-            lessonNumber={selectedLessonForDetails}
-            onClose={() => setSelectedLessonForDetails(null)}
-            theme={theme}
-            onExport={() => {
-              setSelectedLessonForExport(selectedLessonForDetails);
-              setSelectedLessonForDetails(null);
-            }}
-            onEdit={() => {
-              handleEditLesson(selectedLessonForDetails);
-              setSelectedLessonForDetails(null);
-            }}
-            unitId={selectedUnit.id}
-            unitName={selectedUnit.name}
-          />
-        )}
+        {selectedLessonForDetails && (() => {
+          // Find which half-term contains this lesson
+          const containingHalfTerm = halfTerms.find(ht => 
+            ht.lessons && ht.lessons.includes(selectedLessonForDetails)
+          );
+          
+          return (
+            <LessonDetailsModal
+              lessonNumber={selectedLessonForDetails}
+              onClose={() => {
+                setSelectedLessonForDetails(null);
+                setSelectedHalfTerm(null);
+              }}
+              theme={theme}
+              onExport={() => {
+                setSelectedLessonForExport(selectedLessonForDetails);
+                setSelectedLessonForDetails(null);
+              }}
+              onEdit={() => {
+                handleEditLesson(selectedLessonForDetails);
+                setSelectedLessonForDetails(null);
+              }}
+              unitId={selectedUnit.id}
+              unitName={selectedUnit.name}
+              halfTermId={containingHalfTerm?.id}
+              halfTermName={containingHalfTerm?.name}
+            />
+          );
+        })()}
 
         {/* Print Modal - Handles lessons, stacks, half-terms, and units */}
         {showPrintModal && (
@@ -1323,17 +1342,29 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
         })()}
 
         {/* Lesson Details Modal */}
-        {selectedLessonForDetails && (
-          <LessonDetailsModal
-            lessonNumber={selectedLessonForDetails}
-            onClose={() => setSelectedLessonForDetails(null)}
-            theme={theme}
-            onExport={() => {
-              setSelectedLessonForExport(selectedLessonForDetails);
-              setSelectedLessonForDetails(null);
-            }}
-          />
-        )}
+        {selectedLessonForDetails && (() => {
+          // Find which half-term contains this lesson
+          const containingHalfTerm = halfTerms.find(ht => 
+            ht.lessons && ht.lessons.includes(selectedLessonForDetails)
+          );
+          
+          return (
+            <LessonDetailsModal
+              lessonNumber={selectedLessonForDetails}
+              onClose={() => {
+                setSelectedLessonForDetails(null);
+                setSelectedHalfTerm(null);
+              }}
+              theme={theme}
+              onExport={() => {
+                setSelectedLessonForExport(selectedLessonForDetails);
+                setSelectedLessonForDetails(null);
+              }}
+              halfTermId={containingHalfTerm?.id}
+              halfTermName={containingHalfTerm?.name}
+            />
+          );
+        })()}
 
         {/* Stack Modal */}
         {selectedStackForModal && (

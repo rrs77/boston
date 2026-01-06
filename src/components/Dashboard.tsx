@@ -326,6 +326,7 @@ export function Dashboard() {
               <LessonLibrary 
                 className={currentSheetInfo.sheet}
                 onAssignToUnit={handleAssignLessonToHalfTerm}
+                onNavigateToBuilder={() => handleTabChange('lesson-builder')}
               />
             </TabsContent>
 

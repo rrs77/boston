@@ -117,7 +117,19 @@ export function AssignToHalfTermModal({
   };
 
   // Use displayNumber if provided, otherwise fall back to lessonNumber
-  const lessonDisplayText = displayNumber ? displayNumber.toString() : lessonNumber;
+  // Extract numeric part from lessonNumber if it's in "lesson1" format
+  const getNumericLessonNumber = (num: string | number): string => {
+    if (typeof num === 'number') {
+      return num.toString();
+    }
+    // Remove "lesson" prefix and extract just the number
+    const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+    return numericPart || num;
+  };
+  
+  const lessonDisplayText = displayNumber 
+    ? displayNumber.toString() 
+    : getNumericLessonNumber(lessonNumber);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">

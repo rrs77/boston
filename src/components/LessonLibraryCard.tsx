@@ -286,7 +286,8 @@ export function LessonLibraryCard({
             isOpen={showAssignModal}
             onClose={() => setShowAssignModal(false)}
             onAssign={handleAssignToHalfTerm}
-            lessonNumber={displayNumber.toString()}
+            lessonNumber={lessonNumber}
+            displayNumber={displayNumber}
             halfTerms={halfTerms}
           />
         )}
@@ -451,7 +452,8 @@ export function LessonLibraryCard({
             isOpen={showAssignModal}
             onClose={() => setShowAssignModal(false)}
             onAssign={handleAssignToHalfTerm}
-            lessonNumber={displayNumber.toString()}
+            lessonNumber={lessonNumber}
+            displayNumber={displayNumber}
             halfTerms={halfTerms}
           />
         )}

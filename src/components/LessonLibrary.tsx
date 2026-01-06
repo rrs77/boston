@@ -24,7 +24,9 @@ import {
   Check,
   Layers,
   Copy,
-  FileText
+  FileText,
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 import { LessonLibraryCard } from './LessonLibraryCard';
 import { StackedLessonCard } from './StackedLessonCard';
@@ -64,6 +66,7 @@ interface LessonLibraryProps {
   onLessonEdit?: (lessonNumber: string) => void;
   className?: string;
   onAssignToUnit?: (lessonNumber: string, halfTermId: string) => void;
+  onNavigateToBuilder?: () => void; // Callback to navigate to Lesson Builder tab
 }
 
 // Define half-term periods
@@ -80,7 +83,8 @@ export function LessonLibrary({
   onLessonSelect, 
   onLessonEdit,
   className = '', 
-  onAssignToUnit 
+  onAssignToUnit,
+  onNavigateToBuilder
 }: LessonLibraryProps) {
   const { 
     lessonNumbers, 
@@ -93,7 +97,10 @@ export function LessonLibrary({
     allActivities,
     loading,
     updateHalfTerm,
-    copyLessonsToClass
+    copyLessonsToClass,
+    trashLessons,
+    restoreLesson,
+    permanentDeleteFromTrash
   } = useData();
   const { getThemeForClass, categories, customYearGroups } = useSettings();
   const {
@@ -122,6 +129,7 @@ export function LessonLibrary({
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
   const [selectedLessonForExport, setSelectedLessonForExport] = useState<string | null>(null);
   const [selectedLessonForDetails, setSelectedLessonForDetails] = useState<string | null>(null);
+  const [showTrash, setShowTrash] = useState(false); // Toggle between library and trash view
   
   // New editing states
   const [editingLessonNumber, setEditingLessonNumber] = useState<string | null>(null);
@@ -667,8 +675,11 @@ export function LessonLibrary({
       // Filter by half-term using dynamic data instead of static mapping
       if (selectedHalfTerm !== 'all') {
         const lessonHalfTerm = getLessonHalfTerm(lessonNum);
+        // When filtering by a specific term, only show lessons assigned to that term
         if (lessonHalfTerm !== selectedHalfTerm) return false;
       }
+      // When showing "all", show ALL lessons regardless of term assignment
+      // The Lesson Library is a permanent library - lessons remain visible even when assigned to terms
       
       return true;
     });
@@ -769,15 +780,34 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
       <div className={`bg-white rounded-xl shadow-lg  overflow-hidden ${className}`}>
         <div className="p-6 border-b border-gray-200 text-white"
 style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
-          <div className="flex items-center space-x-3">
-            <BookOpen className="h-6 w-6" />
-            <h2 className="text-xl font-bold">Lesson Library</h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <BookOpen className="h-6 w-6" />
+              <h2 className="text-xl font-bold">Lesson Library</h2>
+            </div>
+            {/* Create Lesson Button in Header */}
+            <button
+              onClick={() => setShowStandaloneLessonCreator(true)}
+              className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
+              title="Create a new lesson"
+            >
+              <Plus className="h-5 w-5" />
+              <span className="text-sm font-semibold">Create Lesson</span>
+            </button>
           </div>
         </div>
         <div className="p-8 text-center">
-          <p className="text-gray-600">No lessons found for {currentSheetInfo.display}.</p>
-          <p className="text-sm text-gray-500 mt-2">Switch to Lesson Builder to create your first lesson.</p>
+          <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-600 mb-2">No lessons found for {currentSheetInfo.display}.</p>
+          <p className="text-sm text-gray-500">Use the "Create Lesson" button above to get started</p>
         </div>
+        {/* Standalone Lesson Creator Modal */}
+        {showStandaloneLessonCreator && (
+          <StandaloneLessonCreator
+            onClose={() => setShowStandaloneLessonCreator(false)}
+            onSave={handleSaveStandaloneLesson}
+          />
+        )}
       </div>
     );
   }
@@ -788,16 +818,43 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
       <div className="p-6 border-b border-gray-200 text-white" style={{ background: 'linear-gradient(to right, #14B8A6, #0D9488)' }}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <BookOpen className="h-6 w-6" />
+            {showTrash ? <Trash2 className="h-6 w-6" /> : <BookOpen className="h-6 w-6" />}
             <div>
-              <h2 className="text-xl font-bold">Lesson Library</h2>
+              <h2 className="text-xl font-bold">{showTrash ? 'Trash' : 'Lesson Library'}</h2>
               <p className="text-teal-100 text-sm">
-                {filteredAndSortedLessons.length} of {lessonNumbers.length} lessons
+                {showTrash 
+                  ? `${Object.keys(trashLessons || {}).length} deleted lesson${Object.keys(trashLessons || {}).length !== 1 ? 's' : ''}`
+                  : `${filteredAndSortedLessons.length} of ${lessonNumbers.length} lessons`
+                }
               </p>
             </div>
           </div>
           
           <div className="flex items-center space-x-3">
+            {/* Toggle between Library and Trash */}
+            <button
+              onClick={() => setShowTrash(!showTrash)}
+              className={`px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2 ${
+                showTrash 
+                  ? 'bg-white bg-opacity-20 hover:bg-opacity-30' 
+                  : 'hover:bg-white hover:bg-opacity-10'
+              }`}
+            >
+              {showTrash ? (
+                <>
+                  <BookOpen className="h-4 w-4" />
+                  <span className="text-sm">Library</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  <span className="text-sm">Trash ({Object.keys(trashLessons || {}).length})</span>
+                </>
+              )}
+            </button>
+            
+            {!showTrash && (
+              <>
             {/* View Mode Toggle */}
             <div className="flex items-center space-x-1">
               <button
@@ -825,6 +882,8 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                 <MoreVertical className="h-5 w-5" />
               </button>
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -890,9 +949,15 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
             
             {/* Create Lesson Button */}
             <button
-              onClick={() => setShowStandaloneLessonCreator(true)}
+              onClick={() => {
+                if (onNavigateToBuilder) {
+                  onNavigateToBuilder();
+                } else {
+                  setShowStandaloneLessonCreator(true);
+                }
+              }}
               className="flex items-center justify-center space-x-2 h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
-              title="Create a standalone lesson plan"
+              title="Create a new lesson in Lesson Builder"
             >
               <FileText className="h-4 w-4" />
               <span>Create Lesson</span>
@@ -911,107 +976,108 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
         </div>
       </div>
 
-      {/* Stacked Lessons Section */}
-      {(stacks.length > 0 || true) && (
-        <div className="border-b border-gray-200 bg-gray-50">
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Layers className="h-5 w-5 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-800">Lesson Stacks</h3>
-                <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
-                  {stacks.length} of {stacks.length}
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={handleCreateStack}
-                  className="p-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors"
-                  title="Create New Lesson Stack"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setShowStacksSection(!showStacksSection)}
-                  className="p-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors"
-                  title={showStacksSection ? `Hide Stacks (${stacks.length})` : `Show Stacks (${stacks.length})`}
-                >
-                  {showStacksSection ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
+      {/* Trash View */}
+      {showTrash ? (
+        <div className="p-6">
+          {Object.keys(trashLessons || {}).length === 0 ? (
+            <div className="text-center py-12">
+              <Trash2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Trash is empty</h3>
+              <p className="text-gray-600">Deleted lessons will appear here</p>
             </div>
-          </div>
-          
-          {showStacksSection && (
-            <div className="p-4">
-              {stacks.length === 0 ? (
-                <div className="text-center py-8">
-                  <Layers className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500 mb-4">No lesson stacks yet</p>
-                  <p className="text-xs text-gray-400 mb-4">
-                    Create lesson stacks to organize multiple lessons together
-                  </p>
-                  <button
-                    onClick={handleCreateStack}
-                    className="px-4 py-2 btn-primary text-white rounded-lg text-sm transition-colors"
+          ) : (
+            <div className={`
+              ${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8' :
+                viewMode === 'list' ? 'space-y-4 sm:space-y-6' :
+                'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6'
+              }
+            `}>
+              {Object.entries(trashLessons || {}).map(([lessonNum, lessonData], index) => {
+                const trashedAt = (lessonData as any)._trashedAt;
+                const trashedDate = trashedAt ? new Date(trashedAt).toLocaleDateString() : '';
+                
+                return (
+                  <div
+                    key={lessonNum}
+                    className={`bg-white rounded-lg shadow-md border-2 border-gray-300 p-4 ${
+                      viewMode === 'list' ? 'flex items-center justify-between' : ''
+                    }`}
                   >
-                    Create Your First Stack
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {stacks.map((stack) => (
-                    <StackedLessonCard
-                      key={stack.id}
-                      stack={stack}
-                      allLessonsData={allLessonsData}
-                      theme={theme}
-                      viewMode="activity-stack-style"
-                      onClick={() => handleStackClick(stack)}
-                      onEdit={() => handleEditStack(stack)}
-                      onDelete={() => handleDeleteStack(stack.id)}
-                      onRename={(newName) => handleRenameStack(stack.id, newName)}
-                      onAssignToTerm={() => handleAssignStackToTerm(stack.id)}
-                      isExpanded={expandedStacks.has(stack.id)}
-                      onToggleExpansion={() => {
-                        handleToggleStackExpansion(stack.id);
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
+                    <div className={viewMode === 'list' ? 'flex-1' : ''}>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900">{lessonData.title || `Lesson ${lessonNum}`}</h4>
+                        {trashedDate && (
+                          <span className="text-xs text-gray-500">Deleted {trashedDate}</span>
+                        )}
+                      </div>
+                      {viewMode !== 'compact' && (
+                        <p className="text-sm text-gray-600 mb-2">
+                          {Object.values(lessonData.grouped || {}).reduce((sum: number, acts: any) => sum + (Array.isArray(acts) ? acts.length : 0), 0)} activities
+                        </p>
+                      )}
+                    </div>
+                    <div className={`flex items-center space-x-2 ${viewMode === 'list' ? 'ml-4' : 'mt-3'}`}>
+                      <button
+                        onClick={() => {
+                          restoreLesson(lessonNum);
+                          toast.success('Lesson restored', { duration: 3000 });
+                        }}
+                        className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm flex items-center space-x-1 transition-colors"
+                        title="Restore lesson"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        <span className="hidden sm:inline">Restore</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to permanently delete "${lessonData.title || `Lesson ${lessonNum}`}"? This cannot be undone.`)) {
+                            permanentDeleteFromTrash(lessonNum);
+                            toast.success('Lesson permanently deleted', { duration: 3000 });
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm flex items-center space-x-1 transition-colors"
+                        title="Permanently delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
-      )}
-
+      ) : (
+        <>
       {/* Regular Lessons Section */}
       <div className="p-6">
         {filteredAndSortedLessons.length === 0 ? (
             <div className="text-center py-12">
               <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No lessons found</h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-6">
                 {searchQuery || selectedHalfTerm !== 'all'
                   ? 'Try adjusting your search or filters'
-                  : 'No lessons available in the library'
+                  : 'Create your first lesson to get started'
                 }
               </p>
-              {(searchQuery || selectedHalfTerm !== 'all') && (
-                <button 
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedHalfTerm('all');
-                  }}
-                  className="mt-4 px-4 py-2 btn-primary text-white rounded-lg text-sm"
-                >
-                  Clear Filters
-                </button>
-              )}
+              <div className="flex items-center justify-center gap-3">
+                {searchQuery || selectedHalfTerm !== 'all' ? (
+                  <button 
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedHalfTerm('all');
+                    }}
+                    className="px-4 py-2 btn-primary text-white rounded-lg text-sm"
+                  >
+                    Clear Filters
+                  </button>
+                ) : (
+                  <>
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             <div className={`
@@ -1051,8 +1117,9 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
               })}
             </div>
         )}
-
       </div>
+        </>
+      )}
 
       {/* Activity Picker Modal */}
       {showActivityPicker && (

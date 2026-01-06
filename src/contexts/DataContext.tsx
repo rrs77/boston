@@ -174,7 +174,10 @@ interface DataContextType {
   addOrUpdateUserLessonPlan: (plan: LessonPlan) => void; // New function to add/update user lesson plans
   updateLessonData?: (lessonNumber: string, updatedData: any) => Promise<void>;
   deleteUserLessonPlan: (planId: string) => void; // New function to delete user lesson plans
-  deleteLesson: (lessonNumber: string) => void; // New function to delete a lesson
+  deleteLesson: (lessonNumber: string) => void; // Move lesson to trash
+  trashLessons: Record<string, LessonData>; // Lessons in trash
+  restoreLesson: (lessonNumber: string) => void; // Restore lesson from trash
+  permanentDeleteFromTrash: (lessonNumber: string) => void; // Permanently delete from trash
   allActivities: Activity[]; // Centralized activities
   addActivity: (activity: Activity) => Promise<Activity>; // Add a new activity
   updateActivity: (activity: Activity) => Promise<Activity>; // Update an existing activity
@@ -420,6 +423,15 @@ export function DataProvider({ children }: DataProviderProps) {
   const [teachingUnits, setTeachingUnits] = useState<string[]>([]);
   const [allLessonsData, setAllLessonsData] = useState<Record<string, LessonData>>({});
   const [lessonStandards, setLessonStandards] = useState<Record<string, string[]>>({});
+  // Trash state - stores deleted lessons
+  const [trashLessons, setTrashLessons] = useState<Record<string, LessonData>>(() => {
+    try {
+      const saved = localStorage.getItem(`trash-lessons-${currentSheetInfo.sheet}`);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const [nestedStandards, setNestedStandards] = useState<Record<string, Record<string, string[]>>>(DEFAULT_NESTED_STANDARDS);
   const [loading, setLoading] = useState(true);
   const [userCreatedLessonPlans, setUserCreatedLessonPlans] = useState<LessonPlan[]>([]);
@@ -718,6 +730,7 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
           .from('subject_categories')
           .select('*')
           .eq('subject_id', subjectId)
+          .eq('is_active', true) // Only load active categories
           .order('sort_order');
         
         if (error) {
@@ -873,17 +886,34 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
         throw new Error('Supabase is not configured');
       }
 
-      const { error } = await supabase
+      // Check if category is locked before deletion
+      const category = subjectCategories.find(c => c.id === id);
+      if (category?.is_locked) {
+        throw new Error('Cannot delete a locked category. Unlock it first.');
+      }
+
+      console.log('🗑️ Deleting subject category:', id, category?.name);
+
+      const { error, data } = await supabase
         .from('subject_categories')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
       if (error) {
-        console.error('Failed to delete subject category:', error);
+        console.error('❌ Failed to delete subject category:', error);
         throw error;
       }
 
+      console.log('✅ Successfully deleted subject category:', id, data);
+
+      // Update local state immediately
       setSubjectCategories(prev => prev.filter(c => c.id !== id));
+      
+      // Reload from database to ensure consistency
+      if (category?.subject_id) {
+        await loadSubjectCategories(category.subject_id);
+      }
     } catch (error) {
       console.error('Failed to delete subject category:', error);
       throw error;
@@ -2117,6 +2147,28 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
 
   // Delete a lesson
   const deleteLesson = (lessonNumber: string) => {
+    // Get the lesson data before removing it
+    const lessonToTrash = allLessonsData[lessonNumber];
+    const lessonStandardsToTrash = lessonStandards[lessonNumber];
+    
+    if (!lessonToTrash) {
+      console.warn(`Lesson ${lessonNumber} not found for deletion`);
+      return;
+    }
+
+    // Move lesson to trash (preserve standards)
+    const lessonWithStandards = {
+      ...lessonToTrash,
+      _trashedStandards: lessonStandardsToTrash || [],
+      _trashedAt: new Date().toISOString()
+    };
+    
+    setTrashLessons(prev => {
+      const updated = { ...prev, [lessonNumber]: lessonWithStandards };
+      localStorage.setItem(`trash-lessons-${currentSheetInfo.sheet}`, JSON.stringify(updated));
+      return updated;
+    });
+
     // Remove the lesson from allLessonsData
     setAllLessonsData(prev => {
       const updated = { ...prev };
@@ -2218,6 +2270,86 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
     }
   };
 
+  // Restore lesson from trash
+  const restoreLesson = (lessonNumber: string) => {
+    const trashedLesson = trashLessons[lessonNumber];
+    if (!trashedLesson) {
+      console.warn(`Lesson ${lessonNumber} not found in trash`);
+      return;
+    }
+
+    // Remove metadata from lesson data
+    const { _trashedStandards, _trashedAt, ...lessonData } = trashedLesson;
+
+    // Restore lesson to allLessonsData
+    setAllLessonsData(prev => ({
+      ...prev,
+      [lessonNumber]: lessonData
+    }));
+
+    // Restore lesson number
+    setLessonNumbers(prev => {
+      const updated = [...prev, lessonNumber].sort((a, b) => parseInt(a) - parseInt(b));
+      return updated;
+    });
+
+    // Restore standards if they existed
+    if (_trashedStandards && _trashedStandards.length > 0) {
+      setLessonStandards(prev => ({
+        ...prev,
+        [lessonNumber]: _trashedStandards
+      }));
+    }
+
+    // Remove from trash
+    setTrashLessons(prev => {
+      const updated = { ...prev };
+      delete updated[lessonNumber];
+      localStorage.setItem(`trash-lessons-${currentSheetInfo.sheet}`, JSON.stringify(updated));
+      return updated;
+    });
+
+    // Save restored data to localStorage
+    const dataToSave = {
+      allLessonsData: { ...allLessonsData, [lessonNumber]: lessonData },
+      lessonNumbers: [...lessonNumbers, lessonNumber].sort((a, b) => parseInt(a) - parseInt(b)),
+      teachingUnits,
+      lessonStandards: { ...lessonStandards, ...(_trashedStandards ? { [lessonNumber]: _trashedStandards } : {}) }
+    };
+
+    localStorage.setItem(`lesson-data-${currentSheetInfo.sheet}`, JSON.stringify(dataToSave));
+
+    // Try to update Supabase
+    if (isSupabaseConfigured()) {
+      lessonsApi.updateSheet(currentSheetInfo.sheet, dataToSave, currentAcademicYear)
+        .catch(error => console.warn(`Failed to update Supabase after restoring lesson ${lessonNumber}:`, error));
+    }
+  };
+
+  // Permanently delete lesson from trash
+  const permanentDeleteFromTrash = (lessonNumber: string) => {
+    // Remove from trash
+    setTrashLessons(prev => {
+      const updated = { ...prev };
+      delete updated[lessonNumber];
+      localStorage.setItem(`trash-lessons-${currentSheetInfo.sheet}`, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Reload trash when sheet changes
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`trash-lessons-${currentSheetInfo.sheet}`);
+      const parsed = saved ? JSON.parse(saved) : {};
+      setTrashLessons(parsed);
+      console.log(`🗑️ Loaded trash for ${currentSheetInfo.sheet}:`, Object.keys(parsed).length, 'lessons');
+    } catch (error) {
+      console.error('Failed to load trash:', error);
+      setTrashLessons({});
+    }
+  }, [currentSheetInfo.sheet]);
+
   // Update allLessonsData with a user-created lesson plan
   const updateAllLessonsDataWithUserPlan = (plan: LessonPlan) => {
     if (!plan.lessonNumber) return;
@@ -2268,63 +2400,10 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
       return prev;
     });
     
-    // CRITICAL FIX: Auto-assign lesson to a half-term if not already assigned
-    const isAlreadyAssigned = halfTerms.some(halfTerm => halfTerm.lessons.includes(plan.lessonNumber!));
-    
-    if (!isAlreadyAssigned && plan.lessonNumber) {
-      // Determine which half-term to assign to based on the lesson plan's term or default to first available
-      let targetHalfTermId = 'A1'; // Default to Autumn 1
-      
-      // If the plan has a term specified, try to map it to a half-term
-      if (plan.term) {
-        const termMapping: Record<string, string> = {
-          'Autumn': 'A1',
-          'Spring': 'SP1', 
-          'Summer': 'SM1'
-        };
-        targetHalfTermId = termMapping[plan.term] || 'A1';
-      }
-      
-      // Find the first half-term that has space (less than 10 lessons) or use the target
-      const availableHalfTerm = halfTerms.find(term => 
-        term.id === targetHalfTermId || term.lessons.length < 10
-      );
-      
-      if (availableHalfTerm) {
-        const currentLessons = availableHalfTerm.lessons;
-        const updatedLessons = [...currentLessons, plan.lessonNumber];
-        
-        console.log(`Auto-assigning lesson ${plan.lessonNumber} to half-term ${availableHalfTerm.id}`);
-        
-        // Update the half-term with the new lesson assignment
-        setHalfTerms(prev => {
-          const updated = prev.map(term => 
-            term.id === availableHalfTerm.id 
-              ? { ...term, lessons: updatedLessons }
-              : term
-          );
-          
-          // Save to localStorage
-          localStorage.setItem(`half-terms-${currentSheetInfo.sheet}-${currentAcademicYear}`, JSON.stringify(updated));
-          
-          // Sync to Supabase
-          if (isSupabaseConfigured()) {
-            halfTermsApi.updateHalfTerm(
-              currentSheetInfo.sheet, 
-              availableHalfTerm.id, 
-              updatedLessons, 
-              availableHalfTerm.isComplete,
-              undefined, // academicYear
-              availableHalfTerm.stacks // Include stacks
-            )
-              .then(() => console.log(`Successfully synced lesson assignment to Supabase`))
-              .catch(error => console.warn(`Failed to sync lesson assignment to Supabase:`, error));
-          }
-          
-          return updated;
-        });
-      }
-    }
+    // REMOVED: Auto-assignment to half-terms
+    // Lessons should only be saved to the Lesson Library when created in Lesson Builder
+    // Users can manually assign lessons to terms via the Lesson Library or Unit Viewer
+    // This ensures lessons remain in the library and are not automatically moved to terms
     
     // Save the updated data to localStorage
     const dataToSave = {
@@ -3826,6 +3905,9 @@ const updateLessonData = async (lessonNumber: string, updatedData: any) => {
     updateLessonData,
     deleteUserLessonPlan,
     deleteLesson,
+    trashLessons,
+    restoreLesson,
+    permanentDeleteFromTrash,
     allActivities,
     addActivity,
     updateActivity,

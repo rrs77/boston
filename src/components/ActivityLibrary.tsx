@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Edit3,
   Copy,
+  Type,
 } from 'lucide-react';
 import { ActivityCard } from './ActivityCard';
 import { ActivityDetails } from './ActivityDetails';
@@ -139,12 +140,59 @@ export function ActivityLibrary({
         }
         
         // Check if this category is assigned to any of the year group keys
-        const isAssigned = yearGroupKeys.some(key => category.yearGroups[key] === true);
+        // First try exact match
+        let isAssigned = yearGroupKeys.some(key => category.yearGroups[key] === true);
+        
+        // If no exact match, try partial/fuzzy matching
+        // This handles cases where year group is "LKG" but category has "Lower Kindergarten Music"
+        // BUT: Be strict - only allow specific known matches to avoid false positives
+        if (!isAssigned) {
+          isAssigned = Object.keys(category.yearGroups).some(catKey => {
+            if (category.yearGroups[catKey] !== true) return false;
+            
+            // Check if any year group key matches this category key (exact or partial)
+            return yearGroupKeys.some(key => {
+              const keyLower = key.toLowerCase();
+              const catKeyLower = catKey.toLowerCase();
+              
+              // Exact match
+              if (keyLower === catKeyLower) return true;
+              
+              // EXPLICIT EXCLUSIONS: Never match KS2/KS1 categories to Lower Kindergarten
+              if ((catKeyLower.includes('ks2') || catKeyLower.includes('key stage 2')) && 
+                  (keyLower.includes('lower kindergarten') || keyLower.includes('lkg') || keyLower.includes('reception'))) {
+                console.log(`🚫 EXCLUDING: "${category.name}" (KS2) should not match "${key}" (Lower Kindergarten)`);
+                return false;
+              }
+              if ((keyLower.includes('ks2') || keyLower.includes('key stage 2')) && 
+                  (catKeyLower.includes('lower kindergarten') || catKeyLower.includes('lkg') || catKeyLower.includes('reception'))) {
+                console.log(`🚫 EXCLUDING: "${category.name}" (Lower Kindergarten) should not match "${catKey}" (KS2)`);
+                return false;
+              }
+              
+              // Check if key contains catKey (e.g., "Lower Kindergarten Music" contains "Lower Kindergarten")
+              // BUT: Only if catKey is a meaningful substring (not just a few characters)
+              if (catKeyLower.length >= 5 && catKeyLower.includes(keyLower)) return true;
+              
+              // Check if catKey contains key (e.g., "LKG" in "Lower Kindergarten Music")
+              // BUT: Only if key is a meaningful substring (not just a few characters)
+              if (keyLower.length >= 5 && keyLower.includes(catKeyLower)) return true;
+              
+              // Check for common abbreviations (strict matching only)
+              if (keyLower === 'lkg' && (catKeyLower.includes('lower kindergarten') || catKeyLower === 'lower kindergarten music')) return true;
+              if (keyLower === 'ukg' && (catKeyLower.includes('upper kindergarten') || catKeyLower === 'upper kindergarten music')) return true;
+              if ((keyLower.includes('lower kindergarten') || keyLower === 'lower kindergarten music') && catKeyLower === 'lkg') return true;
+              if ((keyLower.includes('upper kindergarten') || keyLower === 'upper kindergarten music') && catKeyLower === 'ukg') return true;
+              
+              return false;
+            });
+          });
+        }
         
         if (isAssigned) {
           console.log(`✅ Category "${category.name}" is assigned to year group (keys: ${yearGroupKeys.join(', ')})`);
         } else {
-          console.log(`❌ Category "${category.name}" is NOT assigned to year group. Available keys in category:`, Object.keys(category.yearGroups));
+          console.log(`❌ Category "${category.name}" is NOT assigned to year group. Available keys in category:`, Object.keys(category.yearGroups).filter(k => category.yearGroups[k] === true));
         }
         
         return isAssigned;
@@ -167,6 +215,7 @@ export function ActivityLibrary({
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'time' | 'level'>('category');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedLetter, setSelectedLetter] = useState<string | null>(null); // For A-Z index navigation
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [selectedActivityDetails, setSelectedActivityDetails] = useState<Activity | null>(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
@@ -348,6 +397,28 @@ export function ActivityLibrary({
 
     return { filteredAndSortedActivities: filteredActivities, filteredAndSortedStacks: filteredStacks };
   }, [allActivities, activityStacks, searchQuery, localSelectedCategory, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup, userOwnedPacks, availableCategoriesForYearGroup]);
+
+  // Get available letters for A-Z index (only when sorting by name)
+  const availableLetters = useMemo(() => {
+    if (sortBy !== 'name') return [];
+    const letters = new Set<string>();
+    filteredAndSortedActivities.forEach(activity => {
+      const firstLetter = activity.activity.charAt(0).toUpperCase();
+      if (/[A-Z]/.test(firstLetter)) {
+        letters.add(firstLetter);
+      }
+    });
+    return Array.from(letters).sort();
+  }, [filteredAndSortedActivities, sortBy]);
+
+  // Scroll to activities starting with a specific letter
+  const scrollToLetter = (letter: string) => {
+    setSelectedLetter(letter);
+    const element = document.querySelector(`[data-letter-index="${letter}"]`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const toggleSort = (field: 'name' | 'category' | 'time' | 'level') => {
     if (sortBy === field) {
@@ -683,6 +754,19 @@ export function ActivityLibrary({
               {sortBy === 'time' && (sortOrder === 'asc' ? <ArrowUpDown className="h-3 w-3 ml-1" /> : <ArrowDownUp className="h-3 w-3 ml-1" />)}
             </button>
             <button
+              onClick={() => {
+                toggleSort('name');
+                setSortOrder('asc'); // Always A-Z when clicking A-Z button
+              }}
+              className={`flex items-center justify-center p-2 rounded-lg transition-colors duration-200 ${
+                sortBy === 'name' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
+              }`}
+              title="Sort A-Z by Name"
+            >
+              <Type className="h-4 w-4" />
+              {sortBy === 'name' && sortOrder === 'asc' && <span className="text-xs ml-1">A-Z</span>}
+            </button>
+            <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg transition-colors duration-200 ${
                 viewMode === 'grid' ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'
@@ -706,7 +790,30 @@ export function ActivityLibrary({
 
 
       {/* Main Content */}
-      <div className="p-6">
+      <div className="flex relative">
+        {/* A-Z Index Sidebar - Only show when sorting by name */}
+        {sortBy === 'name' && availableLetters.length > 0 && (
+          <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-lg shadow-lg p-2 border border-gray-200">
+            <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
+              {availableLetters.map(letter => (
+                <button
+                  key={letter}
+                  onClick={() => scrollToLetter(letter)}
+                  className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                    selectedLetter === letter
+                      ? 'bg-teal-600 text-white'
+                      : 'text-gray-700 hover:bg-teal-50 hover:text-teal-600'
+                  }`}
+                  title={`Jump to activities starting with ${letter}`}
+                >
+                  {letter}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        <div className="p-6 flex-1">
         {loading || dataLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
@@ -754,16 +861,29 @@ export function ActivityLibrary({
           viewMode === 'list' ? (
           // List View - Compact cards in grid layout with full functionality
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
-            {filteredAndSortedActivities.map((activity, index) => (
-              <div 
-                key={generateActivityKey(activity, index)}
-                className="bg-white shadow-soft hover:shadow-hover transition-shadow duration-200 p-2 relative group"
-                style={{
-                  borderLeft: `4px solid ${getCategoryColor(activity.category)}`,
-                  borderRadius: '4px',
-                  minHeight: '60px'
-                }}
-              >
+            {filteredAndSortedActivities.map((activity, index) => {
+              const firstLetter = activity.activity.charAt(0).toUpperCase();
+              const isNewLetter = index === 0 || 
+                filteredAndSortedActivities[index - 1].activity.charAt(0).toUpperCase() !== firstLetter;
+              
+              return (
+                <React.Fragment key={generateActivityKey(activity, index)}>
+                  {isNewLetter && sortBy === 'name' && /[A-Z]/.test(firstLetter) && (
+                    <div 
+                      data-letter-index={firstLetter}
+                      className="col-span-full py-2 sticky top-0 bg-white z-10 border-b-2 border-teal-200"
+                    >
+                      <h3 className="text-lg font-bold text-teal-600">{firstLetter}</h3>
+                    </div>
+                  )}
+                  <div 
+                    className="bg-white shadow-soft hover:shadow-hover transition-shadow duration-200 p-2 relative group"
+                    style={{
+                      borderLeft: `4px solid ${getCategoryColor(activity.category)}`,
+                      borderRadius: '4px',
+                      minHeight: '60px'
+                    }}
+                  >
 
                 {/* Activity content */}
                 <div 
@@ -808,13 +928,29 @@ export function ActivityLibrary({
                   </div>
                 </div>
               </div>
-            ))}
+              </React.Fragment>
+            );
+            })}
           </div>
         ) : (
           // Grid View
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredAndSortedActivities.map((activity, index) => (
-              <div key={generateActivityKey(activity, index)} className="h-full">
+            {filteredAndSortedActivities.map((activity, index) => {
+              const firstLetter = activity.activity.charAt(0).toUpperCase();
+              const isNewLetter = index === 0 || 
+                filteredAndSortedActivities[index - 1].activity.charAt(0).toUpperCase() !== firstLetter;
+              
+              return (
+                <React.Fragment key={generateActivityKey(activity, index)}>
+                  {isNewLetter && sortBy === 'name' && /[A-Z]/.test(firstLetter) && (
+                    <div 
+                      data-letter-index={firstLetter}
+                      className="col-span-full py-2 sticky top-0 bg-white z-10 border-b-2 border-teal-200"
+                    >
+                      <h3 className="text-lg font-bold text-teal-600">{firstLetter}</h3>
+                    </div>
+                  )}
+                  <div className="h-full">
                 <ActivityCard
                   activity={activity}
                   onUpdate={handleActivityUpdate}
@@ -830,11 +966,14 @@ export function ActivityLibrary({
                   isSelected={false}
                   onSelectionChange={() => {}}
                 />
-              </div>
-            ))}
+                  </div>
+                </React.Fragment>
+              );
+            })}
           </div>
           )
         )}
+        </div>
       </div>
 
       {/* Activity Details Modal */}

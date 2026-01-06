@@ -73,3 +73,5 @@ if (typeof window !== 'undefined') {
   console.log('💡 Run deleteAllLessons() in the console to delete all lessons');
 }
 
+
+

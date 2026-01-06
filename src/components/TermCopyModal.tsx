@@ -35,7 +35,7 @@ export function TermCopyModal({
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setSourceYear('');
+      setSourceYear(currentYear); // Default to current year for easier same-year moves
       setSourceTerm('');
       setTargetYear(currentYear);
       setTargetTerm('');
@@ -77,8 +77,8 @@ export function TermCopyModal({
           <div className="flex items-center space-x-3">
             <Copy className="h-6 w-6" />
             <div>
-              <h2 className="text-xl font-bold">Copy Term Between Years</h2>
-              <p className="text-sm text-white/90">Copy lesson plans from one academic year to another</p>
+              <h2 className="text-xl font-bold">Copy or Move Term</h2>
+              <p className="text-sm text-white/90">Copy lesson plans between terms or academic years</p>
             </div>
           </div>
           <button
@@ -194,7 +194,10 @@ export function TermCopyModal({
               <div>
                 <h4 className="text-sm font-medium text-yellow-800">Important</h4>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Copying a term will replace all existing lessons in the target term. This action cannot be undone.
+                  Copying a term will replace all existing lessons in the target term. This action cannot be undone. 
+                  {sourceYear === targetYear && sourceTerm && targetTerm && sourceTerm !== targetTerm && (
+                    <span className="block mt-1 font-medium">Moving within the same year will copy lessons to the new term.</span>
+                  )}
                 </p>
               </div>
             </div>

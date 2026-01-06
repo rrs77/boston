@@ -160,26 +160,38 @@ export function LessonPlanBuilder({
         
         // Check if this category is assigned to ANY of the year group keys
         // This handles cases where the sheet name is "Reception Music" but category.yearGroups uses "Reception"
-        const isAssigned = yearGroupKeys.some(key => {
-          // Check exact match
+        // Also handles "Lower Kindergarten" vs "Lower Kindergarten Music"
+        let isAssigned = yearGroupKeys.some(key => {
+          // Check exact match first
           if (category.yearGroups[key] === true) {
             return true;
           }
           
           // Also check if any key in category.yearGroups matches any of our year group keys
           return Object.keys(category.yearGroups).some(catKey => {
+            if (category.yearGroups[catKey] !== true) return false;
+            
+            const keyLower = key.toLowerCase();
+            const catKeyLower = catKey.toLowerCase();
+            
             // Exact match
-            if (catKey === key && category.yearGroups[catKey] === true) {
-              return true;
-            }
+            if (catKeyLower === keyLower) return true;
+            
             // Partial match: if key contains catKey (e.g., "Reception Music" contains "Reception")
-            if (key.toLowerCase().includes(catKey.toLowerCase()) && category.yearGroups[catKey] === true) {
-              return true;
-            }
+            if (catKeyLower.includes(keyLower)) return true;
+            
             // Reverse partial match: if catKey contains key (e.g., "Reception" in "Reception Music")
-            if (catKey.toLowerCase().includes(key.toLowerCase()) && category.yearGroups[catKey] === true) {
-              return true;
-            }
+            if (keyLower.includes(catKeyLower)) return true;
+            
+            // Check for common abbreviations and full names
+            // "LKG" should match "Lower Kindergarten Music" or "Lower Kindergarten"
+            if (keyLower === 'lkg' && catKeyLower.includes('lower kindergarten')) return true;
+            if (keyLower.includes('lower kindergarten') && catKeyLower === 'lkg') return true;
+            
+            // "UKG" should match "Upper Kindergarten Music" or "Upper Kindergarten"
+            if (keyLower === 'ukg' && catKeyLower.includes('upper kindergarten')) return true;
+            if (keyLower.includes('upper kindergarten') && catKeyLower === 'ukg') return true;
+            
             return false;
           });
         });
@@ -954,19 +966,26 @@ export function LessonPlanBuilder({
           {currentLessonPlan.isEditingExisting && (
             <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 flex-1">
                   <Edit3 className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <h3 className="font-medium text-blue-900">
-                      Editing: {currentLessonPlan.title}
-                    </h3>
-                    <p className="text-sm text-blue-700">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-blue-900">Editing:</span>
+                      <input
+                        type="text"
+                        value={currentLessonPlan.title || ''}
+                        onChange={(e) => handleLessonPlanFieldUpdate('title', e.target.value)}
+                        className="flex-1 font-medium text-blue-900 bg-white border border-blue-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Lesson Title"
+                      />
+                    </div>
+                    <p className="text-sm text-blue-700 mt-1">
                       Make changes to activities and lesson details
                     </p>
                   </div>
                 </div>
                 
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 ml-4">
                   <button
                     onClick={handleSaveLessonPlan}
                     className="px-4 py-2 btn-primary text-white font-medium rounded-lg transition-colors duration-200"

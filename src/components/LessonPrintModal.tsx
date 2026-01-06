@@ -776,6 +776,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
     
     // Prevent multiple simultaneous calls
     if (isSharing || isSharingSingle) {
+      console.log('Share already in progress, ignoring duplicate call');
       return;
     }
 
@@ -783,10 +784,14 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
     // The hook already checks localStorage internally and will reuse existing URLs
     if (exportMode === 'single' && lessonNumber) {
       try {
+        console.log('🔄 Starting share process for single lesson:', lessonNumber);
+        
         // Check if URL already exists in localStorage before calling shareSingleLesson
         // This allows us to show the right message (retrieved vs created)
         const storedUrl = getStoredShareUrl ? getStoredShareUrl(lessonNumber) : null;
         const wasStored = !!storedUrl;
+        
+        console.log('📦 Stored URL check:', { wasStored, storedUrl });
         
         // Only set loading state if we're actually generating a new PDF
         if (!wasStored) {
@@ -796,6 +801,8 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         
         // shareSingleLesson will check localStorage internally and return immediately if found
         const url = await shareSingleLesson(lessonNumber);
+        console.log('✅ Share function returned URL:', url);
+        
         if (url) {
           setShareUrl(url);
           setShareSuccess(true);
@@ -821,12 +828,34 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
               }
             }, 100);
           }
+        } else {
+          console.warn('⚠️ Share function returned null/undefined URL');
+          toast.error('Failed to generate share link. Please check console for details.', {
+            duration: 5000,
+          });
         }
       } catch (error: any) {
-        console.error('Share error:', error);
+        console.error('❌ Share error:', error);
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
         setShareSuccess(false);
-        toast.error(error.message || 'Failed to create share link', {
-          duration: 5000,
+        
+        // Provide more helpful error messages
+        let errorMessage = error.message || 'Failed to create share link';
+        
+        if (error.message?.includes('bucket')) {
+          errorMessage = 'Storage bucket not configured. Please ensure the "lesson-pdfs" bucket exists in Supabase Storage and is set to public.';
+        } else if (error.message?.includes('Service role key')) {
+          errorMessage = 'Server configuration error. Please ensure SUPABASE_SERVICE_ROLE_KEY is set in Netlify environment variables.';
+        } else if (error.message?.includes('Network error') || error.message?.includes('Failed to connect')) {
+          errorMessage = 'Network error. Please check your internet connection and try again.';
+        }
+        
+        toast.error(errorMessage, {
+          duration: 8000,
         });
       } finally {
         setIsSharing(false);
@@ -1216,8 +1245,35 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
               });
 
               return (
+                <React.Fragment key={lessonNum}>
+                  {/* Visual page break indicator */}
+                  {lessonIndex > 0 && (
+                    <div 
+                      style={{
+                        width: '210mm',
+                        margin: '0 auto 20px auto',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '10px 0'
+                      }}
+                    >
+                      <div style={{ flex: 1, height: '2px', background: 'linear-gradient(to right, transparent, #9ca3af, transparent)' }}></div>
+                      <div style={{ 
+                        padding: '4px 12px',
+                        background: '#9ca3af',
+                        color: 'white',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        PAGE BREAK
+                      </div>
+                      <div style={{ flex: 1, height: '2px', background: 'linear-gradient(to right, transparent, #9ca3af, transparent)' }}></div>
+                    </div>
+                  )}
                   <div
-                      key={lessonNum}
                       className="lesson-page print-preview-page"
                       style={{
                         width: '210mm',
@@ -1549,6 +1605,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         })()}</strong></p>
                       </div>
                     </div>
+                    </React.Fragment>
                 );
               })}
           </div>

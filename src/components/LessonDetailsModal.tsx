@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Download, Edit3, Save, Check, Tag, Clock, Users, ExternalLink, FileText, Trash2, Share2, Link2 } from 'lucide-react';
+import { X, Download, Edit3, Save, Check, Tag, Clock, Users, ExternalLink, FileText, Trash2, Share2 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { ActivityDetails } from './ActivityDetails';
@@ -7,7 +7,6 @@ import { EditableText } from './EditableText';
 import { NestedStandardsBrowser } from './NestedStandardsBrowser';
 import { LessonPrintModal } from './LessonPrintModal';
 import { ResourceViewer } from './ResourceViewer';
-import { useShareLesson } from '../hooks/useShareLesson';
 import toast from 'react-hot-toast';
 import type { Activity, LessonData } from '../contexts/DataContext';
 
@@ -41,9 +40,8 @@ export function LessonDetailsModal({
   halfTermId,
   halfTermName
 }: LessonDetailsModalProps) {
-  const { allLessonsData, updateLessonTitle, lessonStandards, deleteLesson } = useData();
+  const { allLessonsData, updateLessonTitle, lessonStandards, deleteLesson, updateHalfTerm, getLessonsForHalfTerm } = useData();
   const { getCategoryColor } = useSettings();
-  const { shareLesson, isSharing, shareUrl } = useShareLesson();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [initialResource, setInitialResource] = useState<{url: string, title: string, type: string} | null>(null);
   const [selectedResource, setSelectedResource] = useState<{url: string, title: string, type: string} | null>(null);
@@ -52,7 +50,6 @@ export function LessonDetailsModal({
   const [lessonTitleValue, setLessonTitleValue] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
-  const [localShareUrl, setLocalShareUrl] = useState<string | null>(null);
   
 
   const lessonData = allLessonsData[lessonNumber];
@@ -102,7 +99,30 @@ export function LessonDetailsModal({
   };
 
   const confirmDelete = () => {
-    deleteLesson(lessonNumber);
+    // If opened from UnitViewer (has halfTermId), only remove from term, don't delete permanently
+    if (halfTermId) {
+      try {
+        const lessons = getLessonsForHalfTerm ? getLessonsForHalfTerm(halfTermId) : [];
+        const newLessons = lessons.filter(num => num !== lessonNumber);
+        
+        if (updateHalfTerm) {
+          updateHalfTerm(halfTermId, newLessons, false);
+        }
+        
+        toast.success('Lesson removed from term', {
+          duration: 3000,
+          icon: '✅',
+        });
+      } catch (error) {
+        console.error('Failed to remove lesson from term:', error);
+        toast.error('Failed to remove lesson from term', {
+          duration: 3000,
+        });
+      }
+    } else {
+      // Permanently delete lesson (only from Lesson Library)
+      deleteLesson(lessonNumber);
+    }
     onClose();
   };
 
@@ -222,78 +242,6 @@ export function LessonDetailsModal({
                 <Download className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
                 <span className="text-sm font-medium">Export PDF</span>
               </button>
-              
-              {/* Copy Link Button - using div instead of button to prevent macOS share sheet */}
-              <div
-                onClick={async (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  e.stopImmediatePropagation();
-                  
-                  // Prevent any default behavior
-                  if (isSharing) return;
-                  
-                  try {
-                    const url = await shareLesson(lessonNumber);
-                    if (url) {
-                      setLocalShareUrl(url);
-                      toast.success('Share link created! URL copied to clipboard.', {
-                        duration: 4000,
-                        icon: '🔗',
-                      });
-                    }
-                  } catch (error: any) {
-                    console.error('Share link error:', error);
-                    toast.error(error.message || 'Failed to create share link', {
-                      duration: 5000,
-                    });
-                  }
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                role="button"
-                aria-label="Copy share link to clipboard"
-                className={`p-2 rounded-lg transition-all duration-200 group flex items-center space-x-2 cursor-pointer ${
-                  isSharing 
-                    ? 'bg-white bg-opacity-10 cursor-not-allowed opacity-50' 
-                    : (localShareUrl || shareUrl)
-                    ? 'bg-green-500 hover:bg-green-600 bg-opacity-90'
-                    : 'bg-white bg-opacity-20 hover:bg-opacity-30'
-                }`}
-                title={localShareUrl || shareUrl ? "Link created!" : (isSharing ? "Copying link..." : "Copy link to clipboard")}
-                style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!isSharing) {
-                      // Trigger the click handler
-                      const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
-                      (e.target as HTMLElement).dispatchEvent(clickEvent);
-                    }
-                  }
-                }}
-              >
-                {isSharing ? (
-                  <>
-                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-sm font-medium">Copying...</span>
-                  </>
-                ) : (localShareUrl || shareUrl) ? (
-                  <>
-                    <Check className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-                    <span className="text-sm font-medium">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Link2 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-                    <span className="text-sm font-medium">Copy Link</span>
-                  </>
-                )}
-              </div>
               
               <button
                 onClick={onClose}
@@ -556,7 +504,16 @@ export function LessonDetailsModal({
           <div className="bg-white rounded-card shadow-soft max-w-md w-full p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Delete Lesson</h3>
             <p className="text-gray-700 mb-6">
-              Are you sure you want to delete Lesson {displayNumber || lessonNumber}? This action cannot be undone and will remove the lesson from all units.
+              {halfTermId ? (
+                <>
+                  Are you sure you want to remove Lesson {displayNumber || lessonNumber} from {halfTermName || 'this term'}? 
+                  The lesson will remain in the Lesson Library and can be added back later.
+                </>
+              ) : (
+                <>
+                  Are you sure you want to delete Lesson {displayNumber || lessonNumber}? This action cannot be undone and will remove the lesson from all units.
+                </>
+              )}
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -570,7 +527,7 @@ export function LessonDetailsModal({
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center space-x-2"
               >
                 <Trash2 className="h-4 w-4" />
-                <span>Delete Lesson</span>
+                <span>{halfTermId ? 'Remove from Term' : 'Delete Lesson'}</span>
               </button>
             </div>
           </div>

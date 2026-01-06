@@ -138,9 +138,20 @@ export function SimpleNestedCategoryDropdown({
       const storedKeys = Object.keys(category.yearGroups);
       const storedValues = Object.entries(category.yearGroups).map(([k, v]) => `${k}:${v}`);
       
+      // EXPLICIT EXCLUSIONS: Never show KS2/KS1 categories for Lower Kindergarten/Reception
+      const categoryNameLower = category.name.toLowerCase();
+      const primaryKey = yearGroupKeys[0];
+      const primaryKeyLower = primaryKey?.toLowerCase() || '';
+      
+      if ((categoryNameLower.includes('ks2') || categoryNameLower.includes('key stage 2')) && 
+          (primaryKeyLower.includes('lower kindergarten') || primaryKeyLower.includes('lkg') || 
+           primaryKeyLower.includes('reception') || primaryKeyLower.includes('ukg'))) {
+        console.log(`🚫 EXCLUDING: "${category.name}" (KS2) should not be shown for "${primaryKey}" (Lower Kindergarten/Reception)`);
+        return false;
+      }
+      
       // Check if this category is enabled for the PRIMARY year group key
       // We only check the primary key to ensure strict matching
-      const primaryKey = yearGroupKeys[0];
       const value = category.yearGroups[primaryKey];
       const isEnabled = value === true;
       
