@@ -9,12 +9,24 @@ import { supabase } from '../config/supabase';
 import { useShareLesson } from '../hooks/useShareLesson';
 import toast from 'react-hot-toast';
 
-// A4 page height in pixels (297mm at 96 DPI ≈ 1123px, but we use mm conversion)
-// 1mm = 3.7795275591 pixels at 96 DPI
+// A4 dimensions and PDFBolt margin settings
+// These MUST match the PDFBolt API settings exactly for accurate preview
+const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
-const MM_TO_PX = 3.7795275591;
+const MM_TO_PX = 3.7795275591; // 1mm = 3.7795275591 pixels at 96 DPI
+
+// A4 dimensions in pixels at 96 DPI
+const A4_WIDTH_PX = A4_WIDTH_MM * MM_TO_PX; // ~794px
 const A4_HEIGHT_PX = A4_HEIGHT_MM * MM_TO_PX; // ~1122px
-const PAGE_CONTENT_HEIGHT_PX = A4_HEIGHT_PX - (2 * 10 * MM_TO_PX); // Subtract 2cm padding (1cm top + 1cm bottom)
+
+// PDFBolt margin settings (in pixels) - MUST match API call
+const PDFBOLT_MARGIN_TOP_PX = 15;
+const PDFBOLT_MARGIN_BOTTOM_PX = 55; // Includes footer space
+const PDFBOLT_MARGIN_LEFT_PX = 20;
+const PDFBOLT_MARGIN_RIGHT_PX = 20;
+
+// Available content area height (A4 height minus top and bottom margins)
+const PAGE_CONTENT_HEIGHT_PX = A4_HEIGHT_PX - PDFBOLT_MARGIN_TOP_PX - PDFBOLT_MARGIN_BOTTOM_PX; // ~1052px
 
 interface LessonPrintModalProps {
   lessonNumber?: string;
@@ -1290,6 +1302,12 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
               // Total pages across all lessons
               const totalPagesAcrossAllLessons = lessonsToRender
                 .reduce((sum, ln) => sum + (lessonPageCounts[ln] || 1), 0);
+              
+              // Calculate actual height needed for multi-page lessons
+              // Each page is A4 height, minus overlapping margins for visual continuity
+              const containerHeightPx = lessonPages > 1 
+                ? lessonPages * A4_HEIGHT_PX 
+                : A4_HEIGHT_PX;
 
               return (
                 <React.Fragment key={lessonNum}>
@@ -1325,7 +1343,8 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                       className={`lesson-page print-preview-page ${lessonPages > 1 ? 'multi-page' : ''}`}
                       style={{
                         width: '210mm',
-                        minHeight: '297mm',
+                        // Height is based on number of pages this lesson spans
+                        minHeight: `${containerHeightPx}px`,
                         margin: '0 auto 40px auto',
                         background: 'white',
                         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 30px rgba(0, 0, 0, 0.15)',
@@ -1333,12 +1352,29 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         pageBreakAfter: lessonIndex < lessonsToRender.length - 1 ? 'always' : 'auto',
                         breakAfter: lessonIndex < lessonsToRender.length - 1 ? 'page' : 'auto',
                         border: '1px solid #d1d5db',
-                        padding: '1cm',
-                        boxSizing: 'border-box'
+                        // Match PDFBolt margins exactly: top: 15px, right: 20px, bottom: 55px, left: 20px
+                        paddingTop: `${PDFBOLT_MARGIN_TOP_PX}px`,
+                        paddingRight: `${PDFBOLT_MARGIN_LEFT_PX}px`,
+                        paddingBottom: `${PDFBOLT_MARGIN_BOTTOM_PX}px`,
+                        paddingLeft: `${PDFBOLT_MARGIN_RIGHT_PX}px`,
+                        boxSizing: 'border-box',
+                        // Show page boundaries with background
+                        backgroundImage: lessonPages > 1 
+                          ? `repeating-linear-gradient(to bottom, white 0px, white ${A4_HEIGHT_PX - 2}px, #e5e7eb ${A4_HEIGHT_PX - 2}px, #e5e7eb ${A4_HEIGHT_PX}px)`
+                          : 'none'
                       }}
                   >
-                      {/* Page Header */}
-                      <div className="bg-blue-50 px-6 py-3 border-b border-gray-200">
+                      {/* Page Header - Preview only indicator (not in PDF) */}
+                      <div 
+                        className="bg-blue-50 border-b border-gray-200 -mx-5 -mt-4 mb-3 px-5 py-2"
+                        style={{ 
+                          marginLeft: `-${PDFBOLT_MARGIN_LEFT_PX}px`,
+                          marginRight: `-${PDFBOLT_MARGIN_RIGHT_PX}px`,
+                          marginTop: `-${PDFBOLT_MARGIN_TOP_PX}px`,
+                          paddingLeft: `${PDFBOLT_MARGIN_LEFT_PX}px`,
+                          paddingRight: `${PDFBOLT_MARGIN_RIGHT_PX}px`
+                        }}
+                      >
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-blue-800">
                             {(() => {
@@ -1349,24 +1385,24 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                               };
                               const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
                               const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
-                              return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - Preview`;
+                              return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - PREVIEW`;
                             })()}
                           </span>
                           <div className="flex items-center space-x-2">
                             {lessonPages > 1 && (
-                              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium">
-                                {lessonPages} pages
+                              <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-semibold border border-red-300">
+                                ⚠️ {lessonPages} pages - check breaks below
                               </span>
                             )}
-                            <span className="text-xs text-blue-600">
+                            <span className="text-xs text-blue-600 font-medium">
                               Page {previousPagesTotal + 1}{lessonPages > 1 ? `-${previousPagesTotal + lessonPages}` : ''} of {totalPagesAcrossAllLessons}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Lesson Content - Match PDF export structure exactly (px-6 pt-3 pb-6 matches PDF) */}
-                      <div className="px-6 pt-3 pb-6">
+                      {/* Lesson Content - Container already has correct PDFBolt margins */}
+                      <div>
                         {/* Lesson Title */}
                         <div className="mb-3 border-b border-black pb-2">
                           <h3 className="text-xl font-bold text-black">
@@ -1646,8 +1682,58 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         )}
                       </div>
 
-                      {/* Page Footer - Fixed at bottom */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gray-50 px-6 py-3 text-center text-xs text-gray-500 rounded-b-lg">
+                      {/* Page Break Indicators for multi-page lessons */}
+                      {lessonPages > 1 && (
+                        <div className="page-break-indicators" style={{ position: 'absolute', top: 0, left: 0, right: 0, pointerEvents: 'none', zIndex: 10 }}>
+                          {Array.from({ length: lessonPages - 1 }, (_, i) => {
+                            // Position each page break at the correct height
+                            // Each page is PAGE_CONTENT_HEIGHT_PX tall
+                            const breakPosition = (i + 1) * PAGE_CONTENT_HEIGHT_PX + PDFBOLT_MARGIN_TOP_PX;
+                            return (
+                              <div
+                                key={`page-break-${i}`}
+                                style={{
+                                  position: 'absolute',
+                                  top: `${breakPosition}px`,
+                                  left: '0',
+                                  right: '0',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  padding: '0 10px'
+                                }}
+                              >
+                                <div style={{ flex: 1, height: '2px', background: 'linear-gradient(to right, #ef4444, #f97316, #ef4444)' }}></div>
+                                <div style={{
+                                  padding: '2px 10px',
+                                  background: '#ef4444',
+                                  color: 'white',
+                                  borderRadius: '10px',
+                                  fontSize: '10px',
+                                  fontWeight: '600',
+                                  whiteSpace: 'nowrap',
+                                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                                }}>
+                                  PAGE {i + 2} STARTS HERE
+                                </div>
+                                <div style={{ flex: 1, height: '2px', background: 'linear-gradient(to right, #ef4444, #f97316, #ef4444)' }}></div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Page Footer - Fixed at bottom of each page */}
+                      <div 
+                        className="bg-gray-50 px-6 py-2 text-center text-xs text-gray-600"
+                        style={{
+                          position: 'absolute',
+                          bottom: '10px',
+                          left: `${PDFBOLT_MARGIN_LEFT_PX}px`,
+                          right: `${PDFBOLT_MARGIN_RIGHT_PX}px`,
+                          borderTop: '1px solid #e5e7eb'
+                        }}
+                      >
                         <p><strong>{lessonData.customFooter || (() => {
                           // Extract numeric lesson number (handle "lesson1" format)
                           const getLessonDisplayNumber = (num: string): string => {
