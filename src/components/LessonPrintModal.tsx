@@ -1251,7 +1251,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
             </div>
           )}
 
-          {/* Preview - Each lesson as a separate "page" */}
+          {/* Preview - PDF-style view with separate A4 pages */}
           <div 
             className="flex-1 overflow-y-auto print-preview-container"
             style={{
@@ -1259,23 +1259,14 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
               maxHeight: 'calc(90vh - 300px)',
               overflowY: 'auto',
               overflowX: 'hidden',
-              backgroundColor: '#e5e7eb',
-              padding: '20px'
+              backgroundColor: '#525659',
+              padding: '24px'
             }}
           >
-            {/* Render each lesson as a separate page-like container */}
+            {/* Render each lesson - for multi-page lessons, render as separate page cards */}
             {lessonsToRender.map((lessonNum, lessonIndex) => {
               const lessonData = allLessonsData[lessonNum];
               if (!lessonData) return null;
-
-              // Debug lesson data
-              console.log(`Lesson ${lessonNum} data:`, {
-                title: lessonData.title,
-                lessonNum,
-                lessonIndex,
-                categoryOrder: lessonData.categoryOrder,
-                grouped: Object.keys(lessonData.grouped || {})
-              });
 
               const lessonStandardsList = lessonStandards[lessonNum] || lessonStandards[lessonIndex + 1] || lessonStandards[(lessonIndex + 1).toString()] || [];
 
@@ -1285,470 +1276,247 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                 const parts = statement.split(':');
                 const area = parts[0].trim();
                 const detail = parts.length > 1 ? parts[1].trim() : statement;
-
                 if (!groupedEyfs[area]) {
                   groupedEyfs[area] = [];
                 }
-
                 groupedEyfs[area].push(detail);
               });
 
               // Calculate how many pages this lesson spans
               const lessonPages = lessonPageCounts[lessonNum] || 1;
-              // Calculate the starting page number for this lesson (sum of previous lesson pages)
-              const previousPagesTotal = lessonsToRender
-                .slice(0, lessonIndex)
-                .reduce((sum, ln) => sum + (lessonPageCounts[ln] || 1), 0);
-              // Total pages across all lessons
-              const totalPagesAcrossAllLessons = lessonsToRender
-                .reduce((sum, ln) => sum + (lessonPageCounts[ln] || 1), 0);
               
-              // Calculate actual height needed for multi-page lessons
-              // Each page is A4 height, minus overlapping margins for visual continuity
-              const containerHeightPx = lessonPages > 1 
-                ? lessonPages * A4_HEIGHT_PX 
-                : A4_HEIGHT_PX;
-
-              return (
-                <React.Fragment key={lessonNum}>
-                  {/* Visual page break indicator between lessons */}
-                  {lessonIndex > 0 && (
-                    <div 
+              // For each lesson, render N separate A4 page cards
+              return Array.from({ length: lessonPages }, (_, pageIndex) => {
+                const globalPageNumber = lessonsToRender
+                  .slice(0, lessonIndex)
+                  .reduce((sum, ln) => sum + (lessonPageCounts[ln] || 1), 0) + pageIndex + 1;
+                
+                // Calculate content offset for this page
+                const contentOffsetY = pageIndex * PAGE_CONTENT_HEIGHT_PX;
+                
+                return (
+                  <div
+                    key={`${lessonNum}-page-${pageIndex}`}
+                    className="pdf-page-card"
+                    style={{
+                      width: '210mm',
+                      height: `${A4_HEIGHT_PX}px`,
+                      margin: '0 auto 16px auto',
+                      background: 'white',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      borderRadius: '2px'
+                    }}
+                  >
+                    {/* Content container with offset for pagination */}
+                    <div
+                      ref={pageIndex === 0 ? (el) => { lessonRefs.current[lessonNum] = el; } : undefined}
                       style={{
-                        width: '210mm',
-                        margin: '0 auto 20px auto',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        padding: '10px 0'
+                        position: 'absolute',
+                        top: `-${contentOffsetY}px`,
+                        left: 0,
+                        right: 0,
+                        paddingTop: `${PDFBOLT_MARGIN_TOP_PX}px`,
+                        paddingRight: `${PDFBOLT_MARGIN_RIGHT_PX}px`,
+                        paddingBottom: `${PDFBOLT_MARGIN_BOTTOM_PX}px`,
+                        paddingLeft: `${PDFBOLT_MARGIN_LEFT_PX}px`,
+                        boxSizing: 'border-box'
                       }}
                     >
-                      <div style={{ flex: 1, height: '2px', background: 'linear-gradient(to right, transparent, #9ca3af, transparent)' }}></div>
-                      <div style={{ 
-                        padding: '4px 12px',
-                        background: '#9ca3af',
-                        color: 'white',
-                        borderRadius: '12px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        NEW LESSON - PAGE BREAK
-                      </div>
-                      <div style={{ flex: 1, height: '2px', background: 'linear-gradient(to right, transparent, #9ca3af, transparent)' }}></div>
-                    </div>
-                  )}
-                  <div
-                      ref={(el) => { lessonRefs.current[lessonNum] = el; }}
-                      className={`lesson-page print-preview-page ${lessonPages > 1 ? 'multi-page' : ''}`}
-                      style={{
-                        width: '210mm',
-                        // Height is based on number of pages this lesson spans
-                        minHeight: `${containerHeightPx}px`,
-                        margin: '0 auto 40px auto',
-                        background: 'white',
-                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 30px rgba(0, 0, 0, 0.15)',
-                        position: 'relative',
-                        pageBreakAfter: lessonIndex < lessonsToRender.length - 1 ? 'always' : 'auto',
-                        breakAfter: lessonIndex < lessonsToRender.length - 1 ? 'page' : 'auto',
-                        border: '1px solid #d1d5db',
-                        // Match PDFBolt margins exactly: top: 15px, right: 20px, bottom: 55px, left: 20px
-                        paddingTop: `${PDFBOLT_MARGIN_TOP_PX}px`,
-                        paddingRight: `${PDFBOLT_MARGIN_LEFT_PX}px`,
-                        paddingBottom: `${PDFBOLT_MARGIN_BOTTOM_PX}px`,
-                        paddingLeft: `${PDFBOLT_MARGIN_RIGHT_PX}px`,
-                        boxSizing: 'border-box',
-                        // Show page boundaries with background
-                        backgroundImage: lessonPages > 1 
-                          ? `repeating-linear-gradient(to bottom, white 0px, white ${A4_HEIGHT_PX - 2}px, #e5e7eb ${A4_HEIGHT_PX - 2}px, #e5e7eb ${A4_HEIGHT_PX}px)`
-                          : 'none'
-                      }}
-                  >
-                      {/* Page Header - Preview only indicator (not in PDF) */}
-                      <div 
-                        className="bg-blue-50 border-b border-gray-200 -mx-5 -mt-4 mb-3 px-5 py-2"
-                        style={{ 
-                          marginLeft: `-${PDFBOLT_MARGIN_LEFT_PX}px`,
-                          marginRight: `-${PDFBOLT_MARGIN_RIGHT_PX}px`,
-                          marginTop: `-${PDFBOLT_MARGIN_TOP_PX}px`,
-                          paddingLeft: `${PDFBOLT_MARGIN_LEFT_PX}px`,
-                          paddingRight: `${PDFBOLT_MARGIN_RIGHT_PX}px`
-                        }}
-                      >
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-blue-800">
-                            {(() => {
-                              // Extract numeric lesson number (handle "lesson1" format)
-                              const getLessonDisplayNumber = (num: string): string => {
-                                const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
-                                return numericPart || num;
-                              };
-                              const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
-                              const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
-                              return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - PREVIEW`;
-                            })()}
-                          </span>
-                          <div className="flex items-center space-x-2">
-                            {lessonPages > 1 && (
-                              <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-semibold border border-red-300">
-                                ⚠️ {lessonPages} pages - check breaks below
-                              </span>
-                            )}
-                            <span className="text-xs text-blue-600 font-medium">
-                              Page {previousPagesTotal + 1}{lessonPages > 1 ? `-${previousPagesTotal + lessonPages}` : ''} of {totalPagesAcrossAllLessons}
-                            </span>
-                          </div>
-                        </div>
+                      {/* Lesson Title */}
+                      <div className="mb-3 border-b border-black pb-2">
+                        <h3 className="text-xl font-bold text-black">
+                          {lessonData.customHeader || (() => {
+                            const getLessonDisplayNumber = (num: string): string => {
+                              const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+                              return numericPart || num;
+                            };
+                            const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
+                            const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
+                            return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music`;
+                          })()}
+                        </h3>
                       </div>
 
-                      {/* Lesson Content - Container already has correct PDFBolt margins */}
-                      <div>
-                        {/* Lesson Title */}
-                        <div className="mb-3 border-b border-black pb-2">
-                          <h3 className="text-xl font-bold text-black">
-                            {lessonData.customHeader || (() => {
-                              // Extract numeric lesson number (handle "lesson1" format)
-                              const getLessonDisplayNumber = (num: string): string => {
-                                const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
-                                return numericPart || num;
-                              };
-                              const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
-                              const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
-                              return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music`;
-                            })()}
-                          </h3>
-                        </div>
-
-                        {/* Learning Goals - Same logic as PDF export */}
-                        {(() => {
-                          // Get custom objectives for this lesson (same logic as PDF export)
-                          const lessonCustomObjectives = getCustomObjectivesForLesson(lessonNum);
-                          
-                          // Group custom objectives by area
-                          const groupedCustomObjectives: Record<string, CustomObjective[]> = {};
-                          lessonCustomObjectives.forEach(objective => {
-                            const area = customAreas.find(a => a.id === objective.area_id);
-                            if (area) {
-                              if (!groupedCustomObjectives[area.name]) {
-                                groupedCustomObjectives[area.name] = [];
-                              }
-                              groupedCustomObjectives[area.name].push(objective);
+                      {/* Learning Goals */}
+                      {(() => {
+                        const lessonCustomObjectives = getCustomObjectivesForLesson(lessonNum);
+                        const groupedCustomObjectives: Record<string, CustomObjective[]> = {};
+                        lessonCustomObjectives.forEach(objective => {
+                          const area = customAreas.find(a => a.id === objective.area_id);
+                          if (area) {
+                            if (!groupedCustomObjectives[area.name]) {
+                              groupedCustomObjectives[area.name] = [];
                             }
-                          });
-
-                          // Prioritize based on what was actually edited
-                          // If lesson has custom objectives, show those. If lesson has EYFS, show those.
-                          const hasCustomObjectives = Object.keys(groupedCustomObjectives).length > 0;
-                          const hasEyfsObjectives = lessonStandardsList.length > 0;
-                          
-                          // Show custom objectives if they exist, otherwise show EYFS if they exist
-                          const shouldShowCustom = showEyfs && hasCustomObjectives;
-                          const shouldShowEyfs = showEyfs && hasEyfsObjectives && !hasCustomObjectives;
-                          
-                          if (shouldShowEyfs || shouldShowCustom) {
-                            return (
-                              <div className="mb-4">
-                                <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center space-x-2">
-                                  <Tag className="h-4 w-4 text-blue-600" />
-                                  <span>Learning Goals</span>
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                  {/* EYFS objectives only if no custom objectives exist */}
-                                  {shouldShowEyfs && Object.entries(groupedEyfs).map(([area, statements]) => (
-                                    <div key={area} className="bg-yellow-50 rounded-lg p-2 border border-gray-200">
-                                      <h4 className="font-medium text-gray-800 text-xs mb-1">{area}</h4>
-                                      <ul className="space-y-0.5">
-                                        {statements.map((statement, index) => (
-                                          <li key={index} className="flex items-start space-x-2 text-sm text-gray-700">
-                                            <span className="text-green-500 font-bold">✓</span>
-                                            <span>{statement}</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  ))}
-                                  
-                                  {/* Custom objectives (prioritized over EYFS) */}
-                                  {shouldShowCustom && Object.entries(groupedCustomObjectives).map(([areaName, objectives]) => (
-                                    <div key={areaName} className="bg-purple-50 rounded-lg p-2 border border-gray-200">
-                                      <h4 className="font-medium text-gray-800 text-xs mb-1">{areaName}</h4>
-                                      <ul className="space-y-0.5">
-                                        {objectives.map((objective) => (
-                                          <li key={objective.id} className="flex items-start space-x-2 text-sm text-gray-700">
-                                            <span className="text-purple-500 font-bold">✓</span>
-                                            <span>{objective.objective_text}</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            );
+                            groupedCustomObjectives[area.name].push(objective);
                           }
-                          return null;
-                        })()}
+                        });
 
-                        {/* Activities by Category */}
-                        {lessonData.categoryOrder.map((category) => {
-                          const activities = lessonData.grouped[category] || [];
-                          if (activities.length === 0) return null;
-
-                          const categoryColor = getCategoryColor(category);
-
-                          // Get category background color for activity headers (SAME AS PDF)
-                          const getCategoryBgColor = (cat: string) => {
-                            switch(cat) {
-                              case 'Welcome': return '#FEF3C7'; // Light amber
-                              case 'Kodaly Songs': return '#EDE9FE'; // Light purple
-                              case 'Goodbye': return '#D1FAE5'; // Light emerald
-                              default: return `${categoryColor}20`; // 20% opacity of category color
-                            }
-                          };
-
-                          // Get category light border color (SAME AS PDF)
-                          const getCategoryLightBorder = (cat: string) => {
-                            switch(cat) {
-                              case 'Welcome': return '#FDE68A'; // Lighter amber
-                              case 'Kodaly Songs': return '#DDD6FE'; // Lighter purple
-                              case 'Goodbye': return '#A7F3D0'; // Lighter emerald
-                              default: return `${categoryColor}60`; // 60% opacity of category color
-                            }
-                          };
-
+                        const hasCustomObjectives = Object.keys(groupedCustomObjectives).length > 0;
+                        const hasEyfsObjectives = lessonStandardsList.length > 0;
+                        const shouldShowCustom = showEyfs && hasCustomObjectives;
+                        const shouldShowEyfs = showEyfs && hasEyfsObjectives && !hasCustomObjectives;
+                        
+                        if (shouldShowEyfs || shouldShowCustom) {
                           return (
-                              <div key={category} className="mb-4">
-                                <h2
-                                    className="text-sm font-bold mb-1 text-black border-b border-black pb-0.5"
-                                    style={{
-                                      color: categoryColor
-                                    }}
+                            <div className="mb-4">
+                              <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center space-x-2">
+                                <Tag className="h-4 w-4 text-blue-600" />
+                                <span>Learning Goals</span>
+                              </h3>
+                              <div className="grid grid-cols-2 gap-2">
+                                {shouldShowEyfs && Object.entries(groupedEyfs).map(([area, statements]) => (
+                                  <div key={area} className="bg-yellow-50 rounded-lg p-2 border border-gray-200">
+                                    <h4 className="font-medium text-gray-800 text-xs mb-1">{area}</h4>
+                                    <ul className="space-y-0.5">
+                                      {statements.map((statement, index) => (
+                                        <li key={index} className="flex items-start space-x-2 text-sm text-gray-700">
+                                          <span className="text-green-500 font-bold">✓</span>
+                                          <span>{statement}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ))}
+                                {shouldShowCustom && Object.entries(groupedCustomObjectives).map(([areaName, objectives]) => (
+                                  <div key={areaName} className="bg-purple-50 rounded-lg p-2 border border-gray-200">
+                                    <h4 className="font-medium text-gray-800 text-xs mb-1">{areaName}</h4>
+                                    <ul className="space-y-0.5">
+                                      {objectives.map((objective) => (
+                                        <li key={objective.id} className="flex items-start space-x-2 text-sm text-gray-700">
+                                          <span className="text-purple-500 font-bold">✓</span>
+                                          <span>{objective.objective_text}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      {/* Activities by Category */}
+                      {lessonData.categoryOrder.map((category) => {
+                        const activities = lessonData.grouped[category] || [];
+                        if (activities.length === 0) return null;
+
+                        const categoryColor = getCategoryColor(category);
+                        const getCategoryBgColor = (cat: string) => {
+                          switch(cat) {
+                            case 'Welcome': return '#FEF3C7';
+                            case 'Kodaly Songs': return '#EDE9FE';
+                            case 'Goodbye': return '#D1FAE5';
+                            default: return `${categoryColor}20`;
+                          }
+                        };
+                        const getCategoryLightBorder = (cat: string) => {
+                          switch(cat) {
+                            case 'Welcome': return '#FDE68A';
+                            case 'Kodaly Songs': return '#DDD6FE';
+                            case 'Goodbye': return '#A7F3D0';
+                            default: return `${categoryColor}60`;
+                          }
+                        };
+
+                        return (
+                          <div key={category} className="mb-4">
+                            <h2 className="text-sm font-bold mb-1 border-b border-black pb-0.5" style={{ color: categoryColor }}>
+                              {category}
+                            </h2>
+                            <div className="space-y-2">
+                              {activities.map((activity, index) => (
+                                <div
+                                  key={`${category}-${index}`}
+                                  className="bg-white rounded-lg border overflow-hidden"
+                                  style={{
+                                    borderLeftWidth: '4px',
+                                    borderLeftColor: categoryColor,
+                                    borderColor: getCategoryLightBorder(category)
+                                  }}
                                 >
-                                  {category}
-                                </h2>
-
-                                <div className="space-y-2">
-                                  {activities.map((activity, index) => (
-                                      <div
-                                          key={`${category}-${index}`}
-                                          className="bg-white rounded-lg border overflow-hidden"
-                                          style={{
-                                            borderLeftWidth: '4px',
-                                            borderLeftColor: categoryColor,
-                                            borderColor: getCategoryLightBorder(category)
-                                          }}
-                                      >
-                                        {/* Activity Header */}
-                                        <div
-                                            className="px-2 py-0.5 border-b flex justify-between items-center"
-                                            style={{
-                                              backgroundColor: getCategoryBgColor(category),
-                                              borderBottomColor: categoryColor
-                                            }}
-                                        >
-                                          <h3 className="text-xs font-bold text-black">
-                                            {activity.activity}
-                                          </h3>
-                                          {activity.time > 0 && (
-                                              <div
-                                                  className="px-1 py-0.5 rounded-full text-xs font-bold"
-                                                  style={{
-                                                    backgroundColor: 'rgba(0,0,0,0.15)',
-                                                    color: '#374151'
-                                                  }}
-                                              >
-                                                {activity.time}m
-                                              </div>
-                                          )}
-                                        </div>
-
-                                        {/* Activity Content */}
-                                        <div className="p-1.5">
-                                          {/* Activity Text (if available) */}
-                                          {activity.activityText && (
-                                              <div
-                                                  className="mb-1 text-xs text-black font-medium"
-                                                  dangerouslySetInnerHTML={{ __html: activity.activityText }}
-                                              />
-                                          )}
-
-                                          {/* Description */}
-                                          <div
-                                              className={`text-xs text-black ${activity.activityText ? 'pt-1.5 border-t border-gray-300' : ''}`}
-                                              dangerouslySetInnerHTML={{
-                                                __html: activity.description.includes('<') ?
-                                                    activity.description :
-                                                    activity.description.replace(/\n/g, '<br>')
-                                              }}
-                                          />
-
-                                          {/* Resources */}
-                                          {(activity.videoLink || activity.musicLink || activity.backingLink ||
-                                              activity.resourceLink || activity.link || activity.vocalsLink ||
-                                              activity.imageLink) && (
-                                              <div className="mt-1 pt-1 border-t border-gray-600">
-                                                <p className="text-xs font-bold text-black mb-0.5">Resources:</p>
-                                                <div className="flex flex-wrap gap-0.5">
-                                                  {activity.videoLink && (
-                                                      <a
-                                                          href={activity.videoLink}
-                                                          target="_blank"
-                                                          rel="noopener noreferrer"
-                                                          className="inline-flex items-center px-1.5 py-0.5 bg-red-100 text-red-800 text-xs rounded-full hover:bg-red-200 transition-colors"
-                                                      >
-                                                        Video
-                                                      </a>
-                                                  )}
-                                                  {activity.musicLink && (
-                                                      <a
-                                                          href={activity.musicLink}
-                                                          target="_blank"
-                                                          rel="noopener noreferrer"
-                                                          className="inline-flex items-center px-1.5 py-0.5 bg-green-100 text-green-800 text-xs rounded-full hover:bg-green-200 transition-colors"
-                                                      >
-                                                        Music
-                                                      </a>
-                                                  )}
-                                                  {activity.backingLink && (
-                                                      <a
-                                                          href={activity.backingLink}
-                                                          target="_blank"
-                                                          rel="noopener noreferrer"
-                                                          className="inline-flex items-center px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full hover:bg-blue-200 transition-colors"
-                                                      >
-                                                        Backing
-                                                      </a>
-                                                  )}
-                                                  {activity.resourceLink && (
-                                                      <a
-                                                          href={activity.resourceLink}
-                                                          target="_blank"
-                                                          rel="noopener noreferrer"
-                                                          className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full hover:bg-purple-200 transition-colors"
-                                                      >
-                                                        Resource
-                                                      </a>
-                                                  )}
-                                                  {activity.link && (
-                                                      <a
-                                                          href={activity.link}
-                                                          target="_blank"
-                                                          rel="noopener noreferrer"
-                                                          className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full hover:bg-gray-200 transition-colors"
-                                                      >
-                                                        Link
-                                                      </a>
-                                                  )}
-                                                  {activity.vocalsLink && (
-                                                      <a
-                                                          href={activity.vocalsLink}
-                                                          target="_blank"
-                                                          rel="noopener noreferrer"
-                                                          className="inline-flex items-center px-1.5 py-0.5 bg-orange-100 text-orange-800 text-xs rounded-full hover:bg-orange-200 transition-colors"
-                                                      >
-                                                        Vocals
-                                                      </a>
-                                                  )}
-                                                  {activity.imageLink && (
-                                                      <a
-                                                          href={activity.imageLink}
-                                                          target="_blank"
-                                                          rel="noopener noreferrer"
-                                                          className="inline-flex items-center px-1.5 py-0.5 bg-pink-100 text-pink-800 text-xs rounded-full hover:bg-pink-200 transition-colors"
-                                                      >
-                                                        Image
-                                                      </a>
-                                                  )}
-                                                </div>
-                                              </div>
-                                          )}
+                                  <div
+                                    className="px-2 py-0.5 border-b flex justify-between items-center"
+                                    style={{
+                                      backgroundColor: getCategoryBgColor(category),
+                                      borderBottomColor: categoryColor
+                                    }}
+                                  >
+                                    <h3 className="text-xs font-bold text-black">{activity.activity}</h3>
+                                    {activity.time > 0 && (
+                                      <div className="px-1 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'rgba(0,0,0,0.15)', color: '#374151' }}>
+                                        {activity.time}m
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="p-1.5">
+                                    {activity.activityText && (
+                                      <div className="mb-1 text-xs text-black font-medium" dangerouslySetInnerHTML={{ __html: activity.activityText }} />
+                                    )}
+                                    <div
+                                      className={`text-xs text-black ${activity.activityText ? 'pt-1.5 border-t border-gray-300' : ''}`}
+                                      dangerouslySetInnerHTML={{
+                                        __html: activity.description.includes('<') ? activity.description : activity.description.replace(/\n/g, '<br>')
+                                      }}
+                                    />
+                                    {(activity.videoLink || activity.musicLink || activity.backingLink || activity.resourceLink || activity.link || activity.vocalsLink || activity.imageLink) && (
+                                      <div className="mt-1 pt-1 border-t border-gray-600">
+                                        <p className="text-xs font-bold text-black mb-0.5">Resources:</p>
+                                        <div className="flex flex-wrap gap-0.5">
+                                          {activity.videoLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">Video</span>}
+                                          {activity.musicLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">Music</span>}
+                                          {activity.backingLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">Backing</span>}
+                                          {activity.resourceLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full">Resource</span>}
+                                          {activity.link && <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full">Link</span>}
+                                          {activity.vocalsLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-orange-100 text-orange-800 text-xs rounded-full">Vocals</span>}
+                                          {activity.imageLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-pink-100 text-pink-800 text-xs rounded-full">Image</span>}
                                         </div>
                                       </div>
-                                  ))}
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                          );
-                        })}
-
-                        {/* Notes Section */}
-                        {lessonData.notes && (
-                            <div className="mt-6 pt-4 border-t border-black">
-                              <h3 className="text-lg font-bold text-black mb-2">Lesson Notes</h3>
-                              <div
-                                  className="bg-gray-200 rounded-lg p-3 text-black border border-gray-600"
-                                  dangerouslySetInnerHTML={{ __html: lessonData.notes }}
-                              />
+                              ))}
                             </div>
-                        )}
-                      </div>
+                          </div>
+                        );
+                      })}
 
-                      {/* Page Break Indicators for multi-page lessons */}
-                      {lessonPages > 1 && (
-                        <div className="page-break-indicators" style={{ position: 'absolute', top: 0, left: 0, right: 0, pointerEvents: 'none', zIndex: 10 }}>
-                          {Array.from({ length: lessonPages - 1 }, (_, i) => {
-                            // Position each page break at the correct height
-                            // Each page is PAGE_CONTENT_HEIGHT_PX tall
-                            const breakPosition = (i + 1) * PAGE_CONTENT_HEIGHT_PX + PDFBOLT_MARGIN_TOP_PX;
-                            return (
-                              <div
-                                key={`page-break-${i}`}
-                                style={{
-                                  position: 'absolute',
-                                  top: `${breakPosition}px`,
-                                  left: '0',
-                                  right: '0',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '8px',
-                                  padding: '0 10px'
-                                }}
-                              >
-                                <div style={{ flex: 1, height: '2px', background: 'linear-gradient(to right, #ef4444, #f97316, #ef4444)' }}></div>
-                                <div style={{
-                                  padding: '2px 10px',
-                                  background: '#ef4444',
-                                  color: 'white',
-                                  borderRadius: '10px',
-                                  fontSize: '10px',
-                                  fontWeight: '600',
-                                  whiteSpace: 'nowrap',
-                                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                                }}>
-                                  PAGE {i + 2} STARTS HERE
-                                </div>
-                                <div style={{ flex: 1, height: '2px', background: 'linear-gradient(to right, #ef4444, #f97316, #ef4444)' }}></div>
-                              </div>
-                            );
-                          })}
+                      {/* Notes Section */}
+                      {lessonData.notes && (
+                        <div className="mt-6 pt-4 border-t border-black">
+                          <h3 className="text-lg font-bold text-black mb-2">Lesson Notes</h3>
+                          <div className="bg-gray-200 rounded-lg p-3 text-black border border-gray-600" dangerouslySetInnerHTML={{ __html: lessonData.notes }} />
                         </div>
                       )}
-
-                      {/* Page Footer - Fixed at bottom of each page */}
-                      <div 
-                        className="bg-gray-50 px-6 py-2 text-center text-xs text-gray-600"
-                        style={{
-                          position: 'absolute',
-                          bottom: '10px',
-                          left: `${PDFBOLT_MARGIN_LEFT_PX}px`,
-                          right: `${PDFBOLT_MARGIN_RIGHT_PX}px`,
-                          borderTop: '1px solid #e5e7eb'
-                        }}
-                      >
-                        <p><strong>{lessonData.customFooter || (() => {
-                          // Extract numeric lesson number (handle "lesson1" format)
-                          const getLessonDisplayNumber = (num: string): string => {
-                            const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
-                            return numericPart || num;
-                          };
-                          const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
-                          const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
-                          return `Creative Curriculum Designer • Lesson ${termSpecificNumber} • ${currentSheetInfo.display} • ${halfTermName || unitName || ''} • © Rhythmstix 2026`;
-                        })()}</strong></p>
-                      </div>
                     </div>
-                    </React.Fragment>
+
+                    {/* Page Footer */}
+                    <div 
+                      className="text-center text-xs text-gray-600"
+                      style={{
+                        position: 'absolute',
+                        bottom: '12px',
+                        left: `${PDFBOLT_MARGIN_LEFT_PX}px`,
+                        right: `${PDFBOLT_MARGIN_RIGHT_PX}px`
+                      }}
+                    >
+                      <p><strong>{lessonData.customFooter || (() => {
+                        const getLessonDisplayNumber = (num: string): string => {
+                          const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
+                          return numericPart || num;
+                        };
+                        const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
+                        const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
+                        return `Creative Curriculum Designer • Lesson ${termSpecificNumber} • ${currentSheetInfo.display} • ${halfTermName || unitName || ''} • © Rhythmstix 2026`;
+                      })()}</strong></p>
+                    </div>
+                  </div>
                 );
-              })}
+              });
+            })}
           </div>
         </div>
       </div>
