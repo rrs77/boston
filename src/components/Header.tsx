@@ -58,12 +58,12 @@ export function Header() {
                     textAnchor="middle"
                     dominantBaseline="central"
                     fill="white"
-                    fontSize="36"
+                    fontSize="32"
                     fontWeight="700"
                     fontFamily="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
                     letterSpacing="-1"
                   >
-                    CD
+                    CCD
                   </text>
                 </svg>
               </div>

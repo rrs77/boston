@@ -34,7 +34,7 @@ export function Logo({ className = '', size = 'md', showText = true, boldCurricu
 
   return (
     <div className={`flex items-center space-x-4 ${className}`}>
-      {/* CD Logo in Circle */}
+      {/* CCD Logo in Circle */}
       <div className={`${currentSize.container} flex-shrink-0 relative`}>
         <svg 
           viewBox="0 0 80 80" 
@@ -49,19 +49,19 @@ export function Logo({ className = '', size = 'md', showText = true, boldCurricu
             fill="url(#tealGradient)"
           />
           
-          {/* CD Text */}
+          {/* CCD Text */}
           <text
             x="40"
             y="40"
             textAnchor="middle"
             dominantBaseline="central"
             fill="white"
-            fontSize="32"
+            fontSize="28"
             fontWeight="700"
             fontFamily="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
             letterSpacing="-1"
           >
-            CD
+            CCD
           </text>
           
           {/* Gradient definitions */}

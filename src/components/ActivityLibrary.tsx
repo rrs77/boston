@@ -139,10 +139,21 @@ export function ActivityLibrary({
     const yearGroupKeys = getCurrentYearGroupKeys();
     const currentSheet = className || currentSheetInfo?.sheet;
     
+    // Log category yearGroups for debugging
+    const nurseryRhymesCategory = categories.find(c => c.name === 'Nursery Rhymes');
+    if (nurseryRhymesCategory) {
+      console.log('📚 ActivityLibrary: Nursery Rhymes category data:', {
+        name: nurseryRhymesCategory.name,
+        yearGroups: nurseryRhymesCategory.yearGroups,
+        yearGroupKeys: Object.keys(nurseryRhymesCategory.yearGroups || {}).filter(k => nurseryRhymesCategory.yearGroups?.[k] === true)
+      });
+    }
+    
     console.log('📚 ActivityLibrary: Filtering categories for year group:', {
       currentSheet,
       yearGroupKeys,
-      totalCategories: categories.length
+      totalCategories: categories.length,
+      timestamp: new Date().toISOString()
     });
     
     if (yearGroupKeys.length === 0) {
@@ -159,6 +170,61 @@ export function ActivityLibrary({
           if (category.name === 'Nursery Rhymes') {
             console.log(`❌ Category "${category.name}" has no yearGroups assigned - excluding`);
           }
+          return false;
+        }
+        
+        // CRITICAL: Check category name for KS2/KS1 exclusions BEFORE any matching
+        // This prevents KS2 categories from showing for Lower Kindergarten/Reception
+        const categoryNameLower = category.name.toLowerCase();
+        const currentYearGroup = customYearGroups?.find(yg => yg.id === (className || currentSheetInfo?.sheet) || yg.name === (className || currentSheetInfo?.sheet));
+        const currentYearGroupName = currentYearGroup?.name?.toLowerCase() || '';
+        const currentYearGroupId = currentYearGroup?.id?.toLowerCase() || '';
+        
+        // Check ALL keys in category.yearGroups for KS2 indicators
+        const categoryYearGroupKeys = Object.keys(category.yearGroups).filter(k => category.yearGroups[k] === true);
+        const hasKS2YearGroups = categoryYearGroupKeys.some(k => {
+          const kLower = k.toLowerCase();
+          return kLower.includes('ks2') || kLower.includes('key stage 2') || 
+                 kLower.includes('year 3') || kLower.includes('year 4') || 
+                 kLower.includes('year 5') || kLower.includes('year 6');
+        });
+        
+        // Check if current year group is Lower Kindergarten/Reception/UKG
+        const isLowerKindergarten = currentYearGroupName.includes('lower kindergarten') || 
+                                    currentYearGroupName.includes('lkg') || 
+                                    currentYearGroupName.includes('reception') ||
+                                    currentYearGroupName.includes('ukg') ||
+                                    currentYearGroupName.includes('upper kindergarten') ||
+                                    currentYearGroupId.includes('lkg') ||
+                                    currentYearGroupId.includes('ukg');
+        
+        // Explicitly exclude KS2 categories for Lower Kindergarten/Reception/UKG
+        if (hasKS2YearGroups && isLowerKindergarten) {
+          console.log(`🚫 EXCLUDING: Category "${category.name}" (has KS2 year groups: ${categoryYearGroupKeys.join(', ')}) should not show for "${currentYearGroupName}" (Lower Kindergarten/Reception)`);
+          return false;
+        }
+        
+        // Also check category name itself for KS2 indicators
+        if ((categoryNameLower.includes('ks2') || categoryNameLower.includes('key stage 2') || 
+             categoryNameLower.includes('year 3') || categoryNameLower.includes('year 4') || 
+             categoryNameLower.includes('year 5') || categoryNameLower.includes('year 6')) &&
+            isLowerKindergarten) {
+          console.log(`🚫 EXCLUDING: Category "${category.name}" (KS2 in name) should not show for "${currentYearGroupName}" (Lower Kindergarten/Reception)`);
+          return false;
+        }
+        
+        // Explicitly exclude Lower Kindergarten/Reception categories for KS2 year groups
+        const isKS2YearGroup = currentYearGroupName.includes('ks2') || 
+                               currentYearGroupName.includes('key stage 2') || 
+                               currentYearGroupName.includes('year 3') || 
+                               currentYearGroupName.includes('year 4') || 
+                               currentYearGroupName.includes('year 5') || 
+                               currentYearGroupName.includes('year 6');
+        
+        if ((categoryNameLower.includes('lower kindergarten') || categoryNameLower.includes('lkg') || 
+             categoryNameLower.includes('reception') || categoryNameLower.includes('nursery')) &&
+            isKS2YearGroup) {
+          console.log(`🚫 EXCLUDING: Category "${category.name}" (Lower Kindergarten/Reception) should not show for "${currentYearGroupName}" (KS2)`);
           return false;
         }
         
@@ -180,13 +246,63 @@ export function ActivityLibrary({
         const categoryYearGroupKeys = Object.keys(category.yearGroups).filter(k => category.yearGroups[k] === true);
         let isAssigned = yearGroupKeys.some(key => category.yearGroups[key] === true);
         
+        // CRITICAL FALLBACK: Also check if the current year group's ID or name appears as ANY key in category.yearGroups
+        // This handles cases where the key format might be slightly different
+        if (!isAssigned && yearGroupKeys.length > 0) {
+          const currentYearGroup = customYearGroups?.find(yg => yg.id === (className || currentSheetInfo?.sheet) || yg.name === (className || currentSheetInfo?.sheet));
+          if (currentYearGroup) {
+            // Check if the year group's ID or name matches any key in the category
+            const checkKeys = [currentYearGroup.id, currentYearGroup.name].filter(Boolean);
+            isAssigned = checkKeys.some(checkKey => {
+              if (!checkKey) return false;
+              // Check exact match
+              if (category.yearGroups[checkKey] === true) {
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`✅ FALLBACK MATCH: Year group "${checkKey}" found in category yearGroups`);
+                }
+                return true;
+              }
+              // Check case-insensitive match
+              const checkKeyLower = checkKey.toLowerCase().trim();
+              const matchingKey = Object.keys(category.yearGroups).find(k => {
+                const kLower = k.toLowerCase().trim();
+                return kLower === checkKeyLower && category.yearGroups[k] === true;
+              });
+              if (matchingKey) {
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`✅ FALLBACK MATCH (case-insensitive): Year group "${checkKey}" matches "${matchingKey}"`);
+                }
+                return true;
+              }
+              
+              // Also check if checkKey is contained in any category key (or vice versa)
+              const partialMatch = Object.keys(category.yearGroups).find(k => {
+                if (category.yearGroups[k] !== true) return false;
+                const kLower = k.toLowerCase().trim();
+                // Check if one contains the other (for cases like "Lower Kindergarten Music" vs "Lower Kindergarten")
+                return (checkKeyLower.length >= 5 && kLower.includes(checkKeyLower)) ||
+                       (kLower.length >= 5 && checkKeyLower.includes(kLower));
+              });
+              if (partialMatch) {
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`✅ FALLBACK MATCH (partial): Year group "${checkKey}" partially matches "${partialMatch}"`);
+                }
+                return true;
+              }
+              
+              return false;
+            });
+          }
+        }
+        
         // Log detailed matching info for debugging (especially for Nursery Rhymes)
         if (category.name === 'Nursery Rhymes' || index < 3) {
           console.log(`🔍 Category "${category.name}" matching:`, {
             yearGroupKeys,
             categoryYearGroupKeys,
             isAssigned,
-            yearGroups: category.yearGroups
+            yearGroups: category.yearGroups,
+            currentSheet: className || currentSheetInfo?.sheet
           });
         }
         
@@ -199,37 +315,91 @@ export function ActivityLibrary({
             
             // Check if any year group key matches this category key (exact or partial)
             return yearGroupKeys.some(key => {
-              const keyLower = key.toLowerCase();
-              const catKeyLower = catKey.toLowerCase();
+              const keyLower = key.toLowerCase().trim();
+              const catKeyLower = catKey.toLowerCase().trim();
               
-              // Exact match
-              if (keyLower === catKeyLower) return true;
+              // Exact match (case-insensitive)
+              if (keyLower === catKeyLower) {
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`✅ EXACT MATCH: "${key}" === "${catKey}"`);
+                }
+                return true;
+              }
               
               // EXPLICIT EXCLUSIONS: Never match KS2/KS1 categories to Lower Kindergarten
               if ((catKeyLower.includes('ks2') || catKeyLower.includes('key stage 2')) && 
                   (keyLower.includes('lower kindergarten') || keyLower.includes('lkg') || keyLower.includes('reception'))) {
-                console.log(`🚫 EXCLUDING: "${category.name}" (KS2) should not match "${key}" (Lower Kindergarten)`);
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`🚫 EXCLUDING: "${category.name}" (KS2) should not match "${key}" (Lower Kindergarten)`);
+                }
                 return false;
               }
               if ((keyLower.includes('ks2') || keyLower.includes('key stage 2')) && 
                   (catKeyLower.includes('lower kindergarten') || catKeyLower.includes('lkg') || catKeyLower.includes('reception'))) {
-                console.log(`🚫 EXCLUDING: "${category.name}" (Lower Kindergarten) should not match "${catKey}" (KS2)`);
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`🚫 EXCLUDING: "${category.name}" (Lower Kindergarten) should not match "${catKey}" (KS2)`);
+                }
                 return false;
               }
               
               // Check if key contains catKey (e.g., "Lower Kindergarten Music" contains "Lower Kindergarten")
               // BUT: Only if catKey is a meaningful substring (not just a few characters)
-              if (catKeyLower.length >= 5 && catKeyLower.includes(keyLower)) return true;
+              if (catKeyLower.length >= 5 && catKeyLower.includes(keyLower)) {
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`✅ PARTIAL MATCH (catKey contains key): "${catKey}" contains "${key}"`);
+                }
+                return true;
+              }
               
               // Check if catKey contains key (e.g., "LKG" in "Lower Kindergarten Music")
               // BUT: Only if key is a meaningful substring (not just a few characters)
-              if (keyLower.length >= 5 && keyLower.includes(catKeyLower)) return true;
+              if (keyLower.length >= 5 && keyLower.includes(catKeyLower)) {
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`✅ PARTIAL MATCH (key contains catKey): "${key}" contains "${catKey}"`);
+                }
+                return true;
+              }
               
               // Check for common abbreviations (strict matching only)
-              if (keyLower === 'lkg' && (catKeyLower.includes('lower kindergarten') || catKeyLower === 'lower kindergarten music')) return true;
-              if (keyLower === 'ukg' && (catKeyLower.includes('upper kindergarten') || catKeyLower === 'upper kindergarten music')) return true;
-              if ((keyLower.includes('lower kindergarten') || keyLower === 'lower kindergarten music') && catKeyLower === 'lkg') return true;
-              if ((keyLower.includes('upper kindergarten') || keyLower === 'upper kindergarten music') && catKeyLower === 'ukg') return true;
+              if (keyLower === 'lkg' && (catKeyLower.includes('lower kindergarten') || catKeyLower === 'lower kindergarten music')) {
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`✅ ABBREV MATCH: "LKG" matches "${catKey}"`);
+                }
+                return true;
+              }
+              if (keyLower === 'ukg' && (catKeyLower.includes('upper kindergarten') || catKeyLower === 'upper kindergarten music')) {
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`✅ ABBREV MATCH: "UKG" matches "${catKey}"`);
+                }
+                return true;
+              }
+              if ((keyLower.includes('lower kindergarten') || keyLower === 'lower kindergarten music') && catKeyLower === 'lkg') {
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`✅ ABBREV MATCH: "${key}" matches "LKG"`);
+                }
+                return true;
+              }
+              if ((keyLower.includes('upper kindergarten') || keyLower === 'upper kindergarten music') && catKeyLower === 'ukg') {
+                if (category.name === 'Nursery Rhymes') {
+                  console.log(`✅ ABBREV MATCH: "${key}" matches "UKG"`);
+                }
+                return true;
+              }
+              
+              // Additional fuzzy matching: check if both contain the same core words
+              // e.g., "Lower Kindergarten Music" and "Lower Kindergarten" should match
+              const keyWords = keyLower.split(/\s+/).filter(w => w.length > 2);
+              const catKeyWords = catKeyLower.split(/\s+/).filter(w => w.length > 2);
+              if (keyWords.length > 0 && catKeyWords.length > 0) {
+                const commonWords = keyWords.filter(w => catKeyWords.includes(w));
+                // If they share significant words (like "lower", "kindergarten"), consider it a match
+                if (commonWords.length >= 2 || (commonWords.length === 1 && (commonWords[0] === 'lower' || commonWords[0] === 'upper' || commonWords[0] === 'reception'))) {
+                  if (category.name === 'Nursery Rhymes') {
+                    console.log(`✅ FUZZY MATCH (common words): "${key}" and "${catKey}" share words:`, commonWords);
+                  }
+                  return true;
+                }
+              }
               
               return false;
             });
@@ -255,7 +425,7 @@ export function ActivityLibrary({
     }
     
     return filteredCategories;
-  }, [categories, getCurrentYearGroupKeys, className, currentSheetInfo]);
+  }, [categories, getCurrentYearGroupKeys, className, currentSheetInfo, customYearGroups]);
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [localSelectedCategory, setLocalSelectedCategory] = useState(selectedCategory);

@@ -32,7 +32,7 @@
     <path d="M 40 -60 L 43 -57 L 52 -66" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
   
-  <!-- CD text - prominent -->
+  <!-- CCD text - prominent -->
   <text
     x="256"
     y="360"
@@ -43,6 +43,6 @@
     font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
     letter-spacing="-2"
   >
-    CD
+    CCD
   </text>
 </svg>

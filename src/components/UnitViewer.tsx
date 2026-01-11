@@ -1116,12 +1116,12 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                           textAnchor="middle"
                           dominantBaseline="central"
                           fill="white"
-                          fontSize="32"
+                          fontSize="28"
                           fontWeight="700"
                           fontFamily="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
                           letterSpacing="-1"
                         >
-                          CD
+                          CCD
                         </text>
                       </svg>
                     </div>
