@@ -68,6 +68,7 @@ export function ActivityLibrary({
   const { getCategoryColor, categories, customYearGroups, mapActivityLevelToYearGroup } = useSettings();
   
   // Get categories assigned to current year group (same logic as LessonPlanBuilder)
+  // IMPORTANT: This must match the EXACT keys used when saving categories in UserSettings (line 1460)
   const getCurrentYearGroupKeys = React.useCallback((): string[] => {
     const sheetId = className || currentSheetInfo?.sheet;
     if (!sheetId) return [];
@@ -90,8 +91,39 @@ export function ActivityLibrary({
     }
     
     if (yearGroup) {
-      // Return both ID and name as potential keys for matching
-      return [yearGroup.id, yearGroup.name].filter(Boolean);
+      // CRITICAL: Return the EXACT same keys that UserSettings uses when saving (line 1460: yearGroup.id || yearGroup.name)
+      // Also include derived codes (LKG, UKG, Reception) for backward compatibility
+      const keys: string[] = [];
+      
+      // Primary key: ID or name (exactly as saved in UserSettings)
+      const primaryKey = yearGroup.id || yearGroup.name;
+      if (primaryKey) keys.push(primaryKey);
+      
+      // Also add the other one if different
+      if (yearGroup.id && yearGroup.name && yearGroup.id !== yearGroup.name) {
+        keys.push(yearGroup.name);
+      }
+      
+      // Add derived codes for backward compatibility (LKG, UKG, Reception)
+      const nameLower = yearGroup.name.toLowerCase();
+      if (nameLower.includes('lower') || nameLower.includes('lkg')) {
+        if (!keys.includes('LKG')) keys.push('LKG');
+      }
+      if (nameLower.includes('upper') || nameLower.includes('ukg')) {
+        if (!keys.includes('UKG')) keys.push('UKG');
+      }
+      if (nameLower.includes('reception')) {
+        if (!keys.includes('Reception')) keys.push('Reception');
+      }
+      
+      console.log('🔑 ActivityLibrary: Year group keys for matching:', {
+        sheetId,
+        yearGroupName: yearGroup.name,
+        yearGroupId: yearGroup.id,
+        keys
+      });
+      
+      return keys.filter(Boolean);
     }
     return [];
   }, [className, currentSheetInfo, customYearGroups]);
@@ -122,9 +154,11 @@ export function ActivityLibrary({
     // Filter categories that are assigned to this year group
     // Check against all potential keys (ID and name)
     const filteredCategories = categories
-      .filter(category => {
+      .filter((category, index) => {
         if (!category || !category.yearGroups || Object.keys(category.yearGroups).length === 0) {
-          console.log(`❌ Category "${category.name}" has no yearGroups assigned - excluding`);
+          if (category.name === 'Nursery Rhymes') {
+            console.log(`❌ Category "${category.name}" has no yearGroups assigned - excluding`);
+          }
           return false;
         }
         
@@ -135,13 +169,26 @@ export function ActivityLibrary({
           category.yearGroups.Reception === true &&
           Object.keys(category.yearGroups).length === 3;
         if (hasOldDefaults) {
-          console.log(`❌ Category "${category.name}" has old defaults - excluding`);
+          if (category.name === 'Nursery Rhymes') {
+            console.log(`❌ Category "${category.name}" has old defaults - excluding`);
+          }
           return false;
         }
         
         // Check if this category is assigned to any of the year group keys
-        // First try exact match
+        // First try exact match - this should work now that getCurrentYearGroupKeys returns all possible keys
+        const categoryYearGroupKeys = Object.keys(category.yearGroups).filter(k => category.yearGroups[k] === true);
         let isAssigned = yearGroupKeys.some(key => category.yearGroups[key] === true);
+        
+        // Log detailed matching info for debugging (especially for Nursery Rhymes)
+        if (category.name === 'Nursery Rhymes' || index < 3) {
+          console.log(`🔍 Category "${category.name}" matching:`, {
+            yearGroupKeys,
+            categoryYearGroupKeys,
+            isAssigned,
+            yearGroups: category.yearGroups
+          });
+        }
         
         // If no exact match, try partial/fuzzy matching
         // This handles cases where year group is "LKG" but category has "Lower Kindergarten Music"

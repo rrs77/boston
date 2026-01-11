@@ -71,6 +71,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const checkAuthStatus = async () => {
     try {
+      // DEV MODE: Auto-login for local development
+      if (import.meta.env.DEV && !localStorage.getItem('rhythmstix_auth_token')) {
+        const devUser = localUsers[0];
+        if (devUser) {
+          console.log('🔧 DEV MODE: Auto-logging in as', devUser.email);
+          localStorage.setItem('rhythmstix_auth_token', `rhythmstix_local_${devUser.id}`);
+          setUser({
+            id: devUser.id,
+            email: devUser.email,
+            name: devUser.name,
+            avatar: devUser.avatar,
+            role: devUser.role
+          });
+          setLoading(false);
+          return;
+        }
+      }
+      
       const token = localStorage.getItem('rhythmstix_auth_token');
       if (token) {
         // Check if it's a local user token
