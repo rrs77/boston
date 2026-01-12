@@ -68,50 +68,26 @@ export function RichTextEditor({
           }
           return delta;
         });
-      }
-      
-      // Also handle paste event directly to preserve HTML
-      const container = editor.root;
-      container.addEventListener('paste', (e: ClipboardEvent) => {
-        e.preventDefault();
-        const clipboardData = e.clipboardData;
-        if (clipboardData) {
-          const html = clipboardData.getData('text/html');
-          const text = clipboardData.getData('text/plain');
-          
-          if (html) {
-            // Use HTML if available to preserve formatting
-            const range = editor.getSelection(true);
-            if (range) {
-              // Convert HTML to Delta while preserving structure
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              
-              // Process the HTML to preserve lists and line breaks
-              let delta = editor.clipboard.convert(tempDiv);
-              editor.updateContents(delta, 'user');
-              editor.setSelection(range.index + delta.length());
-            }
-          } else if (text) {
-            // Fallback to plain text, preserving line breaks
-            const range = editor.getSelection(true);
-            if (range) {
-              const lines = text.split('\n');
-              let delta = editor.clipboard.convert({});
-              lines.forEach((line, index) => {
-                if (index > 0) {
-                  delta = delta.insert('\n');
-                }
-                if (line) {
-                  delta = delta.insert(line);
-                }
-              });
-              editor.updateContents(delta, 'user');
-              editor.setSelection(range.index + delta.length());
-            }
+        
+        // Preserve plain text line breaks
+        clipboard.addMatcher(Node.TEXT_NODE, (node: any, delta: any) => {
+          const text = node.data || '';
+          if (text.includes('\n')) {
+            const lines = text.split('\n');
+            let newDelta = delta;
+            lines.forEach((line: string, index: number) => {
+              if (index > 0) {
+                newDelta = newDelta.insert('\n');
+              }
+              if (line) {
+                newDelta = newDelta.insert(line);
+              }
+            });
+            return newDelta;
           }
-        }
-      }, true);
+          return delta.insert(text);
+        });
+      }
     }
   }, []);
 

@@ -69,14 +69,9 @@ export function Footer() {
               Privacy
             </a>
             <span className="text-white">•</span>
-            <a 
-              href="https://www.rhythmstix.co.uk"
-              className="text-white hover:text-blue-200 transition-colors duration-200 font-medium"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              © 2026 Rhythmstix
-            </a>
+            <span className="text-white font-medium">
+              © <span style={{ letterSpacing: '0.05em' }}>2026</span> Forward Thinking
+            </span>
           </div>
           
         </div>

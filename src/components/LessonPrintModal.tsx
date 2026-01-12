@@ -343,7 +343,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
 
       // Use custom footer if available, otherwise use default with correct lesson number
       const footerText = lessonData.customFooter || 
-        ['Creative Curriculum Designer', `Lesson ${termSpecificNumber}`, currentSheetInfo.display, halfTermName || unitName, '© Rhythmstix 2026']
+        ['Creative Curriculum Designer', `Lesson ${termSpecificNumber}`, currentSheetInfo.display, halfTermName || unitName, '© Forward Thinking 2026']
           .filter(Boolean)
           .join(' • ');
       
@@ -1681,7 +1681,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         };
                         const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
                         const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
-                        return `Creative Curriculum Designer • Lesson ${termSpecificNumber} • ${currentSheetInfo.display} • ${halfTermName || unitName || ''} • © Rhythmstix 2026`;
+                        return `Creative Curriculum Designer • Lesson ${termSpecificNumber} • ${currentSheetInfo.display} • ${halfTermName || unitName || ''} • © Forward Thinking 2026`;
                       })()}</strong></p>
                     </div>
                   </div>

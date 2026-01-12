@@ -175,7 +175,7 @@ export function LoginForm() {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-sm font-light tracking-wide" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-            Creative Curriculum Designer • From Rhythmstix
+            Creative Curriculum Designer • From Forward Thinking
           </p>
         </div>
       </div>

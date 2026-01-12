@@ -407,7 +407,7 @@ export function useShareLesson() {
 
     // Footer content
     const footerText = lessonData.customFooter || 
-      ['Creative Curriculum Designer', `Lesson ${termSpecificNumber}`, currentSheetInfo.display, halfTermName, '© Rhythmstix 2025']
+      ['Creative Curriculum Designer', `Lesson ${termSpecificNumber}`, currentSheetInfo.display, halfTermName, '© Forward Thinking 2026']
         .filter(Boolean)
         .join(' • ');
     
