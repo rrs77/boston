@@ -50,6 +50,9 @@ export const activitiesApi = {
         activity: item.activity,
         description: item.description,
         activityText: item.activity_text,
+        descriptionHeading: item.description_heading || 'Introduction/Context',
+        activityHeading: item.activity_heading || 'Activity',
+        linkHeading: item.link_heading || 'Additional Link',
         time: item.time,
         videoLink: item.video_link,
         musicLink: item.music_link,
@@ -81,6 +84,9 @@ export const activitiesApi = {
         activity: activityData.activity,
         description: activityData.description,
         activity_text: activityData.activityText,
+        description_heading: activityData.descriptionHeading || 'Introduction/Context',
+        activity_heading: activityData.activityHeading || 'Activity',
+        link_heading: activityData.linkHeading || 'Additional Link',
         time: activityData.time,
         video_link: activityData.videoLink,
         music_link: activityData.musicLink,
@@ -99,8 +105,10 @@ export const activitiesApi = {
         yeargroups: Array.isArray(activityData.yearGroups) ? activityData.yearGroups : [] // CRITICAL: Save yearGroups
       };
       
-      console.log('💾 Creating activity in Supabase with yearGroups:', {
+      console.log('💾 Creating activity in Supabase with all fields:', {
         activity: dbActivity.activity,
+        description_heading: dbActivity.description_heading,
+        activity_heading: dbActivity.activity_heading,
         yeargroups: dbActivity.yeargroups,
         yeargroupsLength: dbActivity.yeargroups.length
       });
@@ -111,7 +119,12 @@ export const activitiesApi = {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase insert error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Activity created in Supabase:', data.id);
       
       // Convert back to camelCase for frontend
       return {
@@ -119,6 +132,9 @@ export const activitiesApi = {
         activity: data.activity,
         description: data.description,
         activityText: data.activity_text,
+        descriptionHeading: data.description_heading || 'Introduction/Context',
+        activityHeading: data.activity_heading || 'Activity',
+        linkHeading: data.link_heading || 'Additional Link',
         time: data.time,
         videoLink: data.video_link,
         musicLink: data.music_link,
@@ -137,7 +153,7 @@ export const activitiesApi = {
         yearGroups: Array.isArray(data.yeargroups) ? data.yeargroups : (data.yeargroups ? [data.yeargroups] : []) // CRITICAL: Return yearGroups
       };
     } catch (error) {
-      console.warn('Failed to create activity in Supabase:', error);
+      console.error('❌ Failed to create activity in Supabase:', error);
       throw error;
     }
   },

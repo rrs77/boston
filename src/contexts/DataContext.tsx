@@ -1547,39 +1547,69 @@ console.log('🏁 Set subjectsLoading to FALSE'); // ADD THIS DEBUG LINE
       let newActivity = activity;
       if (isSupabaseConfigured()) {
         try {
+          console.log('📡 Saving activity to Supabase:', {
+            activity: activity.activity,
+            hasDescriptionHeading: !!activity.descriptionHeading,
+            hasActivityHeading: !!activity.activityHeading,
+            yearGroups: activity.yearGroups
+          });
           newActivity = await activitiesApi.create({ ...activity, yearGroups: activity.yearGroups || [] });
+          console.log('✅ Activity saved to Supabase successfully:', newActivity._id);
+          
+          // Update local state with Supabase data
+          setAllActivities(prev => [...prev, newActivity]);
+          
+          // DO NOT save to localStorage when Supabase is configured - data should only be in Supabase
+          return newActivity;
         } catch (error) {
-          console.warn('Failed to add activity to Supabase:', error);
-          // Generate a local ID
+          console.error('❌ Failed to add activity to Supabase:', error);
+          // Only fall back to localStorage if Supabase save fails
+          console.warn('⚠️ Falling back to localStorage due to Supabase error');
           newActivity = {
             ...activity,
             yearGroups: activity.yearGroups || [],
             _id: `local-${Date.now()}`
           };
+          
+          // Update local state
+          setAllActivities(prev => [...prev, newActivity]);
+          
+          // Save to localStorage as fallback only
+          const savedActivities = localStorage.getItem('library-activities');
+          if (savedActivities) {
+            const activities = JSON.parse(savedActivities);
+            activities.push(newActivity);
+            localStorage.setItem('library-activities', JSON.stringify(activities));
+          } else {
+            localStorage.setItem('library-activities', JSON.stringify([newActivity]));
+          }
+          
+          return newActivity;
         }
       } else {
-        // Generate a local ID
+        // Supabase not configured - use localStorage only
+        console.log('📝 Supabase not configured, using localStorage only');
         newActivity = {
           ...activity,
           yearGroups: activity.yearGroups || [],
           _id: `local-${Date.now()}`
         };
+        
+        // Update local state
+        setAllActivities(prev => [...prev, newActivity]);
+        
+        // Save to localStorage
+        const savedActivities = localStorage.getItem('library-activities');
+        if (savedActivities) {
+          const activities = JSON.parse(savedActivities);
+          activities.push(newActivity);
+          localStorage.setItem('library-activities', JSON.stringify(activities));
+        } else {
+          localStorage.setItem('library-activities', JSON.stringify([newActivity]));
+        }
+        
+        return newActivity;
       }
-      
-      // Update local state
-      setAllActivities(prev => [...prev, newActivity]);
-      
-      // Save to localStorage
-      const savedActivities = localStorage.getItem('library-activities');
-      if (savedActivities) {
-        const activities = JSON.parse(savedActivities);
-        activities.push(newActivity);
-        localStorage.setItem('library-activities', JSON.stringify(activities));
-      } else {
-        localStorage.setItem('library-activities', JSON.stringify([newActivity]));
-      }
-      
-      return newActivity;
     } catch (error) {
       console.error('Failed to add activity:', error);
       throw error;

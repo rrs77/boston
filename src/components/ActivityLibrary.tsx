@@ -243,7 +243,7 @@ export function ActivityLibrary({
         
         // Check if this category is assigned to any of the year group keys
         // First try exact match - this should work now that getCurrentYearGroupKeys returns all possible keys
-        const categoryYearGroupKeys = Object.keys(category.yearGroups).filter(k => category.yearGroups[k] === true);
+        // Note: categoryYearGroupKeys is already declared above (line 184), so we reuse it here
         let isAssigned = yearGroupKeys.some(key => category.yearGroups[key] === true);
         
         // CRITICAL FALLBACK: Also check if the current year group's ID or name appears as ANY key in category.yearGroups

@@ -39,6 +39,9 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
     activity: '',
     description: '',
     activityText: '', // New field for activity text
+    descriptionHeading: 'Introduction/Context', // Editable heading for description
+    activityHeading: 'Activity', // Editable heading for activity text
+    linkHeading: 'Additional Link', // Editable heading for link field
     time: 0,
     videoLink: '',
     musicLink: '',
@@ -417,24 +420,60 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
               </div>
             </div>
 
-            {/* Description */}
+            {/* Introduction/Context */}
             <div>
-              <label className="block text-base font-semibold text-gray-900 mb-3">
-                Introduction/Context
-              </label>
+              <div className="mb-3 flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={activity.descriptionHeading || 'Introduction/Context'}
+                  onChange={(e) => setActivity(prev => ({ ...prev, descriptionHeading: e.target.value }))}
+                  className="text-base font-semibold text-gray-900 bg-transparent border-none outline-none focus:outline-none focus:ring-0 p-0 flex-1 hover:border-b-2 hover:border-gray-300 transition-colors"
+                  placeholder="Enter heading (e.g., Introduction/Context)"
+                  style={{ 
+                    borderBottom: '2px solid transparent',
+                    minHeight: '28px'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderBottomColor = '#0BA596';
+                    e.target.style.borderBottomWidth = '2px';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderBottomColor = 'transparent';
+                  }}
+                />
+                <Edit3 className="h-4 w-4 text-gray-400 flex-shrink-0" />
+              </div>
               <RichTextEditor
                 value={activity.description}
                 onChange={(value) => setActivity(prev => ({ ...prev, description: value }))}
-                placeholder="Enter activity description..."
+                placeholder="Enter introduction/context..."
                 minHeight="150px"
               />
             </div>
 
-            {/* Activity Text - NEW FIELD */}
+            {/* Activity */}
             <div>
-              <label className="block text-base font-semibold text-gray-900 mb-3">
-                Activity
-              </label>
+              <div className="mb-3 flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={activity.activityHeading || 'Activity'}
+                  onChange={(e) => setActivity(prev => ({ ...prev, activityHeading: e.target.value }))}
+                  className="text-base font-semibold text-gray-900 bg-transparent border-none outline-none focus:outline-none focus:ring-0 p-0 flex-1 hover:border-b-2 hover:border-gray-300 transition-colors"
+                  placeholder="Enter heading (e.g., Activity)"
+                  style={{ 
+                    borderBottom: '2px solid transparent',
+                    minHeight: '28px'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderBottomColor = '#0BA596';
+                    e.target.style.borderBottomWidth = '2px';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderBottomColor = 'transparent';
+                  }}
+                />
+                <Edit3 className="h-4 w-4 text-gray-400 flex-shrink-0" />
+              </div>
               <RichTextEditor
                 value={activity.activityText}
                 onChange={(value) => setActivity(prev => ({ ...prev, activityText: value }))}
@@ -515,17 +554,16 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
               <h3 className="text-lg font-medium text-gray-900 mb-4">Resources</h3>
               <div className="space-y-4">
                 {[
-                  { key: 'videoLink', label: 'Video URL', icon: Video },
-                  { key: 'musicLink', label: 'Music URL', icon: Music },
-                  { key: 'backingLink', label: 'Backing Track URL', icon: Volume2 },
-                  { key: 'resourceLink', label: 'Resource URL', icon: FileText },
-                  { key: 'link', label: 'Additional Link', icon: LinkIcon },
-                  { key: 'vocalsLink', label: 'Vocals URL', icon: Volume2 },
+                  { key: 'videoLink', label: 'Video URL', icon: Video, editable: false },
+                  { key: 'musicLink', label: 'Music URL', icon: Music, editable: false },
+                  { key: 'backingLink', label: 'Backing Track URL', icon: Volume2, editable: false },
+                  { key: 'resourceLink', label: 'Resource URL', icon: FileText, editable: false },
+                  { key: 'vocalsLink', label: 'Vocals URL', icon: Volume2, editable: false },
                 ].map(({ key, label, icon: Icon }) => (
                   <div key={key} className="flex items-center space-x-3">
                     <Icon className="h-5 w-5 text-gray-500 flex-shrink-0" />
                     <input
-                      type="url"
+                      type="text"
                       name={key}
                       value={activity[key as keyof typeof activity] as string}
                       onChange={handleChange}
@@ -535,6 +573,36 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
                     />
                   </div>
                 ))}
+                
+                {/* Custom Link - Moved to bottom with editable heading above */}
+                <div>
+                  <div className="mb-2 flex items-center space-x-2">
+                    <LinkIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                    <input
+                      type="text"
+                      value={activity.linkHeading || 'Additional Link'}
+                      onChange={(e) => setActivity(prev => ({ ...prev, linkHeading: e.target.value }))}
+                      className="text-sm font-medium text-gray-700 bg-transparent border-none outline-none focus:outline-none focus:ring-0 p-0 flex-1"
+                      placeholder="Enter heading (e.g., Additional Link)"
+                      style={{ borderBottom: '2px solid transparent' }}
+                      onFocus={(e) => e.target.style.borderBottomColor = '#0BA596'}
+                      onBlur={(e) => e.target.style.borderBottomColor = 'transparent'}
+                    />
+                    <Edit3 className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 flex-shrink-0"></div> {/* Spacer to align with other inputs */}
+                    <input
+                      type="text"
+                      name="link"
+                      value={activity.link}
+                      onChange={handleChange}
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Link URL"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
