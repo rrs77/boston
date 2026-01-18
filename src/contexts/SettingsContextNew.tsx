@@ -318,6 +318,7 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [categories, setCategories] = useState<Category[]>(FIXED_CATEGORIES);
+  const [deletedFixedCategories, setDeletedFixedCategories] = useState<Set<string>>(new Set());
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [customYearGroups, setCustomYearGroups] = useState<YearGroup[]>(DEFAULT_YEAR_GROUPS);
   const [resourceLinks, setResourceLinks] = useState<ResourceLinkConfig[]>(DEFAULT_RESOURCE_LINKS);
@@ -531,6 +532,20 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
             parsed.length
           );
           setCategories(parsed);
+        }
+      }
+      
+      // Load list of deleted fixed categories
+      const deletedCats = localStorage.getItem('deleted-fixed-categories');
+      if (deletedCats) {
+        try {
+          const parsed = JSON.parse(deletedCats);
+          if (Array.isArray(parsed)) {
+            setDeletedFixedCategories(new Set(parsed));
+            console.log('🗑️ Loaded deleted fixed categories:', parsed);
+          }
+        } catch (e) {
+          console.warn('Failed to parse deleted fixed categories:', e);
         }
       }
     } catch (error) {
@@ -752,9 +767,13 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
               console.log('📦 Loaded categories from Supabase:', formattedCategories.length, 'categories');
               console.log('📦 Category groups mapping:', formattedCategories.map(cat => ({ name: cat.name, groups: cat.groups })));
             } else {
-              // No categories in Supabase, use FIXED_CATEGORIES as defaults
-              setCategories(FIXED_CATEGORIES);
-              console.log('📦 No categories in Supabase, using default categories');
+              // No categories in Supabase, use FIXED_CATEGORIES as defaults (excluding deleted ones)
+              const activeFixed = FIXED_CATEGORIES.filter(fixed => !deletedFixedCategories.has(fixed.name));
+              setCategories(activeFixed);
+              console.log('📦 No categories in Supabase, using default categories (excluding deleted):', activeFixed.length, 'categories');
+              if (deletedFixedCategories.size > 0) {
+                console.log('🗑️ Excluded deleted fixed categories:', Array.from(deletedFixedCategories));
+              }
             }
             
             // Check if any categories were cleaned (had old defaults)
@@ -844,12 +863,14 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
                 console.log('📦 Using categories from localStorage:', localCategories.length);
               } catch (error) {
                 console.warn('Failed to parse localStorage categories:', error);
-                setCategories(FIXED_CATEGORIES);
-                console.log('📦 Using fixed categories due to parse error');
+                const activeFixed = FIXED_CATEGORIES.filter(fixed => !deletedFixedCategories.has(fixed.name));
+                setCategories(activeFixed);
+                console.log('📦 Using fixed categories due to parse error (excluding deleted)');
               }
             } else {
-              setCategories(FIXED_CATEGORIES);
-              console.log('📦 No categories anywhere, using fixed categories');
+              const activeFixed = FIXED_CATEGORIES.filter(fixed => !deletedFixedCategories.has(fixed.name));
+              setCategories(activeFixed);
+              console.log('📦 No categories anywhere, using fixed categories (excluding deleted)');
             }
           }
         } catch (error: any) {
@@ -926,12 +947,14 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
               console.log('📦 Fallback: Loaded categories from localStorage:', localCategories.length);
             } catch (parseError) {
               console.error('❌ Failed to parse localStorage categories fallback:', parseError);
-              setCategories(FIXED_CATEGORIES);
-              console.log('📦 Fallback: Using fixed categories due to parse error');
+              const activeFixed = FIXED_CATEGORIES.filter(fixed => !deletedFixedCategories.has(fixed.name));
+              setCategories(activeFixed);
+              console.log('📦 Fallback: Using fixed categories due to parse error (excluding deleted)');
             }
           } else {
-            setCategories(FIXED_CATEGORIES);
-            console.log('📦 Fallback: Using fixed categories (no localStorage data)');
+            const activeFixed = FIXED_CATEGORIES.filter(fixed => !deletedFixedCategories.has(fixed.name));
+            setCategories(activeFixed);
+            console.log('📦 Fallback: Using fixed categories (no localStorage data, excluding deleted)');
           }
           
           // Fallback for category groups
@@ -1139,6 +1162,25 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
     if (isCurrentlyLoading.current) {
       console.log('⏭️ Skipping categories save - currently loading categories');
       return;
+    }
+    
+    // Track which FIXED_CATEGORIES have been deleted
+    const currentCategoryNames = new Set(categories.map(c => c.name));
+    const newDeleted = new Set(deletedFixedCategories);
+    let deletionsChanged = false;
+    
+    FIXED_CATEGORIES.forEach(fixed => {
+      if (!currentCategoryNames.has(fixed.name) && !newDeleted.has(fixed.name)) {
+        newDeleted.add(fixed.name);
+        deletionsChanged = true;
+        console.log(`🗑️ Tracking deletion of fixed category: ${fixed.name}`);
+      }
+    });
+    
+    if (deletionsChanged) {
+      setDeletedFixedCategories(newDeleted);
+      localStorage.setItem('deleted-fixed-categories', JSON.stringify(Array.from(newDeleted)));
+      console.log('💾 Saved deleted fixed categories:', Array.from(newDeleted));
     }
     
     // Save to localStorage immediately
@@ -1504,7 +1546,9 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
   
   const resetCategoriesToDefaults = () => {
     setCategories(FIXED_CATEGORIES);
+    setDeletedFixedCategories(new Set()); // Clear deleted list on reset
     localStorage.removeItem('saved-categories');
+    localStorage.removeItem('deleted-fixed-categories');
   };
   
   const resetYearGroupsToDefaults = () => {

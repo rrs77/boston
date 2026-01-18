@@ -117,108 +117,80 @@ export function LessonPlanBuilder({
   };
   
   // Get categories available for current year group
+  // STRICT FILTERING: Only show categories EXPLICITLY assigned to current year group
   const availableCategoriesForYearGroup = React.useMemo(() => {
-    // Safety check - ensure categories array exists
     if (!categories || categories.length === 0) {
       console.warn('📋 Lesson Builder: No categories available');
       return [];
     }
     
-    const yearGroupKeys = getCurrentYearGroupKeys();
-    if (yearGroupKeys.length === 0) {
-      // If no year group selected, show all categories
-      console.log('📋 Lesson Builder: No year group selected, showing all categories');
-      return categories.map(c => c.name);
+    const currentYearGroupKey = currentSheetInfo?.sheet;
+    
+    if (!currentYearGroupKey) {
+      console.log('📋 Lesson Builder: No year group selected, showing NO categories');
+      return [];
     }
     
-    console.log('📋 Lesson Builder: Filtering categories for year group:', {
-      yearGroupKeys,
-      currentSheet: currentSheetInfo?.sheet,
-      totalCategories: categories.length,
-      categoriesWithYearGroups: categories.filter(c => c.yearGroups && Object.keys(c.yearGroups).length > 0).length
+    // Find the current year group object
+    const currentYearGroup = customYearGroups?.find(
+      yg => yg.id === currentYearGroupKey || yg.name === currentYearGroupKey
+    );
+    
+    console.log('📋 STRICT Lesson Builder Filtering:', {
+      currentYearGroupKey,
+      currentYearGroupId: currentYearGroup?.id,
+      currentYearGroupName: currentYearGroup?.name,
+      totalCategories: categories.length
     });
     
-    // Filter categories that are assigned to this year group
+    // Keys to check for assignment (ID and name of current year group)
+    const keysToCheck = [
+      currentYearGroup?.id,
+      currentYearGroup?.name,
+      currentYearGroupKey
+    ].filter(Boolean) as string[];
+    
+    // STRICT: Filter categories that are EXPLICITLY assigned to current year group
     const filteredCategories = categories
-      .filter(category => {
-        // CRITICAL: Categories without yearGroups assigned should NEVER be shown
+      .filter((category) => {
+        // Skip categories without yearGroups configuration
         if (!category || !category.yearGroups || Object.keys(category.yearGroups).length === 0) {
-          console.log(`❌ Category "${category.name}" has no yearGroups assigned - excluding`);
+          console.log(`❌ Category "${category.name}" has no yearGroups - excluding`);
           return false;
         }
         
-        // Check for old defaults (LKG, UKG, Reception all true with only 3 keys)
-        const hasOldDefaults = 
-          category.yearGroups.LKG === true && 
-          category.yearGroups.UKG === true && 
-          category.yearGroups.Reception === true &&
-          Object.keys(category.yearGroups).length === 3;
-        if (hasOldDefaults) {
-          console.log(`❌ Category "${category.name}" has old default assignments - excluding`);
+        // Get all keys that are explicitly set to true for this category
+        const assignedKeys = Object.keys(category.yearGroups).filter(k => category.yearGroups[k] === true);
+        
+        if (assignedKeys.length === 0) {
+          console.log(`❌ Category "${category.name}" has no assigned year groups - excluding`);
           return false;
         }
         
-        // Check if this category is assigned to ANY of the year group keys
-        // This handles cases where the sheet name is "Reception Music" but category.yearGroups uses "Reception"
-        // Also handles "Lower Kindergarten" vs "Lower Kindergarten Music"
-        let isAssigned = yearGroupKeys.some(key => {
-          // Check exact match first
-          if (category.yearGroups[key] === true) {
-            return true;
-          }
-          
-          // Also check if any key in category.yearGroups matches any of our year group keys
-          return Object.keys(category.yearGroups).some(catKey => {
-            if (category.yearGroups[catKey] !== true) return false;
-            
-            const keyLower = key.toLowerCase();
-            const catKeyLower = catKey.toLowerCase();
-            
-            // Exact match
-            if (catKeyLower === keyLower) return true;
-            
-            // Partial match: if key contains catKey (e.g., "Reception Music" contains "Reception")
-            if (catKeyLower.includes(keyLower)) return true;
-            
-            // Reverse partial match: if catKey contains key (e.g., "Reception" in "Reception Music")
-            if (keyLower.includes(catKeyLower)) return true;
-            
-            // Check for common abbreviations and full names
-            // "LKG" should match "Lower Kindergarten Music" or "Lower Kindergarten"
-            if (keyLower === 'lkg' && catKeyLower.includes('lower kindergarten')) return true;
-            if (keyLower.includes('lower kindergarten') && catKeyLower === 'lkg') return true;
-            
-            // "UKG" should match "Upper Kindergarten Music" or "Upper Kindergarten"
-            if (keyLower === 'ukg' && catKeyLower.includes('upper kindergarten')) return true;
-            if (keyLower.includes('upper kindergarten') && catKeyLower === 'ukg') return true;
-            
-            return false;
+        // STRICT CHECK: Category must be explicitly assigned to current year group
+        const isAssigned = assignedKeys.some(assignedKey => {
+          const assignedKeyLower = assignedKey.toLowerCase().trim();
+          return keysToCheck.some(checkKey => {
+            const checkKeyLower = checkKey.toLowerCase().trim();
+            // Exact match only (case-insensitive)
+            return assignedKeyLower === checkKeyLower;
           });
         });
         
         if (isAssigned) {
-          console.log(`✅ Category "${category.name}" is assigned to year group`, {
-            yearGroupKeys,
-            categoryYearGroupKeys: Object.keys(category.yearGroups).filter(k => category.yearGroups[k] === true)
-          });
-          return true;
+          console.log(`✅ Category "${category.name}" assigned to "${currentYearGroup?.name || currentYearGroupKey}"`);
+        } else {
+          console.log(`❌ Category "${category.name}" NOT assigned. Has: [${assignedKeys.join(', ')}], Need: [${keysToCheck.join(', ')}]`);
         }
         
-        console.log(`❌ Category "${category.name}" is NOT assigned to any of ${yearGroupKeys.join(', ')}`, {
-          categoryYearGroupKeys: Object.keys(category.yearGroups),
-          categoryYearGroupValues: Object.keys(category.yearGroups).filter(k => category.yearGroups[k] === true)
-        });
-        return false;
+        return isAssigned;
       })
       .map(c => c.name);
     
-    console.log('📋 Lesson Builder: Filtered categories:', {
-      yearGroupKeys: yearGroupKeys,
-      matchedCategories: filteredCategories.length,
-      categoryNames: filteredCategories
-    });
+    console.log(`📋 STRICT Lesson Builder Result: ${filteredCategories.length} categories for "${currentYearGroup?.name || currentYearGroupKey}":`, filteredCategories);
     
-    return filteredCategories;
+    // Return empty array if no categories assigned (NOT null - we want to show nothing)
+    return filteredCategories.length > 0 ? filteredCategories : [];
   }, [categories, currentSheetInfo, customYearGroups]);
   
   // Helper function to get storage key
