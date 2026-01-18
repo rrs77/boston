@@ -639,7 +639,69 @@ export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: Cus
 
               {loading ? (
                 <div className="text-center py-8 text-gray-500">Loading...</div>
+              ) : embedded ? (
+                // Simple list without drag-and-drop for embedded mode
+                <div className="space-y-2">
+                  {yearGroups.map((yearGroup) => (
+                    <div
+                      key={yearGroup.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors duration-200 ${
+                        selectedYearGroup === yearGroup.id
+                          ? 'border-teal-500 bg-teal-50'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                      onClick={() => setSelectedYearGroup(yearGroup.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 flex-1">
+                          <div
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: yearGroup.color }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="font-medium text-gray-900 truncate">{yearGroup.name}</h4>
+                              {yearGroup.is_locked && (
+                                <Lock className="h-3 w-3 text-amber-500 flex-shrink-0" title="Locked - Read Only" />
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {yearGroup.areas.length} areas, {yearGroup.areas.reduce((sum, area) => sum + area.objectives.length, 0)} objectives
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-1 flex-shrink-0">
+                          {!yearGroup.is_locked && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditYearGroup(yearGroup);
+                                }}
+                                className="p-1 text-gray-400 hover:text-gray-600"
+                                title="Edit"
+                              >
+                                <Edit2 className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteYearGroup(yearGroup.id);
+                                }}
+                                className="p-1 text-gray-400 hover:text-red-600"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
+                // Full drag-and-drop for modal mode
                 <DndProvider backend={HTML5Backend}>
                 <div className="space-y-2">
                   {yearGroups.map((yearGroup, index) => (
