@@ -652,8 +652,8 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         htmlContent += `</div></div>`;
       }
 
-      // PROFESSIONAL LESSON PLAN STRUCTURE
-      // Following standard school planning conventions with proper section ordering
+      // CLEAN LESSON PLAN LAYOUT - Matching preview style
+      // Simple headers with rounded content boxes
       
       const hasLessonPlanDetails = lessonData.learningOutcome || lessonData.successCriteria || 
         lessonData.introduction || lessonData.mainActivity || lessonData.plenary ||
@@ -662,192 +662,86 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
 
       if (hasLessonPlanDetails) {
         
-        // ═══════════════════════════════════════════════════════════════
-        // SECTION 1: LEARNING OBJECTIVE (Prominent, full-width)
-        // ═══════════════════════════════════════════════════════════════
+        // Helper function for clean section rendering
+        const renderCleanSection = (title: string, content: string, iconSvg?: string) => {
+          return `
+            <div style="margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                ${iconSvg ? `<span style="margin-right: 8px; color: #0d9488;">${iconSvg}</span>` : ''}
+                <h3 style="font-size: 14px; font-weight: 700; color: #1f2937; margin: 0;">${title}</h3>
+              </div>
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;">
+                <div style="font-size: 11px; color: #374151; line-height: 1.6;">${content}</div>
+              </div>
+            </div>
+          `;
+        };
+
+        // Target icon SVG
+        const targetIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+
+        // Learning Outcome
         if (lessonData.learningOutcome) {
-          htmlContent += `
-            <div class="section-card" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); border: none; margin-bottom: 12px;">
-              <div class="section-header" style="background: transparent; color: white; border: none; font-size: 13px; padding: 10px 14px;">
-                Learning Objective
-              </div>
-              <div class="section-content" style="background: white; color: #1a1a1a; padding: 14px; border-radius: 0 0 6px 6px; font-size: 11px;">
-                ${lessonData.learningOutcome}
-              </div>
-            </div>
-          `;
+          htmlContent += renderCleanSection('Learning Outcome', lessonData.learningOutcome, targetIcon);
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // SECTION 2: SUCCESS CRITERIA
-        // ═══════════════════════════════════════════════════════════════
+        // Success Criteria
         if (lessonData.successCriteria) {
-          htmlContent += `
-            <div class="section-card theme-blue" style="margin-bottom: 12px;">
-              <div class="section-header">Success Criteria</div>
-              <div class="section-content">${lessonData.successCriteria}</div>
-            </div>
-          `;
+          htmlContent += renderCleanSection('Success Criteria', lessonData.successCriteria, targetIcon);
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // SECTION 2b: ASSESSMENT OBJECTIVES (Curriculum objectives for whole lesson)
-        // ═══════════════════════════════════════════════════════════════
+        // Assessment Objectives (if any)
         if (lessonData.assessmentObjectives && lessonData.assessmentObjectives.length > 0) {
-          htmlContent += `
-            <div class="section-card" style="background: #faf5ff; border: 1px solid #c4b5fd; margin-bottom: 12px;">
-              <div class="section-header" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; font-size: 11px;">
-                Assessment Objectives
-              </div>
-              <div class="section-content" style="padding: 12px;">
-                <ul style="margin: 0; padding-left: 20px;">
-                  ${lessonData.assessmentObjectives.map((obj: string, i: number) => `
-                    <li style="margin-bottom: 6px; font-size: 10px; color: #374151;">
-                      <span style="color: #7c3aed; font-weight: 600;">${i + 1}.</span> ${obj}
-                    </li>
-                  `).join('')}
-                </ul>
-              </div>
-            </div>
-          `;
+          const objectivesList = lessonData.assessmentObjectives.map((obj: string, i: number) => 
+            `<div style="margin-bottom: 6px;"><strong style="color: #7c3aed;">${i + 1}.</strong> ${obj}</div>`
+          ).join('');
+          htmlContent += renderCleanSection('Assessment Objectives', objectivesList);
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // SECTION 3: KEY VOCABULARY & RESOURCES (side by side, compact)
-        // ═══════════════════════════════════════════════════════════════
-        if (lessonData.vocabulary || lessonData.resources) {
-          htmlContent += `<div class="two-col" style="margin-bottom: 12px;">`;
-          if (lessonData.vocabulary) {
-            htmlContent += `
-              <div class="section-card theme-gray">
-                <div class="section-header" style="font-size: 10px; padding: 6px 10px;">Key Vocabulary</div>
-                <div class="section-content" style="font-size: 10px; padding: 10px;">${lessonData.vocabulary}</div>
-              </div>
-            `;
-          }
-          if (lessonData.resources) {
-            htmlContent += `
-              <div class="section-card theme-gray">
-                <div class="section-header" style="font-size: 10px; padding: 6px 10px;">Resources</div>
-                <div class="section-content" style="font-size: 10px; padding: 10px;">${lessonData.resources}</div>
-              </div>
-            `;
-          }
-          htmlContent += `</div>`;
+        // Introduction
+        if (lessonData.introduction) {
+          htmlContent += renderCleanSection('Introduction', lessonData.introduction);
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // SECTION 4: LESSON SEQUENCE (LARGEST SECTION - Primary Focus)
-        // This is the main teaching content - given most space and prominence
-        // ═══════════════════════════════════════════════════════════════
-        const hasLessonSequence = lessonData.introduction || lessonData.mainActivity || lessonData.plenary;
-        
-        if (hasLessonSequence) {
-          htmlContent += `
-            <div style="background: #f8fafc; border: 2px solid #0d9488; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
-              <div style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: white; padding: 10px 14px; font-weight: 700; font-size: 13px; letter-spacing: 0.5px;">
-                LESSON SEQUENCE
-              </div>
-              <div style="padding: 14px;">
-          `;
-
-          // Introduction / Starter
-          if (lessonData.introduction) {
-            htmlContent += `
-              <div style="margin-bottom: 14px;">
-                <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                  <div style="width: 28px; height: 28px; background: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
-                    <span style="font-weight: 700; color: #1e40af; font-size: 12px;">1</span>
-                  </div>
-                  <span style="font-weight: 600; color: #1e40af; font-size: 12px;">Introduction / Starter</span>
-                </div>
-                <div style="margin-left: 38px; font-size: 11px; color: #374151; line-height: 1.5;">
-                  ${lessonData.introduction}
-                </div>
-              </div>
-            `;
-          }
-
-          // Main Teaching & Activities (Largest subsection)
-          if (lessonData.mainActivity) {
-            htmlContent += `
-              <div style="margin-bottom: 14px; background: white; border: 1px solid #0d9488; border-radius: 6px; padding: 12px;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                  <div style="width: 28px; height: 28px; background: #ccfbf1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
-                    <span style="font-weight: 700; color: #0f766e; font-size: 12px;">2</span>
-                  </div>
-                  <span style="font-weight: 700; color: #0f766e; font-size: 13px;">Main Teaching & Activities</span>
-                </div>
-                <div style="margin-left: 38px; font-size: 11px; color: #1a1a1a; line-height: 1.6;">
-                  ${lessonData.mainActivity}
-                </div>
-              </div>
-            `;
-          }
-
-          // Plenary / Reflection
-          if (lessonData.plenary) {
-            htmlContent += `
-              <div style="margin-bottom: 0;">
-                <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                  <div style="width: 28px; height: 28px; background: #e0e7ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
-                    <span style="font-weight: 700; color: #4338ca; font-size: 12px;">3</span>
-                  </div>
-                  <span style="font-weight: 600; color: #4338ca; font-size: 12px;">Plenary / Reflection</span>
-                </div>
-                <div style="margin-left: 38px; font-size: 11px; color: #374151; line-height: 1.5;">
-                  ${lessonData.plenary}
-                </div>
-              </div>
-            `;
-          }
-
-          htmlContent += `</div></div>`;
+        // Main Activity
+        if (lessonData.mainActivity) {
+          htmlContent += renderCleanSection('Main Activity', lessonData.mainActivity);
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // SECTION 5: TEACHER SUPPORT (Grouped together - compact)
-        // Differentiation, Key Questions, Assessment
-        // ═══════════════════════════════════════════════════════════════
-        const hasSupportSections = lessonData.differentiation || lessonData.keyQuestions || lessonData.assessment;
-        
-        if (hasSupportSections) {
-          htmlContent += `
-            <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin-bottom: 12px;">
-              <div style="font-weight: 600; color: #475569; font-size: 10px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
-                Teacher Support
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
-          `;
-          
-          if (lessonData.differentiation) {
-            htmlContent += `
-              <div style="background: white; border-radius: 4px; padding: 10px; border-left: 3px solid #f59e0b;">
-                <div style="font-weight: 600; color: #b45309; font-size: 10px; margin-bottom: 6px;">Differentiation</div>
-                <div style="font-size: 10px; color: #374151; line-height: 1.4;">${lessonData.differentiation}</div>
-              </div>
-            `;
-          }
-          
-          if (lessonData.keyQuestions) {
-            htmlContent += `
-              <div style="background: white; border-radius: 4px; padding: 10px; border-left: 3px solid #8b5cf6;">
-                <div style="font-weight: 600; color: #6d28d9; font-size: 10px; margin-bottom: 6px;">Key Questions</div>
-                <div style="font-size: 10px; color: #374151; line-height: 1.4;">${lessonData.keyQuestions}</div>
-              </div>
-            `;
-          }
-          
-          if (lessonData.assessment) {
-            htmlContent += `
-              <div style="background: white; border-radius: 4px; padding: 10px; border-left: 3px solid #0ea5e9;">
-                <div style="font-weight: 600; color: #0369a1; font-size: 10px; margin-bottom: 6px;">Assessment Opportunities</div>
-                <div style="font-size: 10px; color: #374151; line-height: 1.4;">${lessonData.assessment}</div>
-              </div>
-            `;
-          }
-          
-          htmlContent += `</div></div>`;
+        // Plenary
+        if (lessonData.plenary) {
+          htmlContent += renderCleanSection('Plenary', lessonData.plenary);
+        }
+
+        // Vocabulary
+        if (lessonData.vocabulary) {
+          // Format vocabulary with bold terms
+          const formattedVocab = lessonData.vocabulary.replace(/^([^-:]+)(\s*[-:]\s*)/gm, '<strong>$1</strong>$2');
+          htmlContent += renderCleanSection('Vocabulary', formattedVocab);
+        }
+
+        // Key Questions
+        if (lessonData.keyQuestions) {
+          htmlContent += renderCleanSection('Key Questions', lessonData.keyQuestions);
+        }
+
+        // Resources
+        if (lessonData.resources) {
+          htmlContent += renderCleanSection('Resources', lessonData.resources);
+        }
+
+        // Differentiation
+        if (lessonData.differentiation) {
+          // Format with bold Support/Challenge labels
+          const formattedDiff = lessonData.differentiation
+            .replace(/Support:/gi, '<strong>Support:</strong>')
+            .replace(/Challenge:/gi, '<strong>Challenge:</strong>');
+          htmlContent += renderCleanSection('Differentiation', formattedDiff);
+        }
+
+        // Assessment
+        if (lessonData.assessment) {
+          htmlContent += renderCleanSection('Assessment', lessonData.assessment);
         }
       }
 
@@ -878,12 +772,12 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         activitiesByCategory[activity.category].push(activity);
       });
 
-      // Display activities by category with new modern styling
+      // Display activities by category with clean styling
       if (categoriesInOrder.length > 0) {
         htmlContent += `
           <div class="activity-section">
-            <div style="font-weight: 600; color: #0f766e; font-size: 11px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #0d9488; padding-bottom: 6px;">
-              Activities from Library
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+              <h3 style="font-size: 14px; font-weight: 700; color: #1f2937; margin: 0;">Activities from Library</h3>
             </div>
         `;
         
