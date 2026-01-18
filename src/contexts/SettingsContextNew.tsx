@@ -223,7 +223,6 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 // Default year groups
 const DEFAULT_YEAR_GROUPS: YearGroup[] = [
-  { id: 'EYFS', name: 'EYFS', color: '#14B8A6' },
   { id: 'LKG', name: 'Lower Kindergarten', color: '#14B8A6' },
   { id: 'UKG', name: 'Upper Kindergarten', color: '#14B8A6' },
   { id: 'Reception', name: 'Reception', color: '#14B8A6' },
