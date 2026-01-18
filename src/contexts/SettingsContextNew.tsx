@@ -228,7 +228,14 @@ const DEFAULT_YEAR_GROUPS: YearGroup[] = [
   { id: 'UKG', name: 'Upper Kindergarten', color: '#14B8A6' },
   { id: 'Reception', name: 'Reception', color: '#14B8A6' },
   { id: 'Year1', name: 'Year 1', color: '#14B8A6' },
-  { id: 'Year2', name: 'Year 2', color: '#14B8A6' }
+  { id: 'Year2', name: 'Year 2', color: '#14B8A6' },
+  { id: 'Year3', name: 'Year 3', color: '#14B8A6' },
+  { id: 'Year4', name: 'Year 4', color: '#14B8A6' },
+  { id: 'Year5', name: 'Year 5', color: '#14B8A6' },
+  { id: 'Year6', name: 'Year 6', color: '#14B8A6' },
+  { id: 'ReceptionDrama', name: 'Reception Drama', color: '#8B5CF6' },
+  { id: 'Year1Drama', name: 'Year 1 Drama', color: '#8B5CF6' },
+  { id: 'Year2Drama', name: 'Year 2 Drama', color: '#8B5CF6' }
 ];
 
 // Default category groups
