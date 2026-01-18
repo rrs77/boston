@@ -624,7 +624,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: Cus
                     try {
                       setMessage({ type: 'success', text: 'Adding Reception Drama objectives...' });
                       await seedReceptionDramaObjectives();
-                      await loadYearGroups();
+                      await loadData();
                       setMessage({ type: 'success', text: 'Reception Drama objectives added successfully!' });
                     } catch (error) {
                       setMessage({ type: 'error', text: 'Failed to add Reception Drama objectives' });
