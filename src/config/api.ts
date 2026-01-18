@@ -991,41 +991,54 @@ export const yearGroupsApi = {
 
   upsert: async (yearGroups: any[]) => {
     try {
-      // Deduplicate year groups by name before processing
+      // SAFE UPSERT: Only add missing year groups, never delete existing ones
+      console.log('🔄 Safe upsert - checking existing year groups first...');
+      
+      // First, get existing year groups
+      const { data: existing, error: fetchError } = await supabase
+        .from(TABLES.YEAR_GROUPS)
+        .select('*')
+        .order('sort_order');
+      
+      if (fetchError) {
+        console.error('❌ Error fetching existing year groups:', fetchError);
+        throw fetchError;
+      }
+      
+      const existingNames = new Set((existing || []).map(g => g.name));
+      console.log('📦 Existing year groups:', Array.from(existingNames));
+      
+      // Deduplicate incoming year groups by name
       const uniqueYearGroups = yearGroups.reduce((acc, group) => {
-        const existing = acc.find(g => g.name === group.name);
-        if (!existing) {
+        const exists = acc.find(g => g.name === group.name);
+        if (!exists) {
           acc.push(group);
         }
         return acc;
       }, [] as any[]);
       
-      console.log('🔄 Deduplicated year groups:', { original: yearGroups.length, unique: uniqueYearGroups.length });
+      // Find year groups that need to be added (don't exist yet)
+      const toAdd = uniqueYearGroups.filter(g => !existingNames.has(g.name));
       
-      // Format the year groups for Supabase with new UUIDs
-      const formattedYearGroups = uniqueYearGroups.map((group, index) => {
-        return {
-          id: crypto.randomUUID(), // Always generate new UUID to avoid conflicts
-          name: group.name,
-          color: group.color || '#3B82F6',
-          sort_order: index
-        };
-      });
-      
-      console.log('🔄 Replacing all year groups in Supabase:', formattedYearGroups);
-      
-      // Use a simple approach: delete all existing and insert new ones
-      // This avoids any conflict issues with existing data
-      const { error: deleteError } = await supabase
-        .from(TABLES.YEAR_GROUPS)
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
-      
-      if (deleteError) {
-        console.warn('⚠️ Failed to clear year groups table (continuing anyway):', deleteError);
+      if (toAdd.length === 0) {
+        console.log('✅ All year groups already exist, nothing to add');
+        return existing;
       }
       
-      // Insert the new year groups
+      // Find the highest sort_order
+      const maxOrder = (existing || []).reduce((max, g) => Math.max(max, g.sort_order || 0), 0);
+      
+      // Format the new year groups for insertion
+      const formattedYearGroups = toAdd.map((group, index) => ({
+        id: crypto.randomUUID(),
+        name: group.name,
+        color: group.color || '#14B8A6',
+        sort_order: maxOrder + index + 1
+      }));
+      
+      console.log('📝 Adding missing year groups:', formattedYearGroups.map(g => g.name));
+      
+      // Insert only the missing year groups
       const { data, error } = await supabase
         .from(TABLES.YEAR_GROUPS)
         .insert(formattedYearGroups)
@@ -1036,13 +1049,50 @@ export const yearGroupsApi = {
         throw error;
       }
       
-      console.log('✅ Year groups replaced successfully:', data);
-      console.log('✅ Inserted count:', data?.length || 0);
+      console.log('✅ Added missing year groups:', data?.map(g => g.name));
       
-      return data;
+      // Return combined list
+      return [...(existing || []), ...(data || [])];
     } catch (error) {
       console.error('❌ Failed to upsert year groups to Supabase:', error);
-      console.error('❌ Full error object:', error);
+      throw error;
+    }
+  },
+
+  // EXPLICIT REPLACE: Only use this when user explicitly clicks "Reset to Defaults"
+  replaceAll: async (yearGroups: any[]) => {
+    try {
+      console.log('⚠️ EXPLICIT REPLACE: Removing all year groups and replacing with:', yearGroups.map(g => g.name));
+      
+      // Delete all existing
+      const { error: deleteError } = await supabase
+        .from(TABLES.YEAR_GROUPS)
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      
+      if (deleteError) {
+        console.warn('⚠️ Failed to clear year groups:', deleteError);
+      }
+      
+      // Format and insert new ones
+      const formatted = yearGroups.map((group, index) => ({
+        id: crypto.randomUUID(),
+        name: group.name,
+        color: group.color || '#14B8A6',
+        sort_order: index
+      }));
+      
+      const { data, error } = await supabase
+        .from(TABLES.YEAR_GROUPS)
+        .insert(formatted)
+        .select();
+      
+      if (error) throw error;
+      
+      console.log('✅ Year groups replaced:', data?.map(g => g.name));
+      return data;
+    } catch (error) {
+      console.error('❌ Failed to replace year groups:', error);
       throw error;
     }
   },
