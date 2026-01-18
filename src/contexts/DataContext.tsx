@@ -53,6 +53,7 @@ export interface LessonData {
   totalTime: number;
   lessonStandards?: string[];
   title?: string; // Added title field for lessons
+  lessonName?: string; // Lesson name/subtitle
   customObjectives?: string[];
   curriculumType?: 'EYFS' | 'CUSTOM';
   academicYear?: string; // Academic year this lesson belongs to
@@ -60,6 +61,21 @@ export interface LessonData {
   customFooter?: string; // Custom footer for print
   orderedActivities?: Activity[]; // Flat array of activities in exact order
   isUserCreated?: boolean; // Flag to mark user-created standalone lessons
+  // Lesson plan fields (from StandaloneLessonCreator)
+  learningOutcome?: string;
+  successCriteria?: string;
+  introduction?: string;
+  mainActivity?: string;
+  plenary?: string;
+  vocabulary?: string;
+  keyQuestions?: string;
+  resources?: string;
+  differentiation?: string;
+  assessment?: string;
+  videoLink?: string;
+  resourceLink?: string;
+  imageLink?: string;
+  additionalLinks?: string;
 }
 
 interface SheetInfo {
@@ -332,12 +348,12 @@ const DEFAULT_NESTED_STANDARDS = {
   "Mathematics": {
     "Number": [
       "Counts reliably up to 10",
-      "Recognizes numerals 1-10",
+      "Recognises numerals 1-10",
       "Compares quantities using language",
       "Solves simple addition and subtraction problems"
     ],
     "Shape, Space and Measures": [
-      "Recognizes and names common 2D and 3D shapes",
+      "Recognises and names common 2D and 3D shapes",
       "Uses positional language",
       "Compares objects by size, weight, capacity"
     ]
@@ -346,7 +362,7 @@ const DEFAULT_NESTED_STANDARDS = {
     "People and Communities": [
       "Talks about past and present events in their own lives",
       "Knows about similarities and differences between themselves and others",
-      "Recognizes that people have different beliefs and customs"
+      "Recognises that people have different beliefs and customs"
     ],
     "The Natural World": [
       "Shows care and concern for living things",

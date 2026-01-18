@@ -18,11 +18,19 @@ import {
   Link as LinkIcon,
   Volume2
 } from 'lucide-react';
-import { useSettings } from '../contexts/SettingsContextNew';
+import { useSettings, ResourceLinkConfig } from '../contexts/SettingsContextNew';
 import { RichTextEditor } from './RichTextEditor';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { NestedStandardsBrowser } from './NestedStandardsBrowser';
 import { activityPacksApi, ActivityPack } from '../config/api';
+
+// Helper function to get icon component by name for resource links
+const getIconComponentForResourceLink = (iconName: string) => {
+  const iconMap: { [key: string]: React.ComponentType<any> } = {
+    Video, Music, Volume2, FileText, Palette, LinkIcon, Image
+  };
+  return iconMap[iconName] || FileText; // Default to FileText if icon not found
+};
 import { useAuth } from '../hooks/useAuth';
 
 interface ActivityCreatorProps {
@@ -33,7 +41,7 @@ interface ActivityCreatorProps {
 }
 
 export function ActivityCreator({ onClose, onSave, categories, levels }: ActivityCreatorProps) {
-  const { categories: allCategories, customYearGroups } = useSettings();
+  const { categories: allCategories, customYearGroups, resourceLinks } = useSettings();
   const { user } = useAuth();
   const [activity, setActivity] = useState({
     activity: '',
@@ -50,6 +58,7 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
     link: '',
     vocalsLink: '',
     imageLink: '',
+    canvaLink: '',
     category: '',
     level: '',
     yearGroups: [] as string[], // New field for multiple year groups
@@ -553,26 +562,26 @@ export function ActivityCreator({ onClose, onSave, categories, levels }: Activit
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Resources</h3>
               <div className="space-y-4">
-                {[
-                  { key: 'videoLink', label: 'Video URL', icon: Video, editable: false },
-                  { key: 'musicLink', label: 'Music URL', icon: Music, editable: false },
-                  { key: 'backingLink', label: 'Backing Track URL', icon: Volume2, editable: false },
-                  { key: 'resourceLink', label: 'Resource URL', icon: FileText, editable: false },
-                  { key: 'vocalsLink', label: 'Vocals URL', icon: Volume2, editable: false },
-                ].map(({ key, label, icon: Icon }) => (
-                  <div key={key} className="flex items-center space-x-3">
-                    <Icon className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                    <input
-                      type="text"
-                      name={key}
-                      value={activity[key as keyof typeof activity] as string}
-                      onChange={handleChange}
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder={label}
-                      dir="ltr"
-                    />
-                  </div>
-                ))}
+                {resourceLinks
+                  .filter(link => link.enabled)
+                  .map((linkConfig) => {
+                    // Get icon component dynamically
+                    const IconComponent = getIconComponentForResourceLink(linkConfig.iconName);
+                    return (
+                      <div key={linkConfig.key} className="flex items-center space-x-3">
+                        <IconComponent className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                        <input
+                          type="text"
+                          name={linkConfig.key}
+                          value={activity[linkConfig.key as keyof typeof activity] as string}
+                          onChange={handleChange}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder={linkConfig.label}
+                          dir="ltr"
+                        />
+                      </div>
+                    );
+                  })}
                 
                 {/* Custom Link - Moved to bottom with editable heading above */}
                 <div>

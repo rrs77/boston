@@ -158,6 +158,7 @@ export function LessonLibrary({
   
   // Standalone Lesson Creator State
   const [showStandaloneLessonCreator, setShowStandaloneLessonCreator] = useState(false);
+  const [editingLessonForCreator, setEditingLessonForCreator] = useState<{ lessonNumber: string; lessonData: any } | null>(null);
   
   // Lesson stacks section starts collapsed by default - user can expand it manually
   
@@ -176,48 +177,23 @@ export function LessonLibrary({
     return null; // Lesson not assigned to any half-term
   };
 
-  // Start editing a lesson
+  // Start editing a lesson - opens full lesson creator
   const handleStartEditing = (lessonNumber: string) => {
     const lessonData = allLessonsData[lessonNumber];
     if (lessonData) {
-      // NEW: Use orderedActivities if available (preserves exact order across categories)
-      // Otherwise fall back to categoryOrder method (for backward compatibility)
-      let activities: any[];
-      
-      if (lessonData.orderedActivities && Array.isArray(lessonData.orderedActivities)) {
-        // Use the flat ordered array - this preserves exact order including cross-category ordering
-        activities = lessonData.orderedActivities.map((activity: any, index: number) => ({
-          ...activity,
-          _editId: `${lessonNumber}-${index}-${Date.now()}`
-        }));
-        console.log('📖 Loading lesson with orderedActivities (exact order preserved)');
-      } else {
-        // Fallback to old method using categoryOrder
-        const categoryOrder = lessonData.categoryOrder || Object.keys(lessonData.grouped);
-        activities = categoryOrder
-          .filter(category => lessonData.grouped[category])
-          .flatMap(category => lessonData.grouped[category] || [])
-          .map((activity: any, index: number) => ({
-            ...activity,
-            _editId: `${lessonNumber}-${index}-${Date.now()}`
-          }));
-        console.log('📖 Loading lesson with categoryOrder (legacy method)');
-      }
-      
-      console.log('📖 Loading lesson for editing:', {
+      console.log('📖 Opening lesson for editing:', {
         lessonNumber,
-        activityCount: activities.length,
-        activitiesOrder: activities.map((a, i) => `${i + 1}. ${a.activity} (${a.category})`)
+        title: lessonData.title,
+        hasLearningOutcome: !!lessonData.learningOutcome,
+        hasMainActivity: !!lessonData.mainActivity
       });
       
-      // Load custom header and footer if they exist
-      setCustomHeader(lessonData.customHeader || '');
-      setCustomFooter(lessonData.customFooter || '');
-      setShowHeaderFooterEdit(!!(lessonData.customHeader || lessonData.customFooter));
-      
-      setEditingLessonActivities(activities);
-      setEditingLessonNumber(lessonNumber);
-      setShowEditModal(true);
+      // Open the full lesson creator with editing data
+      setEditingLessonForCreator({
+        lessonNumber,
+        lessonData
+      });
+      setShowStandaloneLessonCreator(true);
     }
   };
 
@@ -787,7 +763,10 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
             </div>
             {/* Create Lesson Button in Header */}
             <button
-              onClick={() => setShowStandaloneLessonCreator(true)}
+              onClick={() => {
+                setEditingLessonForCreator(null);
+                setShowStandaloneLessonCreator(true);
+              }}
               className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
               title="Create a new lesson"
             >
@@ -801,16 +780,21 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
           <p className="text-gray-600 mb-2">No lessons found for {currentSheetInfo.display}.</p>
           <p className="text-sm text-gray-500">Use the "Create Lesson" button above to get started</p>
         </div>
-        {/* Standalone Lesson Creator Modal */}
-        {showStandaloneLessonCreator && (
-          <StandaloneLessonCreator
-            onClose={() => setShowStandaloneLessonCreator(false)}
-            onSave={handleSaveStandaloneLesson}
-          />
-        )}
-      </div>
-    );
-  }
+      {/* Standalone Lesson Creator Modal */}
+      {showStandaloneLessonCreator && (
+        <StandaloneLessonCreator
+          onClose={() => {
+            setShowStandaloneLessonCreator(false);
+            setEditingLessonForCreator(null);
+          }}
+          onSave={handleSaveStandaloneLesson}
+          editingLesson={editingLessonForCreator || undefined}
+          yearGroup={currentSheetInfo.sheet}
+        />
+      )}
+    </div>
+  );
+}
 
   return (
     <div className={`bg-white rounded-xl shadow-lg  overflow-hidden ${className}`}>
@@ -949,7 +933,10 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
             
             {/* Create Lesson Button */}
             <button
-              onClick={() => setShowStandaloneLessonCreator(true)}
+              onClick={() => {
+                setEditingLessonForCreator(null);
+                setShowStandaloneLessonCreator(true);
+              }}
               className="flex items-center justify-center space-x-2 h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
               title="Create a new lesson"
             >
@@ -1398,8 +1385,13 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
       {/* Standalone Lesson Creator Modal */}
       {showStandaloneLessonCreator && (
         <StandaloneLessonCreator
-          onClose={() => setShowStandaloneLessonCreator(false)}
+          onClose={() => {
+            setShowStandaloneLessonCreator(false);
+            setEditingLessonForCreator(null);
+          }}
           onSave={handleSaveStandaloneLesson}
+          editingLesson={editingLessonForCreator || undefined}
+          yearGroup={currentSheetInfo.sheet}
         />
       )}
 

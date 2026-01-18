@@ -4,11 +4,56 @@ import { useData } from '../contexts/DataContext';
 const PDFBOLT_API_URL = 'https://api.pdfbolt.com/api/v1/generate';
 const PDFBOLT_API_KEY = import.meta.env.VITE_PDFBOLT_API_KEY;
 
+// DreamHost PDF upload configuration (optional - falls back to Supabase if not set)
+const DREAMHOST_PDF_UPLOAD_URL = import.meta.env.VITE_PDF_UPLOAD_URL;
+const DREAMHOST_PDF_API_KEY = import.meta.env.VITE_PDF_API_KEY;
+const USE_DREAMHOST_STORAGE = !!DREAMHOST_PDF_UPLOAD_URL;
+
 interface ShareLessonOptions {
   lessonNumber: string;
   currentSheetInfo: { sheet: string; display: string };
   allLessonsData: Record<string, any>;
   generateHTMLContent: () => string[];
+}
+
+/**
+ * Upload PDF to DreamHost server
+ */
+async function uploadToDreamHost(pdfBlob: Blob, fileName: string): Promise<string> {
+  if (!DREAMHOST_PDF_UPLOAD_URL || !DREAMHOST_PDF_API_KEY) {
+    throw new Error('DreamHost PDF upload not configured');
+  }
+
+  // Convert blob to base64
+  const arrayBuffer = await pdfBlob.arrayBuffer();
+  const base64Data = btoa(
+    new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+  );
+
+  const response = await fetch(DREAMHOST_PDF_UPLOAD_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': DREAMHOST_PDF_API_KEY
+    },
+    body: JSON.stringify({
+      fileData: base64Data,
+      fileName: fileName
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`DreamHost upload failed: ${response.status} - ${errorText}`);
+  }
+
+  const result = await response.json();
+  
+  if (!result.success || !result.url) {
+    throw new Error(result.error || 'Upload failed - no URL returned');
+  }
+
+  return result.url;
 }
 
 /**
@@ -115,7 +160,14 @@ export async function shareLesson(options: ShareLessonOptions): Promise<string> 
   const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber);
   const fileName = `${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
 
-  // Upload to Supabase Storage
+  // Upload to DreamHost if configured, otherwise use Supabase
+  if (USE_DREAMHOST_STORAGE) {
+    console.log('📤 Uploading PDF to DreamHost...');
+    return await uploadToDreamHost(pdfBlob, fileName);
+  }
+
+  // Fallback: Upload to Supabase Storage
+  console.log('📤 Uploading PDF to Supabase Storage...');
   const timestamp = Date.now();
   const storageFileName = `shared-pdfs/${timestamp}_${fileName}`;
 

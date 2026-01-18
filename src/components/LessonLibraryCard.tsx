@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, Users, Calendar, Edit3, Copy, Share2, Check, X } from 'lucide-react';
+import { Clock, Users, Calendar, Edit3, Copy, Share2, Check, X, Link2 } from 'lucide-react';
 import type { LessonData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { AssignToHalfTermModal } from './AssignToHalfTermModal';

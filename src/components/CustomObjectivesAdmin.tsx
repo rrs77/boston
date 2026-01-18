@@ -13,24 +13,95 @@ import {
   ChevronDown,
   ChevronRight,
   Lock,
-  Unlock
+  Unlock,
+  GripVertical,
+  Link2,
+  Check
 } from 'lucide-react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { customObjectivesApi } from '../config/customObjectivesApi';
+import { seedReceptionDramaObjectives } from '../utils/seedReceptionDrama';
 import type { 
   CustomObjectiveYearGroupWithAreas, 
   CustomObjectiveFormData,
   CustomObjectiveCSVRow 
 } from '../types/customObjectives';
 import { useAuth } from '../hooks/useAuth';
+import { useSettings } from '../contexts/SettingsContextNew';
 
-interface CustomObjectivesAdminProps {
-  isOpen: boolean;
-  onClose: () => void;
+// Draggable Year Group Item
+interface DraggableYearGroupProps {
+  yearGroup: CustomObjectiveYearGroupWithAreas;
+  index: number;
+  isSelected: boolean;
+  onSelect: () => void;
+  onReorder: (dragIndex: number, hoverIndex: number) => void;
+  onDragEnd: () => void;
+  children: React.ReactNode;
 }
 
-export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdminProps) {
+function DraggableYearGroup({ yearGroup, index, isSelected, onSelect, onReorder, onDragEnd, children }: DraggableYearGroupProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const [{ handlerId }, drop] = useDrop({
+    accept: 'yearGroup',
+    collect(monitor) {
+      return { handlerId: monitor.getHandlerId() };
+    },
+    hover(item: { index: number }, monitor) {
+      if (!ref.current) return;
+      const dragIndex = item.index;
+      const hoverIndex = index;
+      if (dragIndex === hoverIndex) return;
+
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
+
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
+
+      onReorder(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    },
+  });
+
+  const [{ isDragging }, drag] = useDrag({
+    type: 'yearGroup',
+    item: () => ({ index }),
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+    end: () => onDragEnd()
+  });
+
+  drag(drop(ref));
+
+  return (
+    <div
+      ref={ref}
+      style={{ opacity: isDragging ? 0.5 : 1 }}
+      data-handler-id={handlerId}
+      className={`transition-all ${isDragging ? 'ring-2 ring-teal-400 rounded-lg shadow-lg' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+interface CustomObjectivesAdminProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  embedded?: boolean;
+}
+
+export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: CustomObjectivesAdminProps) {
   const { user } = useAuth();
+  const { yearGroups: settingsYearGroups } = useSettings();
   const isAdmin = user?.email === 'rob.reichstorer@gmail.com' || user?.role === 'administrator';
+  
+  // Get available year group names for linking
+  const availableYearGroups = settingsYearGroups.map(yg => yg.name);
   
   const [yearGroups, setYearGroups] = useState<CustomObjectiveYearGroupWithAreas[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +110,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
   const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<CustomObjectiveFormData>({
-    year_group: { name: '', description: '', color: '#3B82F6' },
+    year_group: { name: '', description: '', color: '#3B82F6', linked_year_groups: [] },
     areas: []
   });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -104,10 +175,10 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || embedded) {
       loadData();
     }
-  }, [isOpen]);
+  }, [isOpen, embedded]);
 
   // Auto-expand all areas when a year group is selected
   useEffect(() => {
@@ -141,9 +212,10 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
 
   const handleCreateYearGroup = () => {
     setFormData({
-      year_group: { name: '', description: '', color: '#3B82F6' },
+      year_group: { name: '', description: '', color: '#3B82F6', linked_year_groups: [] },
       areas: []
     });
+    setEditingYearGroup(null);
     setShowForm(true);
   };
 
@@ -152,7 +224,8 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
       year_group: {
         name: yearGroup.name,
         description: yearGroup.description || '',
-        color: yearGroup.color
+        color: yearGroup.color,
+        linked_year_groups: yearGroup.linked_year_groups || []
       },
       areas: yearGroup.areas.map(area => ({
         id: area.id,
@@ -194,7 +267,8 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
         await customObjectivesApi.yearGroups.update(editingYearGroup, {
           name: formData.year_group.name,
           description: formData.year_group.description,
-          color: formData.year_group.color
+          color: formData.year_group.color,
+          linked_year_groups: formData.year_group.linked_year_groups || []
         });
 
         // Update areas and objectives for existing year group
@@ -266,7 +340,8 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
           name: formData.year_group.name,
           description: formData.year_group.description,
           color: formData.year_group.color,
-          sort_order: yearGroups.length
+          sort_order: yearGroups.length,
+          linked_year_groups: formData.year_group.linked_year_groups || []
         });
 
         // Create areas and objectives
@@ -478,12 +553,12 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
     }));
   };
 
-  if (!isOpen) return null;
+  if (!isOpen && !embedded) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
-        {/* Header */}
+  const content = (
+    <>
+      {/* Header */}
+      {!embedded && (
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-teal-600 to-teal-700 text-white">
           <div className="flex items-center space-x-3">
             <h2 className="text-xl font-bold">Custom Objectives Admin</h2>
@@ -495,6 +570,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
             <X className="h-6 w-6" />
           </button>
         </div>
+      )}
 
         {/* Message */}
         {message && (
@@ -540,15 +616,63 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                   </button>
                 </div>
               </div>
+              
+              {/* Quick Add Reception Drama Button */}
+              {!yearGroups.some(yg => yg.name === 'Reception Drama') && (
+                <button
+                  onClick={async () => {
+                    try {
+                      setMessage({ type: 'success', text: 'Adding Reception Drama objectives...' });
+                      await seedReceptionDramaObjectives();
+                      await loadYearGroups();
+                      setMessage({ type: 'success', text: 'Reception Drama objectives added successfully!' });
+                    } catch (error) {
+                      setMessage({ type: 'error', text: 'Failed to add Reception Drama objectives' });
+                    }
+                  }}
+                  className="w-full mb-4 p-3 bg-purple-100 border-2 border-dashed border-purple-300 text-purple-700 rounded-lg hover:bg-purple-200 hover:border-purple-400 transition-colors duration-200 text-sm font-medium flex items-center justify-center space-x-2"
+                >
+                  <span>🎭</span>
+                  <span>Add Reception Drama Objectives</span>
+                </button>
+              )}
 
               {loading ? (
                 <div className="text-center py-8 text-gray-500">Loading...</div>
               ) : (
+                <DndProvider backend={HTML5Backend}>
                 <div className="space-y-2">
-                  {yearGroups.map((yearGroup) => (
-                    <div
+                  {yearGroups.map((yearGroup, index) => (
+                    <DraggableYearGroup
                       key={yearGroup.id}
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors duration-200 ${
+                      yearGroup={yearGroup}
+                      index={index}
+                      isSelected={selectedYearGroup === yearGroup.id}
+                      onSelect={() => setSelectedYearGroup(yearGroup.id)}
+                      onReorder={(dragIndex, hoverIndex) => {
+                        const newYearGroups = [...yearGroups];
+                        const [removed] = newYearGroups.splice(dragIndex, 1);
+                        newYearGroups.splice(hoverIndex, 0, removed);
+                        newYearGroups.forEach((yg, i) => {
+                          yg.sort_order = i;
+                        });
+                        setYearGroups(newYearGroups);
+                      }}
+                      onDragEnd={async () => {
+                        // Save the new order
+                        try {
+                          for (const yg of yearGroups) {
+                            await customObjectivesApi.yearGroups.update(yg.id, { sort_order: yg.sort_order });
+                          }
+                          setMessage({ type: 'success', text: 'Subject areas reordered successfully' });
+                        } catch (error) {
+                          console.error('Failed to save order:', error);
+                          setMessage({ type: 'error', text: 'Failed to save new order' });
+                        }
+                      }}
+                    >
+                    <div
+                      className={`p-3 rounded-lg border cursor-grab active:cursor-grabbing transition-colors duration-200 ${
                         selectedYearGroup === yearGroup.id
                           ? 'border-teal-500 bg-teal-50'
                           : 'border-gray-200 bg-white hover:border-gray-300'
@@ -557,6 +681,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 flex-1">
+                          <GripVertical className="h-4 w-4 text-gray-400 flex-shrink-0" />
                           <div
                             className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{ backgroundColor: yearGroup.color }}
@@ -567,10 +692,18 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                               {yearGroup.is_locked && (
                                 <Lock className="h-3 w-3 text-amber-500 flex-shrink-0" title="Locked - Read Only" />
                               )}
+                              {yearGroup.linked_year_groups && yearGroup.linked_year_groups.length > 0 && (
+                                <Link2 className="h-3 w-3 text-teal-500 flex-shrink-0" title={`Linked to: ${yearGroup.linked_year_groups.join(', ')}`} />
+                              )}
                             </div>
                             <p className="text-xs text-gray-500">
                               {yearGroup.areas.length} areas, {yearGroup.areas.reduce((sum, area) => sum + area.objectives.length, 0)} objectives
                             </p>
+                            {yearGroup.linked_year_groups && yearGroup.linked_year_groups.length > 0 && (
+                              <p className="text-xs text-teal-600 truncate" title={yearGroup.linked_year_groups.join(', ')}>
+                                → {yearGroup.linked_year_groups.slice(0, 3).join(', ')}{yearGroup.linked_year_groups.length > 3 ? ` +${yearGroup.linked_year_groups.length - 3}` : ''}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex space-x-1 flex-shrink-0">
@@ -628,8 +761,10 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                         </div>
                       </div>
                     </div>
+                    </DraggableYearGroup>
                   ))}
                 </div>
+                </DndProvider>
               )}
             </div>
           </div>
@@ -877,6 +1012,57 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
                   />
                 </div>
 
+                {/* Linked Year Groups */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="flex items-center space-x-2">
+                      <Link2 className="h-4 w-4 text-teal-600" />
+                      <span>Link to Year Groups</span>
+                    </div>
+                  </label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Select which year groups these objectives apply to. If none selected, objectives will be available to all year groups.
+                  </p>
+                  <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    {availableYearGroups.length === 0 ? (
+                      <p className="text-sm text-gray-500 italic">No year groups configured in Settings</p>
+                    ) : (
+                      availableYearGroups.map((ygName) => {
+                        const isLinked = formData.year_group.linked_year_groups?.includes(ygName) || false;
+                        return (
+                          <button
+                            key={ygName}
+                            type="button"
+                            onClick={() => {
+                              const currentLinked = formData.year_group.linked_year_groups || [];
+                              const newLinked = isLinked
+                                ? currentLinked.filter(yg => yg !== ygName)
+                                : [...currentLinked, ygName];
+                              setFormData(prev => ({
+                                ...prev,
+                                year_group: { ...prev.year_group, linked_year_groups: newLinked }
+                              }));
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center space-x-1.5 ${
+                              isLinked
+                                ? 'bg-teal-600 text-white ring-2 ring-teal-300'
+                                : 'bg-white text-gray-700 border border-gray-300 hover:border-teal-400 hover:bg-teal-50'
+                            }`}
+                          >
+                            {isLinked && <Check className="h-3 w-3" />}
+                            <span>{ygName}</span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                  {(formData.year_group.linked_year_groups?.length || 0) > 0 && (
+                    <p className="text-xs text-teal-600 mt-1">
+                      Linked to {formData.year_group.linked_year_groups?.length} year group{formData.year_group.linked_year_groups?.length !== 1 ? 's' : ''}
+                    </p>
+                  )}
+                </div>
+
                 {/* Subheadings */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -1042,6 +1228,23 @@ export function CustomObjectivesAdmin({ isOpen, onClose }: CustomObjectivesAdmin
             </div>
           </div>
         )}
+    </>
+  );
+
+  // Embedded mode - render directly without modal wrapper
+  if (embedded) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col overflow-hidden" style={{ height: '600px' }}>
+        {content}
+      </div>
+    );
+  }
+
+  // Modal mode
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
+        {content}
       </div>
     </div>
   );

@@ -236,86 +236,265 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
     return 'Lesson Plan';
   }, [exportMode, lessonNumber, unitName, halfTermName, allLessonsData]);
 
-  // Generate HTML content for PDFBolt with Tailwind CSS
+  // Generate HTML content for PDFBolt with custom styling (no Tailwind dependency)
   const generateHTMLContent = () => {
-    let footerContent
-
     let htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8">
         <title>${printTitle}</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <style>  
-          /* Page setup for A4 */
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #1a1a1a;
+            background: #fff;
+          }
+          
           @page {
             size: A4;
-            margin: 1cm;
+            margin: 12mm 15mm 25mm 15mm;
+            @bottom-center {
+              content: counter(page) " of " counter(pages);
+              font-family: 'Inter', sans-serif;
+              font-size: 9px;
+              color: #6b7280;
+            }
           }
           
-          /* Lesson page styling - visible in preview */
           .lesson-page {
-            width: 21cm;
-            min-height: 29.7cm;
-            padding: 1cm;
-            margin: 0 auto 2cm auto;
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            page-break-after: always;
-            break-after: always;
+            width: 100%;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 0;
+            position: relative;
+            min-height: calc(100vh - 25mm);
           }
           
-          .lesson-page:last-child {
+          /* Header Section */
+          .lesson-header {
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 8px 8px 0 0;
             margin-bottom: 0;
           }
           
-          /* Print media styles */
+          .lesson-header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: -0.02em;
+          }
+          
+          .lesson-header .subtitle {
+            font-size: 11px;
+            opacity: 0.9;
+            font-weight: 500;
+          }
+          
+          .lesson-header .meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 10px;
+            opacity: 0.85;
+          }
+          
+          .lesson-header .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+          
+          /* Content Container */
+          .content-wrapper {
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 16px;
+            background: #fafafa;
+          }
+          
+          /* Section Cards */
+          .section-card {
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            page-break-inside: avoid;
+          }
+          
+          .section-header {
+            padding: 8px 12px;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+          }
+          
+          .section-content {
+            padding: 10px 12px;
+            font-size: 10px;
+            line-height: 1.5;
+          }
+          
+          .section-content ul {
+            margin: 0;
+            padding-left: 16px;
+          }
+          
+          .section-content li {
+            margin-bottom: 3px;
+          }
+          
+          .section-content p {
+            margin-bottom: 6px;
+          }
+          
+          .section-content p:last-child {
+            margin-bottom: 0;
+          }
+          
+          /* Two Column Layout */
+          .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+          }
+          
+          .two-col .section-card {
+            margin-bottom: 0;
+          }
+          
+          /* Simplified Color Themes - Teal, Blue, and Muted tones */
+          .theme-teal .section-header { background: #f0fdfa; color: #0f766e; border-left: 4px solid #0d9488; }
+          .theme-teal-dark .section-header { background: #ccfbf1; color: #115e59; border-left: 4px solid #0f766e; }
+          .theme-blue .section-header { background: #eff6ff; color: #1e40af; border-left: 4px solid #3b82f6; }
+          .theme-blue-light .section-header { background: #f0f9ff; color: #0369a1; border-left: 4px solid #0ea5e9; }
+          .theme-slate .section-header { background: #f8fafc; color: #475569; border-left: 4px solid #64748b; }
+          .theme-gray .section-header { background: #f9fafb; color: #4b5563; border-left: 4px solid #6b7280; }
+          
+          /* Activity Cards */
+          .activity-section {
+            margin-top: 12px;
+          }
+          
+          .activity-category {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f766e;
+            padding: 6px 0;
+            border-bottom: 2px solid #0d9488;
+            margin-bottom: 8px;
+          }
+          
+          .activity-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            border-left: 3px solid #0d9488;
+          }
+          
+          .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f0fdfa;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          
+          .activity-title {
+            font-weight: 600;
+            font-size: 11px;
+            color: #0f766e;
+          }
+          
+          .activity-time {
+            background: #ccfbf1;
+            color: #0f766e;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 600;
+          }
+          
+          .activity-body {
+            padding: 10px 12px;
+            font-size: 10px;
+            color: #374151;
+          }
+          
+          .activity-resources {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #d1d5db;
+          }
+          
+          .resource-tag {
+            font-size: 8px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 500;
+            background: #f0fdfa;
+            color: #0f766e;
+          }
+          
+          /* Footer */
+          .lesson-footer {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 9px;
+            color: #64748b;
+            border-radius: 0 0 8px 8px;
+          }
+          
+          .footer-left {
+            font-weight: 500;
+          }
+          
+          .footer-center {
+            text-align: center;
+          }
+          
+          .footer-right {
+            font-weight: 600;
+            color: #0f766e;
+          }
+          
+          /* Print styles */
           @media print {
-            .page-header {
-              display: none;
-            }
-            
-            .lesson-page {
-              box-shadow: none;
-              margin: 0;
-              padding: 0;
-              width: 100%;
-              min-height: auto;
-            }
-            
-            .lesson-page:not(:last-child) {
-              page-break-after: always;
-              break-after: always;
-            }
-            
-            * {
-              -webkit-print-color-adjust: exact !important;
-              color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-           
-            .print-border {
-              border: 2px solid #000000 !important;
-            }
-           
-            .print-text-dark {
-              color: #000000 !important;
-            }
-           
-            .print-bg-light {
-              background-color: #f8f9fa !important;
-            }
-           
-            .print-border-dark {
-              border-color: #333333 !important;
-            }
+            body { background: white; }
+            .lesson-page { box-shadow: none; min-height: auto; }
+            .content-wrapper { background: white; }
           }
         </style>
       </head>
       <body>
-        <div>
-          <div>
+        <div class="lesson-page">
     `;
 
     lessonsToRender.forEach((lessonNum, lessonIndex) => {
@@ -331,36 +510,8 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
       const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
 
-      // Debug custom header/footer
-      console.log(`📄 Print - Lesson ${lessonNum} Header/Footer:`, {
-        customHeader: lessonData.customHeader,
-        customFooter: lessonData.customFooter,
-        hasCustomHeader: !!lessonData.customHeader,
-        hasCustomFooter: !!lessonData.customFooter,
-        lessonDisplayNumber,
-        termSpecificNumber
-      });
-
-      // Use custom footer if available, otherwise use default with correct lesson number
-      const footerText = lessonData.customFooter || 
-        ['Creative Curriculum Designer', `Lesson ${termSpecificNumber}`, currentSheetInfo.display, halfTermName || unitName, '© Forward Thinking 2026']
-          .filter(Boolean)
-          .join(' • ');
-      
-      footerContent = `<div
-           style="width: 100%; text-align: center; font-size: 11px; color: #000000; font-weight: bold;">
-        <p>${footerText}</p>
-      </div>`
 
       const lessonStandardsList = lessonStandards[lessonNum] || lessonStandards[lessonIndex + 1] || lessonStandards[(lessonIndex + 1).toString()] || [];
-
-      // Debug EYFS data - try multiple key formats
-      console.log(`Looking for EYFS data:`, {
-        lessonNum,
-        lessonIndex: lessonIndex + 1,
-        foundData: lessonStandardsList,
-        availableKeys: Object.keys(lessonStandards)
-      });
 
       // Group EYFS statements by area
       const groupedEyfs: Record<string, string[]> = {};
@@ -368,34 +519,27 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         const parts = statement.split(':');
         const area = parts[0].trim();
         const detail = parts.length > 1 ? parts[1].trim() : statement;
-
-        if (!groupedEyfs[area]) {
-          groupedEyfs[area] = [];
-        }
+        if (!groupedEyfs[area]) groupedEyfs[area] = [];
         groupedEyfs[area].push(detail);
       });
 
+      // Lesson title
+      const lessonTitle = lessonData.title || `Lesson ${termSpecificNumber}`;
+      const lessonSubtitle = lessonData.lessonName || `${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}`;
+
       htmlContent += `
-        <div class="lesson-page bg-white">
-          <div class="page-header bg-blue-50 px-6 py-3 border-b border-gray-200">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-medium text-blue-800">
-                Lesson ${termSpecificNumber} Preview
-              </span>
-              <span class="text-xs text-blue-600">
-                Page ${lessonIndex + 1} of ${lessonsToRender.length}
-              </span>
+          <!-- Lesson Header -->
+          <div class="lesson-header">
+            <h1>${lessonData.customHeader || lessonTitle}</h1>
+            <div class="subtitle">${lessonSubtitle}</div>
+            <div class="meta">
+              <span class="meta-item">📚 ${currentSheetInfo.display}</span>
+              <span class="meta-item">⏱ ${lessonData.totalTime || 45} mins</span>
+              <span class="meta-item">📅 ${halfTermName || unitName || 'Term 1'}</span>
             </div>
           </div>
-
-          <!-- Lesson Content -->
-          <div class="px-6 pt-3 pb-6">
-            <!-- Lesson Title -->
-            <div class="mb-3 border-b border-black pb-2">
-              <h3 class="text-xl font-bold text-black">
-                ${lessonData.customHeader || `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music`}
-              </h3>
-            </div>
+          
+          <div class="content-wrapper">
       `;
 
       // Get custom objectives for this lesson
@@ -508,6 +652,205 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         htmlContent += `</div></div>`;
       }
 
+      // PROFESSIONAL LESSON PLAN STRUCTURE
+      // Following standard school planning conventions with proper section ordering
+      
+      const hasLessonPlanDetails = lessonData.learningOutcome || lessonData.successCriteria || 
+        lessonData.introduction || lessonData.mainActivity || lessonData.plenary ||
+        lessonData.vocabulary || lessonData.keyQuestions || lessonData.resources ||
+        lessonData.differentiation || lessonData.assessment;
+
+      if (hasLessonPlanDetails) {
+        
+        // ═══════════════════════════════════════════════════════════════
+        // SECTION 1: LEARNING OBJECTIVE (Prominent, full-width)
+        // ═══════════════════════════════════════════════════════════════
+        if (lessonData.learningOutcome) {
+          htmlContent += `
+            <div class="section-card" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); border: none; margin-bottom: 12px;">
+              <div class="section-header" style="background: transparent; color: white; border: none; font-size: 13px; padding: 10px 14px;">
+                Learning Objective
+              </div>
+              <div class="section-content" style="background: white; color: #1a1a1a; padding: 14px; border-radius: 0 0 6px 6px; font-size: 11px;">
+                ${lessonData.learningOutcome}
+              </div>
+            </div>
+          `;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // SECTION 2: SUCCESS CRITERIA
+        // ═══════════════════════════════════════════════════════════════
+        if (lessonData.successCriteria) {
+          htmlContent += `
+            <div class="section-card theme-blue" style="margin-bottom: 12px;">
+              <div class="section-header">Success Criteria</div>
+              <div class="section-content">${lessonData.successCriteria}</div>
+            </div>
+          `;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // SECTION 2b: ASSESSMENT OBJECTIVES (Curriculum objectives for whole lesson)
+        // ═══════════════════════════════════════════════════════════════
+        if (lessonData.assessmentObjectives && lessonData.assessmentObjectives.length > 0) {
+          htmlContent += `
+            <div class="section-card" style="background: #faf5ff; border: 1px solid #c4b5fd; margin-bottom: 12px;">
+              <div class="section-header" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; font-size: 11px;">
+                Assessment Objectives
+              </div>
+              <div class="section-content" style="padding: 12px;">
+                <ul style="margin: 0; padding-left: 20px;">
+                  ${lessonData.assessmentObjectives.map((obj: string, i: number) => `
+                    <li style="margin-bottom: 6px; font-size: 10px; color: #374151;">
+                      <span style="color: #7c3aed; font-weight: 600;">${i + 1}.</span> ${obj}
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            </div>
+          `;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // SECTION 3: KEY VOCABULARY & RESOURCES (side by side, compact)
+        // ═══════════════════════════════════════════════════════════════
+        if (lessonData.vocabulary || lessonData.resources) {
+          htmlContent += `<div class="two-col" style="margin-bottom: 12px;">`;
+          if (lessonData.vocabulary) {
+            htmlContent += `
+              <div class="section-card theme-gray">
+                <div class="section-header" style="font-size: 10px; padding: 6px 10px;">Key Vocabulary</div>
+                <div class="section-content" style="font-size: 10px; padding: 10px;">${lessonData.vocabulary}</div>
+              </div>
+            `;
+          }
+          if (lessonData.resources) {
+            htmlContent += `
+              <div class="section-card theme-gray">
+                <div class="section-header" style="font-size: 10px; padding: 6px 10px;">Resources</div>
+                <div class="section-content" style="font-size: 10px; padding: 10px;">${lessonData.resources}</div>
+              </div>
+            `;
+          }
+          htmlContent += `</div>`;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // SECTION 4: LESSON SEQUENCE (LARGEST SECTION - Primary Focus)
+        // This is the main teaching content - given most space and prominence
+        // ═══════════════════════════════════════════════════════════════
+        const hasLessonSequence = lessonData.introduction || lessonData.mainActivity || lessonData.plenary;
+        
+        if (hasLessonSequence) {
+          htmlContent += `
+            <div style="background: #f8fafc; border: 2px solid #0d9488; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
+              <div style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: white; padding: 10px 14px; font-weight: 700; font-size: 13px; letter-spacing: 0.5px;">
+                LESSON SEQUENCE
+              </div>
+              <div style="padding: 14px;">
+          `;
+
+          // Introduction / Starter
+          if (lessonData.introduction) {
+            htmlContent += `
+              <div style="margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                  <div style="width: 28px; height: 28px; background: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                    <span style="font-weight: 700; color: #1e40af; font-size: 12px;">1</span>
+                  </div>
+                  <span style="font-weight: 600; color: #1e40af; font-size: 12px;">Introduction / Starter</span>
+                </div>
+                <div style="margin-left: 38px; font-size: 11px; color: #374151; line-height: 1.5;">
+                  ${lessonData.introduction}
+                </div>
+              </div>
+            `;
+          }
+
+          // Main Teaching & Activities (Largest subsection)
+          if (lessonData.mainActivity) {
+            htmlContent += `
+              <div style="margin-bottom: 14px; background: white; border: 1px solid #0d9488; border-radius: 6px; padding: 12px;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                  <div style="width: 28px; height: 28px; background: #ccfbf1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                    <span style="font-weight: 700; color: #0f766e; font-size: 12px;">2</span>
+                  </div>
+                  <span style="font-weight: 700; color: #0f766e; font-size: 13px;">Main Teaching & Activities</span>
+                </div>
+                <div style="margin-left: 38px; font-size: 11px; color: #1a1a1a; line-height: 1.6;">
+                  ${lessonData.mainActivity}
+                </div>
+              </div>
+            `;
+          }
+
+          // Plenary / Reflection
+          if (lessonData.plenary) {
+            htmlContent += `
+              <div style="margin-bottom: 0;">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                  <div style="width: 28px; height: 28px; background: #e0e7ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                    <span style="font-weight: 700; color: #4338ca; font-size: 12px;">3</span>
+                  </div>
+                  <span style="font-weight: 600; color: #4338ca; font-size: 12px;">Plenary / Reflection</span>
+                </div>
+                <div style="margin-left: 38px; font-size: 11px; color: #374151; line-height: 1.5;">
+                  ${lessonData.plenary}
+                </div>
+              </div>
+            `;
+          }
+
+          htmlContent += `</div></div>`;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // SECTION 5: TEACHER SUPPORT (Grouped together - compact)
+        // Differentiation, Key Questions, Assessment
+        // ═══════════════════════════════════════════════════════════════
+        const hasSupportSections = lessonData.differentiation || lessonData.keyQuestions || lessonData.assessment;
+        
+        if (hasSupportSections) {
+          htmlContent += `
+            <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+              <div style="font-weight: 600; color: #475569; font-size: 10px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Teacher Support
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+          `;
+          
+          if (lessonData.differentiation) {
+            htmlContent += `
+              <div style="background: white; border-radius: 4px; padding: 10px; border-left: 3px solid #f59e0b;">
+                <div style="font-weight: 600; color: #b45309; font-size: 10px; margin-bottom: 6px;">Differentiation</div>
+                <div style="font-size: 10px; color: #374151; line-height: 1.4;">${lessonData.differentiation}</div>
+              </div>
+            `;
+          }
+          
+          if (lessonData.keyQuestions) {
+            htmlContent += `
+              <div style="background: white; border-radius: 4px; padding: 10px; border-left: 3px solid #8b5cf6;">
+                <div style="font-weight: 600; color: #6d28d9; font-size: 10px; margin-bottom: 6px;">Key Questions</div>
+                <div style="font-size: 10px; color: #374151; line-height: 1.4;">${lessonData.keyQuestions}</div>
+              </div>
+            `;
+          }
+          
+          if (lessonData.assessment) {
+            htmlContent += `
+              <div style="background: white; border-radius: 4px; padding: 10px; border-left: 3px solid #0ea5e9;">
+                <div style="font-weight: 600; color: #0369a1; font-size: 10px; margin-bottom: 6px;">Assessment Opportunities</div>
+                <div style="font-size: 10px; color: #374151; line-height: 1.4;">${lessonData.assessment}</div>
+              </div>
+            `;
+          }
+          
+          htmlContent += `</div></div>`;
+        }
+      }
+
       // Add activities - use orderedActivities if available for correct order, otherwise fall back to categoryOrder
       console.log(`🖨️ Print Debug for Lesson ${lessonNum}:`, {
         hasOrderedActivities: !!(lessonData.orderedActivities && lessonData.orderedActivities.length > 0),
@@ -535,141 +878,108 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
         activitiesByCategory[activity.category].push(activity);
       });
 
-      // Display activities by category in the order they appear
-      categoriesInOrder.forEach(category => {
-        const activities = activitiesByCategory[category] || [];
-        if (activities.length === 0) return;
-
-        const categoryColor = getCategoryColor(category);
-        const categoryLightBorder = `${categoryColor}60`;
-        const categoryColorStyle = `color: ${categoryColor};`;
-        const borderColorStyle = `border-left-color: ${categoryColor};`;
-        const categoryBgStyle = `background-color: ${categoryColor}20; border-bottom-color: ${categoryColor};`;
-
+      // Display activities by category with new modern styling
+      if (categoriesInOrder.length > 0) {
         htmlContent += `
-          <div class="mb-4">
-            <h2 class="text-sm font-bold mb-1 text-black border-b border-black pb-0.5" style="${categoryColorStyle} page-break-after: avoid;">
-              ${category}
-            </h2>
-           
-            <div class="space-y-2">
+          <div class="activity-section">
+            <div style="font-weight: 600; color: #0f766e; font-size: 11px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #0d9488; padding-bottom: 6px;">
+              Activities from Library
+            </div>
         `;
+        
+        categoriesInOrder.forEach(category => {
+          const activities = activitiesByCategory[category] || [];
+          if (activities.length === 0) return;
 
-        activities.forEach(activity => {
+          const categoryColor = getCategoryColor(category);
+
           htmlContent += `
-            <div class="bg-white rounded-lg border overflow-hidden" style="page-break-inside: avoid; border-left-width: 4px; ${borderColorStyle} border-color: ${categoryLightBorder};">
-              <!-- Activity Header -->
-              <div class="px-2 py-0.5 border-b flex justify-between items-center" style="${categoryBgStyle}">
-                <h3 class="font-bold text-black text-xs">
-                  ${activity.activity}
-                </h3>
-                ${activity.time > 0 ? `
-                  <div class="px-1 py-0.5 rounded-full text-xs font-bold" style="background-color: rgba(0,0,0,0.15); color: #374151;">
-                    ${activity.time}m
-                  </div>
-                ` : ''}
-              </div>
-             
-              <div class="p-1.5">
-                ${activity.activityText ? `
-                  <div class="mb-1 text-xs text-black font-medium">
-                    ${activity.activityText}
-                  </div>
-                ` : ''}
-                
-                <div class="text-sm text-gray-700">
-                    ${activity.description.includes('<')
-                      ? activity.description
-                       : activity.description.replace(/\n/g, '<br>')
-                    }
-                </div>
+            <div class="activity-category" style="color: ${categoryColor}; border-bottom-color: ${categoryColor};">
+              ${category}
+            </div>
           `;
 
-          const resources = [];
-          if (activity.videoLink) resources.push({
-            label: 'Video',
-            url: activity.videoLink,
-            classes: 'bg-red-100 text-red-800 border-red-300'
-          });
-          if (activity.musicLink) resources.push({
-            label: 'Music',
-            url: activity.musicLink,
-            classes: 'bg-green-100 text-green-800 border-green-300'
-          });
-          if (activity.backingLink) resources.push({
-            label: 'Backing',
-            url: activity.backingLink,
-            classes: 'bg-blue-100 text-blue-800 border-blue-300'
-          });
-          if (activity.resourceLink) resources.push({
-            label: 'Resource',
-            url: activity.resourceLink,
-            classes: 'bg-purple-100 text-purple-800 border-purple-300'
-          });
-          if (activity.link) resources.push({
-            label: 'Link',
-            url: activity.link,
-            classes: 'bg-gray-100 text-gray-800 border-gray-300'
-          });
-          if (activity.vocalsLink) resources.push({
-            label: 'Vocals',
-            url: activity.vocalsLink,
-            classes: 'bg-orange-100 text-orange-800 border-orange-300'
-          });
-          if (activity.imageLink) resources.push({
-            label: 'Image',
-            url: activity.imageLink,
-            classes: 'bg-pink-100 text-pink-800 border-pink-300'
-          });
-
-          if (resources.length > 0) {
+          activities.forEach(activity => {
             htmlContent += `
-              <div class="mt-1 pt-1 border-t border-gray-600">
-                <p class="text-xs font-bold text-black mb-0.5">Resources:</p>
-                <div class="flex flex-wrap gap-0.5">
+              <div class="activity-card" style="border-left: 3px solid ${categoryColor};">
+                <div class="activity-header">
+                  <span class="activity-title">${activity.activity}</span>
+                  ${activity.time > 0 ? `<span class="activity-time">${activity.time} min</span>` : ''}
+                </div>
+                <div class="activity-body">
+                  ${activity.activityText ? `<p style="font-weight: 500; margin-bottom: 6px;">${activity.activityText}</p>` : ''}
+                  <div>${activity.description.includes('<') ? activity.description : activity.description.replace(/\n/g, '<br>')}</div>
             `;
-            resources.forEach(resource => {
-              htmlContent += `
-                <a href="${resource.url}"
-                   class="inline-flex items-center px-1.5 py-0.5 text-xs rounded-full border font-bold ${resource.classes}"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                  ${resource.label}
-                </a>
-              `;
-            });
+
+            // Resources
+            const resources = [];
+            if (activity.videoLink) resources.push({ label: 'Video', class: 'resource-video' });
+            if (activity.musicLink) resources.push({ label: 'Music', class: 'resource-music' });
+            if (activity.backingLink) resources.push({ label: 'Backing', class: 'resource-backing' });
+            if (activity.resourceLink) resources.push({ label: 'Resource', class: 'resource-resource' });
+            if (activity.link) resources.push({ label: 'Link', class: 'resource-link' });
+            if (activity.vocalsLink) resources.push({ label: 'Vocals', class: 'resource-vocals' });
+            if (activity.imageLink) resources.push({ label: 'Image', class: 'resource-image' });
+
+            if (resources.length > 0) {
+              htmlContent += `<div class="activity-resources">`;
+              resources.forEach(r => {
+                htmlContent += `<span class="resource-tag ${r.class}">${r.label}</span>`;
+              });
+              htmlContent += `</div>`;
+            }
+
             htmlContent += `</div></div>`;
-          }
-
-          htmlContent += `</div></div>`;
+          });
         });
-
-        htmlContent += `</div></div>`;
-      });
+        
+        htmlContent += `</div>`;
+      }
 
       // Add notes if available
       if (lessonData.notes) {
         htmlContent += `
-          <div class="mt-6 pt-4 border-t border-black">
-            <h3 class="text-lg font-bold text-black mb-2">Lesson Notes</h3>
-            <div class="bg-gray-200 rounded-lg p-3 text-black border border-gray-600">
-              ${lessonData.notes}
+          <div class="section-card" style="margin-top: 12px;">
+            <div class="section-header" style="background: #f3f4f6; color: #374151; border-left: 4px solid #9ca3af;">
+              Teacher Notes
             </div>
+            <div class="section-content">${lessonData.notes}</div>
           </div>
         `;
       }
 
+      // Close content wrapper
+      htmlContent += `</div>`;
+      
+      // Build footer text
+      const footerText = lessonData.customFooter || 
+        [currentSheetInfo.display, halfTermName || unitName, '© Forward Thinking 2026']
+          .filter(Boolean)
+          .join(' • ');
+      
+      // Footer with page number
       htmlContent += `
-          </div>
+        <div class="lesson-footer">
+          <div class="footer-left">Creative Curriculum Designer</div>
+          <div class="footer-center">${footerText}</div>
+          <div class="footer-right">Lesson ${termSpecificNumber} • Page ${lessonIndex + 1} of ${lessonsToRender.length}</div>
         </div>
       `;
     });
 
     htmlContent += `
         </div>
-        </div>
       </body>
       </html>
+    `;
+
+    // Create footer template for PDFBolt (separate from in-page footer)
+    const footerContent = `
+      <div style="width: 100%; font-size: 9px; padding: 5px 20px; display: flex; justify-content: space-between; align-items: center; color: #666; font-family: 'Inter', sans-serif;">
+        <span>Creative Curriculum Designer</span>
+        <span>${currentSheetInfo.display || ''} ${halfTermName || unitName ? '• ' + (halfTermName || unitName) : ''} • © Forward Thinking 2026</span>
+        <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+      </div>
     `;
 
     return [htmlContent, footerContent];
@@ -1547,6 +1857,85 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                               </div>
                             ))}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Lesson Plan Details - Compact Layout - Only show on first page */}
+                      {pageIndex === 0 && (lessonData.learningOutcome || lessonData.successCriteria || 
+                        lessonData.introduction || lessonData.mainActivity || lessonData.plenary ||
+                        lessonData.vocabulary || lessonData.keyQuestions || lessonData.resources ||
+                        lessonData.differentiation || lessonData.assessment) && (
+                        <div className="mb-2">
+                          {/* Learning Outcome & Success Criteria side by side */}
+                          {(lessonData.learningOutcome || lessonData.successCriteria) && (
+                            <div className="grid grid-cols-2 gap-1 mb-1">
+                              {lessonData.learningOutcome && (
+                                <div className="rounded p-1.5 border-l-4 border-blue-500 bg-blue-50">
+                                  <h4 className="font-bold text-blue-800 text-xs mb-0.5">Learning Outcome</h4>
+                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.learningOutcome }} />
+                                </div>
+                              )}
+                              {lessonData.successCriteria && (
+                                <div className="rounded p-1.5 border-l-4 border-green-500 bg-green-50">
+                                  <h4 className="font-bold text-green-800 text-xs mb-0.5">Success Criteria</h4>
+                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.successCriteria }} />
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {lessonData.introduction && (
+                            <div className="rounded p-1.5 border-l-4 border-purple-500 bg-purple-50 mb-1">
+                              <h4 className="font-bold text-purple-800 text-xs mb-0.5">Introduction</h4>
+                              <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.introduction }} />
+                            </div>
+                          )}
+                          {lessonData.mainActivity && (
+                            <div className="rounded p-1.5 border-l-4 border-orange-500 bg-orange-50 mb-1">
+                              <h4 className="font-bold text-orange-800 text-xs mb-0.5">Main Activity</h4>
+                              <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.mainActivity }} />
+                            </div>
+                          )}
+                          {lessonData.plenary && (
+                            <div className="rounded p-1.5 border-l-4 border-teal-500 bg-teal-50 mb-1">
+                              <h4 className="font-bold text-teal-800 text-xs mb-0.5">Plenary / Conclusion</h4>
+                              <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.plenary }} />
+                            </div>
+                          )}
+                          {/* 4-column grid for smaller sections */}
+                          {(lessonData.vocabulary || lessonData.keyQuestions || lessonData.resources || lessonData.differentiation) && (
+                            <div className="grid grid-cols-2 gap-1 mb-1">
+                              {lessonData.vocabulary && (
+                                <div className="rounded p-1 border-l-4 border-yellow-500 bg-yellow-50">
+                                  <h4 className="font-bold text-yellow-700 text-xs mb-0.5">Vocabulary</h4>
+                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.vocabulary }} />
+                                </div>
+                              )}
+                              {lessonData.keyQuestions && (
+                                <div className="rounded p-1 border-l-4 border-indigo-500 bg-indigo-50">
+                                  <h4 className="font-bold text-indigo-700 text-xs mb-0.5">Key Questions</h4>
+                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.keyQuestions }} />
+                                </div>
+                              )}
+                              {lessonData.resources && (
+                                <div className="rounded p-1 border-l-4 border-pink-500 bg-pink-50">
+                                  <h4 className="font-bold text-pink-700 text-xs mb-0.5">Resources</h4>
+                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.resources }} />
+                                </div>
+                              )}
+                              {lessonData.differentiation && (
+                                <div className="rounded p-1 border-l-4 border-cyan-500 bg-cyan-50">
+                                  <h4 className="font-bold text-cyan-700 text-xs mb-0.5">Differentiation</h4>
+                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.differentiation }} />
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {lessonData.assessment && (
+                            <div className="rounded p-1.5 border-l-4 border-red-500 bg-red-50 mb-1">
+                              <h4 className="font-bold text-red-800 text-xs mb-0.5">Assessment</h4>
+                              <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.assessment }} />
+                            </div>
+                          )}
                         </div>
                       )}
 

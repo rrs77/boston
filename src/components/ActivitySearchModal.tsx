@@ -26,7 +26,7 @@ export function ActivitySearchModal({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Filter activities based on search and category
+  // Filter and group activities by category
   const filteredActivities = useMemo(() => {
     let filtered = allActivities;
     
@@ -47,7 +47,12 @@ export function ActivitySearchModal({
       });
     }
     
-    return filtered;
+    // Sort by category to group same categories together
+    return [...filtered].sort((a, b) => {
+      const categoryA = a.category || 'Other';
+      const categoryB = b.category || 'Other';
+      return categoryA.localeCompare(categoryB);
+    });
   }, [allActivities, searchQuery, selectedCategory]);
 
   const handleActivityClick = (activity: Activity, e?: React.MouseEvent) => {
@@ -225,20 +230,16 @@ export function ActivitySearchModal({
                       </div>
                     )}
                     
-                    {/* Selection indicator / Remove button */}
-                    {isSelected ? (
-                      <button
-                        onClick={(e) => handleRemoveClick(activity, e)}
-                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                        title="Remove activity"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    ) : (
-                      <div className="w-6 h-6 flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-gray-300 rounded transition-colors group-hover:border-teal-500" />
-                      </div>
-                    )}
+                    {/* Selection checkbox - matches app styling */}
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
+                      isSelected 
+                        ? 'bg-teal-600 border-teal-600' 
+                        : 'border-gray-300 group-hover:border-teal-400'
+                    }`}>
+                      {isSelected && (
+                        <Check className="h-3 w-3 text-white" />
+                      )}
+                    </div>
                   </div>
                 );
               })}

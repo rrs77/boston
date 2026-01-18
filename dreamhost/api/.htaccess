@@ -1,0 +1,15 @@
+# Protect API directory
+# Allow only POST requests to PHP files
+
+<FilesMatch "\.php$">
+    # Enable PHP processing
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# Block directory listing
+Options -Indexes
+
+# Deny access to any non-PHP files in this directory
+<FilesMatch "^(?!.*\.php$)">
+    Require all denied
+</FilesMatch>

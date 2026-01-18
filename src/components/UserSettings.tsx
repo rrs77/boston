@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Settings, Palette, RotateCcw, X, Plus, Trash2, GripVertical, Edit3, Save, Users, Database, AlertTriangle, GraduationCap, Package, Filter } from 'lucide-react';
-import { useSettings, Category } from '../contexts/SettingsContextNew';
+import React, { useState, useRef } from 'react';
+import { Settings, Palette, RotateCcw, X, Plus, Trash2, GripVertical, Edit3, Save, Users, Database, AlertTriangle, GraduationCap, Package, Filter, Video, Music, Volume2, FileText, Link as LinkIcon, Image, FileVideo, FileMusic, File, Globe, ExternalLink, Share2, Download, Upload, Eye, Play, Pause, Headphones, Mic, Speaker, Film, Camera, BookOpen, Book, Folder, Cloud, Network } from 'lucide-react';
+import { useSettings, Category, ResourceLinkConfig } from '../contexts/SettingsContextNew';
 import { DataSourceSettings } from './DataSourceSettings';
 import { CustomObjectivesAdmin } from './CustomObjectivesAdmin';
 import { ActivityPacksAdmin } from './ActivityPacksAdmin';
@@ -8,6 +8,110 @@ import { useAuth } from '../hooks/useAuth';
 import { useIsViewOnly } from '../hooks/useIsViewOnly';
 import { isSupabaseConfigured } from '../config/supabase';
 import { customCategoriesApi } from '../config/api';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+
+// Draggable Category Item Component
+interface DraggableCategoryProps {
+  category: Category;
+  index: number;
+  onReorder: (dragIndex: number, hoverIndex: number) => void;
+  onDragEnd?: () => void;
+  children: React.ReactNode;
+}
+
+function DraggableCategory({ category, index, onReorder, onDragEnd, children }: DraggableCategoryProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const [{ handlerId }, drop] = useDrop({
+    accept: 'category',
+    collect(monitor) {
+      return { handlerId: monitor.getHandlerId() };
+    },
+    hover(item: { index: number }, monitor) {
+      if (!ref.current) return;
+      const dragIndex = item.index;
+      const hoverIndex = index;
+      if (dragIndex === hoverIndex) return;
+
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
+
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
+
+      onReorder(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    },
+  });
+
+  const [{ isDragging }, drag] = useDrag({
+    type: 'category',
+    item: () => ({ index }),
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+    end: () => {
+      if (onDragEnd) onDragEnd();
+    }
+  });
+
+  drag(drop(ref));
+
+  return (
+    <div
+      ref={ref}
+      style={{ opacity: isDragging ? 0.5 : 1 }}
+      data-handler-id={handlerId}
+      className={`transition-all ${isDragging ? 'ring-2 ring-teal-400 rounded-lg shadow-lg' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Helper function to get icon component by name
+const getIconComponent = (iconName: string) => {
+  const iconMap: { [key: string]: React.ComponentType<any> } = {
+    Video, Music, Volume2, FileText, Palette, LinkIcon, Image, FileVideo, FileMusic, File, Globe, ExternalLink, Share2, Download, Upload, Eye, Play, Pause, Headphones, Mic, Speaker, Film, Camera, Folder, BookOpen, Book, Cloud, Database, Network
+  };
+  return iconMap[iconName] || FileText; // Default to FileText if icon not found
+};
+
+// Helper function to get available icons for selection
+const getAvailableIcons = () => {
+  return [
+    { name: 'Video', label: 'Video' },
+    { name: 'Music', label: 'Music' },
+    { name: 'Volume2', label: 'Volume' },
+    { name: 'FileText', label: 'File Text' },
+    { name: 'Palette', label: 'Palette' },
+    { name: 'LinkIcon', label: 'Link' },
+    { name: 'Image', label: 'Image' },
+    { name: 'FileVideo', label: 'File Video' },
+    { name: 'FileMusic', label: 'File Music' },
+    { name: 'File', label: 'File' },
+    { name: 'Globe', label: 'Globe' },
+    { name: 'ExternalLink', label: 'External Link' },
+    { name: 'Share2', label: 'Share' },
+    { name: 'Download', label: 'Download' },
+    { name: 'Upload', label: 'Upload' },
+    { name: 'Eye', label: 'Eye' },
+    { name: 'Play', label: 'Play' },
+    { name: 'Pause', label: 'Pause' },
+    { name: 'Headphones', label: 'Headphones' },
+    { name: 'Mic', label: 'Microphone' },
+    { name: 'Speaker', label: 'Speaker' },
+    { name: 'Film', label: 'Film' },
+    { name: 'Camera', label: 'Camera' },
+    { name: 'BookOpen', label: 'Book Open' },
+    { name: 'Book', label: 'Book' },
+    { name: 'Folder', label: 'Folder' },
+    { name: 'Cloud', label: 'Cloud' },
+    { name: 'Database', label: 'Database' },
+    { name: 'Network', label: 'Network' },
+  ];
+};
 
 interface UserSettingsProps {
   isOpen: boolean;
@@ -17,12 +121,13 @@ interface UserSettingsProps {
 export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const { user } = useAuth();
   const isViewOnly = useIsViewOnly();
-  const { settings, updateSettings, resetToDefaults, categories, updateCategories, resetCategoriesToDefaults, customYearGroups, updateYearGroups, resetYearGroupsToDefaults, forceSyncYearGroups, forceSyncToSupabase, forceRefreshFromSupabase, forceSyncCurrentYearGroups, forceSafariSync, startUserChange, endUserChange } = useSettings();
+  const { settings, updateSettings, resetToDefaults, categories, updateCategories, resetCategoriesToDefaults, customYearGroups, updateYearGroups, resetYearGroupsToDefaults, forceSyncYearGroups, forceSyncToSupabase, forceRefreshFromSupabase, forceSyncCurrentYearGroups, forceSafariSync, startUserChange, endUserChange, resourceLinks, updateResourceLinks, resetResourceLinksToDefaults } = useSettings();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tempSettings, setTempSettings] = useState(settings);
   const [tempCategories, setTempCategories] = useState(categories);
   const [tempYearGroups, setTempYearGroups] = useState(customYearGroups);
-  const [activeTab, setActiveTab] = useState<'yeargroups' | 'categories' | 'purchases' | 'manage-packs' | 'data' | 'admin'>('yeargroups');
+  const [tempResourceLinks, setTempResourceLinks] = useState(resourceLinks);
+  const [activeTab, setActiveTab] = useState<'yeargroups' | 'categories' | 'purchases' | 'manage-packs' | 'data' | 'admin' | 'resource-links'>('yeargroups');
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editingCategoryYearGroups, setEditingCategoryYearGroups] = useState<string | null>(null); // Track which category's year groups are being edited
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -42,7 +147,6 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [editingYearGroup, setEditingYearGroup] = useState<string | null>(null);
   const [draggedYearGroup, setDraggedYearGroup] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [showCustomObjectivesAdmin, setShowCustomObjectivesAdmin] = useState(false);
   const [showYearGroupsModal, setShowYearGroupsModal] = useState(false);
 
   // Check if user is admin
@@ -71,6 +175,11 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     setTempYearGroups(customYearGroups);
     }
   }, [customYearGroups, isDeletingYearGroup]);
+
+  // Update temp resource links when resource links change
+  React.useEffect(() => {
+    setTempResourceLinks(resourceLinks);
+  }, [resourceLinks]);
 
   // Immediate update for categories to ensure group assignments are saved
   React.useEffect(() => {
@@ -650,6 +759,22 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
               </div>
                           </button>
           )}
+
+          {/* Resource Links */}
+          <button
+            onClick={() => setActiveTab('resource-links')}
+            className={`px-4 sm:px-6 py-3 mr-3 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-200 focus:outline-none ${
+              activeTab === 'resource-links' 
+                ? 'text-white bg-gradient-to-r from-teal-500 to-teal-600' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-teal-50'
+            }`}
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif', border: 'none', borderLeft: 'none', borderRight: 'none' }}
+          >
+            <div className="flex items-center space-x-2">
+              <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Resource Links</span>
+            </div>
+          </button>
               </div>
 
         {/* Content - Responsive padding */}
@@ -1304,24 +1429,36 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                     </div>
                   )}
                   
+                  <DndProvider backend={HTML5Backend}>
                   <div className="space-y-2 max-h-[400px] overflow-y-auto">
                     {tempCategories.map((category, index) => {
                       // Use index as stable identifier for editing state (not name, which changes)
                       const isEditing = editingCategory === `category-index-${index}`;
                       
                       return (
-                      <div 
+                      <DraggableCategory
                         key={`category-${index}-${category.position || index}`}
-                        draggable={!bulkYearGroupMode}
-                        onDragStart={() => !bulkYearGroupMode && handleDragStart(category.name)}
-                        onDragOver={(e) => !bulkYearGroupMode && handleDragOver(e, category.name)}
-                        onDrop={(e) => !bulkYearGroupMode && handleDrop(e, category.name)}
-                        onDragEnd={handleDragEnd}
+                        category={category}
+                        index={index}
+                        onReorder={(dragIndex, hoverIndex) => {
+                          const newCategories = [...tempCategories];
+                          const [removed] = newCategories.splice(dragIndex, 1);
+                          newCategories.splice(hoverIndex, 0, removed);
+                          newCategories.forEach((cat, i) => {
+                            cat.position = i;
+                          });
+                          setTempCategories(newCategories);
+                        }}
+                        onDragEnd={() => {
+                          // Save the new order when drag ends
+                          updateCategories(tempCategories);
+                        }}
+                      >
+                      <div 
                         className={`p-3 rounded-lg transition-colors duration-200 ${
-                          draggedCategory === category.name ? 'bg-teal-50 border-teal-300 opacity-50 cursor-move' : 
                           bulkYearGroupMode && selectedCategoriesForBulk.has(category.name) ? 'bg-teal-100 border-teal-300 border-2' :
                           'bg-gray-50 hover:bg-gray-100'
-                        } ${!bulkYearGroupMode ? 'cursor-move' : ''}`}
+                        } ${!bulkYearGroupMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
                       >
                         {isEditing ? (
                           <div className="flex flex-col space-y-3">
@@ -1581,9 +1718,11 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                           </div>
                         )}
                       </div>
+                      </DraggableCategory>
                       );
                     })}
                   </div>
+                  </DndProvider>
                 </div>
               </div>
 
@@ -1599,7 +1738,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                   <h3 className="text-xl font-bold text-gray-900">Purchase Activity Card Sets</h3>
                 </div>
                 <p className="text-sm text-gray-700 mb-2">
-                  Expand your curriculum with specialized activity card sets. Each set includes professionally designed activities tailored to specific subjects and age groups.
+                  Expand your curriculum with specialised activity card sets. Each set includes professionally designed activities tailored to specific subjects and age groups.
                 </p>
                 <p className="text-xs text-gray-600">
                   Connected account: <span className="font-semibold">{user?.email || 'Not signed in'}</span>
@@ -1731,72 +1870,112 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
             </div>
           )}
 
-          {activeTab === 'admin' && (
+          {activeTab === 'resource-links' && (
             <div className="space-y-6">
-              {/* Custom Objectives Management */}
-              <div className="border border-teal-200 bg-teal-50 rounded-lg p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <GraduationCap className="h-6 w-6 text-teal-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Curriculum Objectives</h3>
+              <div className="border border-teal-200 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <LinkIcon className="h-6 w-6 text-teal-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Resource Links Customisation</h3>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (confirm('Reset all resource links to defaults?')) {
+                        resetResourceLinksToDefaults();
+                        setTempResourceLinks(resourceLinks);
+                      }
+                    }}
+                    className="px-3 py-1.5 text-sm text-teal-600 hover:text-teal-700 hover:bg-teal-100 rounded-lg transition-colors flex items-center space-x-1"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    <span>Reset to Defaults</span>
+                  </button>
                 </div>
-                <p className="text-sm text-gray-600 mb-4">
-                  Create and manage curriculum objectives for any year group or subject.
+                <p className="text-sm text-gray-600 mb-6">
+                  Customise the names and icons for resource links in the Activity Creator. You can enable or disable each resource link type.
                 </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-white rounded-lg p-4 border border-teal-200">
-                    <h4 className="font-medium text-teal-900 mb-2">Year Groups</h4>
-                    <p className="text-sm text-teal-700">
-                      Add curriculum groups (Y1 Drama, Y2 Music, etc.)
-                    </p>
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-4 border border-teal-200">
-                    <h4 className="font-medium text-teal-900 mb-2">Learning Areas</h4>
-                    <p className="text-sm text-teal-700">
-                      Create learning areas (Performance, Technical Skills, etc.)
-                    </p>
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-4 border border-teal-200">
-                    <h4 className="font-medium text-teal-900 mb-2">Objectives</h4>
-                    <p className="text-sm text-teal-700">
-                      Define objectives with codes and descriptions
-                    </p>
-                  </div>
+
+                <div className="space-y-4">
+                  {tempResourceLinks.map((link, index) => {
+                    // Dynamically import the icon component
+                    const IconComponent = getIconComponent(link.iconName);
+                    
+                    return (
+                      <div key={link.key} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2 flex-1">
+                            <IconComponent className="h-5 w-5 text-gray-500" />
+                            <input
+                              type="text"
+                              value={link.label}
+                              onChange={(e) => {
+                                const updated = [...tempResourceLinks];
+                                updated[index] = { ...updated[index], label: e.target.value };
+                                setTempResourceLinks(updated);
+                              }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                              placeholder="Resource link label"
+                            />
+                          </div>
+                          <select
+                            value={link.iconName}
+                            onChange={(e) => {
+                              const updated = [...tempResourceLinks];
+                              updated[index] = { ...updated[index], iconName: e.target.value };
+                              setTempResourceLinks(updated);
+                            }}
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                          >
+                            {getAvailableIcons().map(icon => (
+                              <option key={icon.name} value={icon.name}>{icon.label}</option>
+                            ))}
+                          </select>
+                          <label className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={link.enabled}
+                              onChange={(e) => {
+                                const updated = [...tempResourceLinks];
+                                updated[index] = { ...updated[index], enabled: e.target.checked };
+                                setTempResourceLinks(updated);
+                              }}
+                              className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                            />
+                            <span className="text-sm text-gray-700">Enabled</span>
+                          </label>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="bg-white rounded-lg p-4 border border-teal-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h4 className="font-medium text-gray-900">Objectives Manager</h4>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Create, edit, and organize objectives
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setShowCustomObjectivesAdmin(true)}
-                      className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200 flex items-center space-x-2"
-                    >
-                      <GraduationCap className="h-4 w-4" />
-                      <span>Open Admin Panel</span>
-                    </button>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h5 className="font-medium text-gray-900 mb-2">Example Structure:</h5>
-                    <div className="text-sm text-gray-700 space-y-1">
-                      <div><strong>Y1 Drama</strong> (Teal)</div>
-                      <div className="ml-4">• <strong>Performance Skills</strong></div>
-                      <div className="ml-8">- Y1D-P-01: Use voice expressively</div>
-                      <div className="ml-8">- Y1D-P-02: Use movement effectively</div>
-                      <div className="ml-4">• <strong>Creative Expression</strong></div>
-                      <div className="ml-8">- Y1D-C-01: Develop simple narratives</div>
-                      <div className="ml-8">- Y1D-C-02: Work collaboratively in groups</div>
-                    </div>
-                  </div>
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setTempResourceLinks(resourceLinks);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      updateResourceLinks(tempResourceLinks);
+                      setSaveSuccess(true);
+                      setTimeout(() => setSaveSuccess(false), 3000);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
+                  >
+                    Save Changes
+                  </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'admin' && (
+            <div className="h-full">
+              <CustomObjectivesAdmin embedded={true} />
             </div>
           )}
         </div>
@@ -1830,12 +2009,6 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
         </div>
       </div>
 
-      {/* Custom Objectives Admin Modal */}
-      <CustomObjectivesAdmin
-        isOpen={showCustomObjectivesAdmin}
-        onClose={() => setShowCustomObjectivesAdmin(false)}
-      />
-      
     </div>
   );
 }

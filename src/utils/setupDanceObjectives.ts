@@ -196,7 +196,7 @@ const DANCE_CURRICULUM: Record<string, DanceYearGroupData> = {
           { code: 'Y4-D-M1', text: 'Perform complex movement sequences with accuracy', description: 'Technical complexity' },
           { code: 'Y4-D-M2', text: 'Create movements using different body parts as initiators', description: 'Body part isolation' },
           { code: 'Y4-D-M3', text: 'Use weight transfer and balance in movement', description: 'Balance and weight' },
-          { code: 'Y4-D-M4', text: 'Work in small groups to create synchronized movements', description: 'Group synchronization' },
+          { code: 'Y4-D-M4', text: 'Work in small groups to create synchronised movements', description: 'Group synchronisation' },
           { code: 'Y4-D-M5', text: 'Use repetition and contrast in movement sequences', description: 'Choreographic devices' },
         ]
       },

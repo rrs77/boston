@@ -7,6 +7,7 @@ export interface CustomObjectiveYearGroup {
   color: string;
   sort_order: number;
   is_locked?: boolean;
+  linked_year_groups?: string[]; // Links to activity year groups (e.g., ['LKG', 'UKG', 'Reception'])
   created_at: string;
   updated_at: string;
 }
@@ -61,6 +62,7 @@ export interface CustomObjectiveFormData {
     name: string;
     description?: string;
     color: string;
+    linked_year_groups?: string[]; // Links to activity year groups
   };
   areas: Array<{
     section?: string; // Overall section heading

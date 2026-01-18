@@ -185,10 +185,10 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
       )
     },
     {
-      title: "Organize Your Lesson Flow",
+      title: "Organise Your Lesson Flow",
       content: (
         <div className="space-y-3">
-          <p>Once activities are added, organize them for optimal lesson flow:</p>
+          <p>Once activities are added, organise them for optimal lesson flow:</p>
           <ul className="list-disc pl-5 space-y-2">
             <li><strong>Auto-Grouping:</strong> Activities are automatically grouped by category for easy viewing</li>
             <li><strong>Reorder:</strong> Drag activities up or down to change the sequence within your lesson</li>
@@ -243,7 +243,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
           <p>Navigate to the <strong>Unit Builder</strong> tab in the main navigation.</p>
           <p>Click the <strong>Create New</strong> button to start building a fresh unit of work.</p>
           <div className="bg-teal-50 border-l-4 border-teal-500 p-3 rounded">
-            <p className="text-sm text-teal-900"><strong>What is a Unit?</strong> A unit is a collection of related lessons organized around a theme or topic, typically covering a half-term (5-7 weeks) of teaching.</p>
+            <p className="text-sm text-teal-900"><strong>What is a Unit?</strong> A unit is a collection of related lessons organised around a theme or topic, typically covering a half-term (5-7 weeks) of teaching.</p>
           </div>
         </div>
       ),
@@ -283,7 +283,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
       )
     },
     {
-      title: "Organize Lesson Sequence",
+      title: "Organise Lesson Sequence",
       content: (
         <div className="space-y-3">
           <p>In the <strong>Unit Contents</strong> panel, arrange your lessons for optimal progression:</p>
@@ -339,7 +339,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
         <div className="space-y-3">
           <p>In the <strong>Your Units</strong> panel (usually on the right), locate the unit you want to schedule:</p>
           <ul className="list-disc pl-5 space-y-2">
-            <li>Browse your saved units organized by term</li>
+            <li>Browse your saved units organised by term</li>
             <li>Check the unit details to confirm it's the right one</li>
             <li>Click the <strong>Calendar</strong> icon next to the unit name</li>
           </ul>
@@ -601,7 +601,7 @@ export function HelpGuide({ isOpen, onClose, initialSection }: HelpGuideProps) {
         }`}>
           <div className="p-6 max-w-4xl mx-auto">
             <p className="text-sm text-gray-700 leading-relaxed mb-4">
-              A comprehensive planning platform to streamline your curriculum development. Build reusable activities, organize them into structured lessons, group lessons into thematic units, and schedule everything across your academic year.
+              A comprehensive planning platform to streamline your curriculum development. Build reusable activities, organise them into structured lessons, group lessons into thematic units, and schedule everything across your academic year.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               <div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">

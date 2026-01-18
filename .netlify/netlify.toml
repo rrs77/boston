@@ -1,5 +1,5 @@
 functionsDirectory = "/Users/robreich-storer/Library/Mobile Documents/com~apple~CloudDocs/CC Designer/boston/netlify/functions"
-functionsDirectoryOrigin = "default"
+functionsDirectoryOrigin = "config"
 headersOrigin = "config"
 redirectsOrigin = "config"
 plugins = []

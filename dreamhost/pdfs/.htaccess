@@ -1,0 +1,23 @@
+# PDF Directory Configuration
+
+# Allow public access to PDF files
+<FilesMatch "\.pdf$">
+    Require all granted
+</FilesMatch>
+
+# Block access to non-PDF files
+<FilesMatch "^(?!.*\.pdf$)">
+    Require all denied
+</FilesMatch>
+
+# Disable directory listing
+Options -Indexes
+
+# Set proper content type for PDFs
+AddType application/pdf .pdf
+
+# Enable caching for PDFs (1 week)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType application/pdf "access plus 1 week"
+</IfModule>

@@ -467,7 +467,7 @@ function SubjectManagement() {
                       <div className="text-center py-12 text-gray-500">
                         <Tag className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                         <p className="text-lg">No categories yet</p>
-                        <p className="text-sm">Add categories to organize activities for {currentSubject.name}</p>
+                        <p className="text-sm">Add categories to organise activities for {currentSubject.name}</p>
                       </div>
                     )}
                   </div>

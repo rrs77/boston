@@ -538,7 +538,7 @@ export async function addKS1MathsObjectives() {
           {
             code: 'ST2',
             text: 'Ask and answer simple questions by counting the number of objects in each category and sorting the categories by quantity',
-            description: 'Collecting and organizing data'
+            description: 'Collecting and organising data'
           },
           {
             code: 'ST3',

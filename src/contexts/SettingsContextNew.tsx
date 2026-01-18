@@ -45,6 +45,13 @@ export interface Category {
   };
 }
 
+export interface ResourceLinkConfig {
+  key: string; // e.g., 'videoLink', 'musicLink', etc.
+  label: string; // Custom label
+  iconName: string; // Lucide icon name (e.g., 'Video', 'Music', 'Palette')
+  enabled: boolean; // Whether this resource link is enabled
+}
+
 interface UserSettings {
   schoolName: string;
   schoolLogo: string;
@@ -52,6 +59,7 @@ interface UserSettings {
   secondaryColor: string;
   accentColor: string;
   customTheme: boolean;
+  resourceLinks?: ResourceLinkConfig[]; // Custom resource link configurations
 }
 
 interface YearGroup {
@@ -104,6 +112,10 @@ interface SettingsContextType {
   // User change management
   startUserChange: () => void;
   endUserChange: () => void;
+  // Resource link customization
+  resourceLinks: ResourceLinkConfig[];
+  updateResourceLinks: (links: ResourceLinkConfig[]) => void;
+  resetResourceLinksToDefaults: () => void;
 }
 
 const FIXED_CATEGORIES: Category[] = [
@@ -224,6 +236,16 @@ const DEFAULT_CATEGORY_GROUPS: CategoryGroups = {
   groups: []
 };
 
+// Default resource link configurations
+const DEFAULT_RESOURCE_LINKS: ResourceLinkConfig[] = [
+  { key: 'videoLink', label: 'Video URL', iconName: 'Video', enabled: true },
+  { key: 'musicLink', label: 'Music URL', iconName: 'Music', enabled: true },
+  { key: 'backingLink', label: 'Backing Track URL', iconName: 'Volume2', enabled: true },
+  { key: 'resourceLink', label: 'Resource URL', iconName: 'FileText', enabled: true },
+  { key: 'vocalsLink', label: 'Vocals URL', iconName: 'Volume2', enabled: true },
+  { key: 'canvaLink', label: 'Canva Design URL', iconName: 'Palette', enabled: true },
+];
+
 const SettingsContextNew = createContext<SettingsContextType | undefined>(
   undefined
 );
@@ -277,7 +299,10 @@ export const useSettings = () => {
       removeCategoryGroup: () => {},
       updateCategoryGroup: () => {},
       startUserChange: () => {},
-      endUserChange: () => {}
+      endUserChange: () => {},
+      resourceLinks: DEFAULT_RESOURCE_LINKS,
+      updateResourceLinks: () => {},
+      resetResourceLinksToDefaults: () => {}
     } as SettingsContextType;
   }
   return context;
@@ -289,6 +314,7 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
   const [categories, setCategories] = useState<Category[]>(FIXED_CATEGORIES);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [customYearGroups, setCustomYearGroups] = useState<YearGroup[]>(DEFAULT_YEAR_GROUPS);
+  const [resourceLinks, setResourceLinks] = useState<ResourceLinkConfig[]>(DEFAULT_RESOURCE_LINKS);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [defaultViewMode, setDefaultViewMode] = useState<
     'grid' | 'list' | 'compact'
@@ -453,6 +479,19 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
 
     const adminStatus = localStorage.getItem('isAdmin') === 'true';
     setIsAdmin(adminStatus);
+
+    // Load resource links from localStorage
+    try {
+      const savedResourceLinks = localStorage.getItem('resource-links');
+      if (savedResourceLinks) {
+        const parsed = JSON.parse(savedResourceLinks);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setResourceLinks(parsed);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load resource links from localStorage:', error);
+    }
 
     // Load settings from localStorage
     try {
@@ -700,34 +739,17 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
               };
             });
             
-            // Merge with fixed categories, but use Supabase data for any FIXED_CATEGORIES that exist in Supabase
-            const mergedCategories = [...FIXED_CATEGORIES];
-            
-            // Update FIXED_CATEGORIES with any group assignments from Supabase
-            formattedCategories.forEach(supabaseCat => {
-              const fixedIndex = mergedCategories.findIndex(fixed => fixed.name === supabaseCat.name);
-              if (fixedIndex >= 0) {
-                // This is a FIXED_CATEGORY with group assignments from Supabase
-                // Use Supabase yearGroups if they exist and are not empty, otherwise keep empty
-                const yearGroups = (supabaseCat.yearGroups && Object.keys(supabaseCat.yearGroups).length > 0) 
-                  ? supabaseCat.yearGroups 
-                  : {}; // Ensure empty if no assignments
-                
-                mergedCategories[fixedIndex] = {
-                  ...mergedCategories[fixedIndex],
-                  group: supabaseCat.group,
-                  groups: supabaseCat.groups,
-                  yearGroups: yearGroups
-                };
-              } else {
-                // This is a custom category, add it
-                mergedCategories.push(supabaseCat);
-              }
-            });
-            
-            setCategories(mergedCategories);
-            console.log('📦 Loaded categories from Supabase:', formattedCategories.length, 'custom categories');
-            console.log('📦 Category groups mapping:', formattedCategories.map(cat => ({ name: cat.name, groups: cat.groups })));
+            // Use categories from Supabase directly - no longer force FIXED_CATEGORIES
+            // If Supabase has categories, use those. Only use FIXED_CATEGORIES as initial defaults.
+            if (formattedCategories.length > 0) {
+              setCategories(formattedCategories);
+              console.log('📦 Loaded categories from Supabase:', formattedCategories.length, 'categories');
+              console.log('📦 Category groups mapping:', formattedCategories.map(cat => ({ name: cat.name, groups: cat.groups })));
+            } else {
+              // No categories in Supabase, use FIXED_CATEGORIES as defaults
+              setCategories(FIXED_CATEGORIES);
+              console.log('📦 No categories in Supabase, using default categories');
+            }
             
             // Check if any categories were cleaned (had old defaults)
             const cleanedCount = formattedCategories.filter(cat => {
@@ -1356,6 +1378,25 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
   const updateSettings = (newSettings: Partial<UserSettings>) => {
     setSettings(prev => ({ ...prev, ...newSettings }));
   };
+
+  const updateResourceLinks = (links: ResourceLinkConfig[]) => {
+    setResourceLinks(links);
+    // Save to localStorage
+    try {
+      localStorage.setItem('resource-links', JSON.stringify(links));
+    } catch (error) {
+      console.error('Failed to save resource links to localStorage:', error);
+    }
+  };
+
+  const resetResourceLinksToDefaults = () => {
+    setResourceLinks(DEFAULT_RESOURCE_LINKS);
+    try {
+      localStorage.setItem('resource-links', JSON.stringify(DEFAULT_RESOURCE_LINKS));
+    } catch (error) {
+      console.error('Failed to save default resource links to localStorage:', error);
+    }
+  };
   
   const updateCategories = (newCategories: Category[]) => {
     setCategories(newCategories);
@@ -1759,34 +1800,12 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
           };
         });
         
-        // Merge with fixed categories, but use Supabase data for any FIXED_CATEGORIES that exist in Supabase
-        const mergedCategories = [...FIXED_CATEGORIES];
-        
-        // Update FIXED_CATEGORIES with any group assignments from Supabase
-        formattedCategories.forEach(supabaseCat => {
-          const fixedIndex = mergedCategories.findIndex(fixed => fixed.name === supabaseCat.name);
-          if (fixedIndex >= 0) {
-            // This is a FIXED_CATEGORY with group assignments from Supabase
-            // Use Supabase yearGroups if they exist and are not empty, otherwise keep empty
-            const yearGroups = (supabaseCat.yearGroups && Object.keys(supabaseCat.yearGroups).length > 0) 
-              ? supabaseCat.yearGroups 
-              : {}; // Ensure empty if no assignments
-            
-            mergedCategories[fixedIndex] = {
-              ...mergedCategories[fixedIndex],
-              group: supabaseCat.group,
-              groups: supabaseCat.groups,
-              yearGroups: yearGroups
-            };
-          } else {
-            // This is a custom category, add it
-            mergedCategories.push(supabaseCat);
-          }
-        });
-        
-        setCategories(mergedCategories);
-        localStorage.setItem('saved-categories', JSON.stringify(mergedCategories));
-        console.log('✅ Categories refreshed from Supabase:', formattedCategories.length);
+        // Use categories from Supabase directly - deleted categories stay deleted
+        if (formattedCategories.length > 0) {
+          setCategories(formattedCategories);
+          localStorage.setItem('saved-categories', JSON.stringify(formattedCategories));
+          console.log('✅ Categories refreshed from Supabase:', formattedCategories.length);
+        }
       }
 
       // Refresh category groups
@@ -2191,7 +2210,11 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
     updateCategoryGroup,
     // User change management
     startUserChange,
-    endUserChange
+    endUserChange,
+    // Resource link customization
+    resourceLinks,
+    updateResourceLinks,
+    resetResourceLinksToDefaults
   };
 
   return (

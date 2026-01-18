@@ -562,7 +562,7 @@ export function LessonPlanBuilder({
         ...JSON.parse(JSON.stringify(activity)),
         _id: undefined, // Remove original ID
         id: undefined,  // Remove original ID
-        activity: activity.activity + ' (Customized)', // Mark as customized
+        activity: activity.activity + ' (Customised)', // Mark as customised
         _uniqueId: Date.now() + Math.random().toString(36).substring(2, 9),
         _isCustomized: true // Flag to indicate this is a customized version
       };

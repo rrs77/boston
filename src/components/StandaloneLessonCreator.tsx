@@ -1,22 +1,26 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { X, Plus, Trash2, Eye, BookOpen, Target, Link2, Clock, Search, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Plus, Trash2, Eye, BookOpen, Target, Link2, Clock, Search, GripVertical, ChevronDown, ChevronUp, List, Layers, Upload } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { ActivityCard } from './ActivityCard';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
 import { ActivitySearchModal } from './ActivitySearchModal';
+import { ObjectiveSelector } from './ObjectiveSelector';
+import { LessonImportModal, ParsedLessonData } from './LessonImportModal';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
+import { useAuth } from '../hooks/useAuth';
 import type { Activity, LessonPlan } from '../contexts/DataContext';
 
 interface StandaloneLessonCreatorProps {
-  onSave: (lessonData: any) => void;
+  onSave: (lessonData: any) => void | Promise<void>;
   onClose: () => void;
   editingLesson?: {
     lessonNumber: string;
     lessonData: any;
   };
+  yearGroup?: string; // Current year group for filtering objectives
 }
 
 // Compact Draggable Activity Item Component
@@ -70,15 +74,21 @@ function CompactDraggableActivity({ activity, index, onRemove, onReorder }: Comp
       ref={ref}
       style={{ opacity }}
       data-handler-id={handlerId}
-      className="flex items-center py-2 px-3 hover:bg-gray-50 group cursor-move"
+      className={`flex items-center py-2.5 px-3 group cursor-grab active:cursor-grabbing transition-all ${
+        isDragging 
+          ? 'bg-teal-50 shadow-lg ring-2 ring-teal-400 rounded-lg' 
+          : 'hover:bg-gray-50'
+      }`}
     >
-      <GripVertical className="h-4 w-4 text-gray-400 mr-2" />
+      <div className="p-1 mr-2 rounded hover:bg-gray-200 transition-colors">
+        <GripVertical className="h-4 w-4 text-gray-400" />
+      </div>
       <div 
         className="w-1 h-6 rounded-full mr-2 flex-shrink-0"
         style={{ backgroundColor: categoryColor }}
       />
       <div className="flex-1 min-w-0">
-        <span className="text-sm text-gray-900">{activity.activity}</span>
+        <span className="text-sm text-gray-900 font-medium">{activity.activity}</span>
       </div>
       <span 
         className="px-2 py-0.5 text-white text-xs font-medium rounded-full mr-2"
@@ -97,21 +107,26 @@ function CompactDraggableActivity({ activity, index, onRemove, onReorder }: Comp
           e.stopPropagation();
           onRemove();
         }}
-        className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors opacity-0 group-hover:opacity-100"
+        className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
         title="Remove Activity"
       >
-        <X className="h-3.5 w-3.5" />
+        <X className="h-4 w-4" />
       </button>
     </div>
   );
 }
 
-export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = ({ onSave, onClose, editingLesson }) => {
+export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = ({ onSave, onClose, editingLesson, yearGroup }) => {
   const { allActivities, updateLessonData } = useData();
   const { categories, customYearGroups } = useSettings();
+  const { user } = useAuth();
+  
+  // Check if user is admin
+  const isAdmin = user?.email === 'rob.reichstorer@gmail.com' || user?.role === 'administrator';
   
   const [activeTab, setActiveTab] = useState<'main' | 'extended'>('main');
   const [showPreview, setShowPreview] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   
   // Initialize lesson state - populate if editing
   const [lesson, setLesson] = useState(() => {
@@ -121,6 +136,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         lessonTitle: lessonData.title || '',
         lessonName: lessonData.lessonName || '',
         duration: lessonData.totalTime || 60,
+        assessmentObjectives: lessonData.assessmentObjectives || [] as string[],
         learningOutcome: lessonData.learningOutcome || '',
         successCriteria: lessonData.successCriteria || '',
         introduction: lessonData.introduction || '',
@@ -137,24 +153,26 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         additionalLinks: lessonData.additionalLinks || [] as Array<{ url: string; label: string }>,
       };
     }
+    // Pre-filled dummy data for testing - remove or clear these values for production
     return {
-      lessonTitle: '',
-      lessonName: '',
-      duration: 60,
-      learningOutcome: '',
-      successCriteria: '',
-      introduction: '',
-      mainActivity: '',
-      plenary: '',
-      vocabulary: '',
-      keyQuestions: '',
-      resources: '',
-      differentiation: '',
-      assessment: '',
+      lessonTitle: 'Exploring Rhythm and Beat',
+      lessonName: 'Introduction to Musical Patterns',
+      duration: 45,
+      assessmentObjectives: [] as string[],
+      learningOutcome: '<p>Children will be able to:</p><ul><li>Maintain a steady beat when clapping or playing instruments</li><li>Identify the difference between rhythm and beat</li><li>Create simple 4-beat rhythm patterns</li></ul>',
+      successCriteria: '<p>I can:</p><ul><li>Keep a steady beat for at least 8 counts</li><li>Copy a simple rhythm pattern</li><li>Create my own rhythm using body percussion</li></ul>',
+      introduction: '<p>Begin by playing a familiar song and ask children to clap along. Discuss: "What are we clapping? Is it the same all the way through?"</p><p>Introduce the concept of a steady beat like a heartbeat - always the same speed.</p>',
+      mainActivity: '<p><strong>Activity 1: Beat vs Rhythm</strong></p><p>Play "We Will Rock You" - demonstrate the steady beat (stomp stomp clap) vs the rhythm of the words.</p><p><strong>Activity 2: Rhythm Patterns</strong></p><p>Using rhythm cards, children practice 4-beat patterns in pairs. Progress from copying to creating.</p>',
+      plenary: '<p>Performance circle: Each pair shares their created rhythm pattern. Class tries to copy it back.</p><p>Exit question: "What is the difference between beat and rhythm?"</p>',
+      vocabulary: '<p><strong>Beat</strong> - The steady pulse in music<br/><strong>Rhythm</strong> - The pattern of long and short sounds<br/><strong>Tempo</strong> - How fast or slow the beat is<br/><strong>Pattern</strong> - A sequence that repeats</p>',
+      keyQuestions: '<ul><li>Can you feel the beat in this music?</li><li>Is the rhythm the same as the beat?</li><li>How many beats are in your pattern?</li><li>What happens if we speed up the tempo?</li></ul>',
+      resources: '<ul><li>Rhythm cards (sets of 8)</li><li>Untuned percussion instruments</li><li>Audio: "We Will Rock You" by Queen</li><li>Interactive whiteboard for visual patterns</li></ul>',
+      differentiation: '<p><strong>Support:</strong> Use visual rhythm cards with symbols, pair with confident partner</p><p><strong>Challenge:</strong> Create 8-beat patterns, add dynamics (loud/quiet)</p>',
+      assessment: '<p>Observe children during activities - can they maintain the beat independently?</p><p>Use exit tickets: Draw your favourite rhythm pattern</p>',
       videoLink: '',
       resourceLink: '',
       imageLink: '',
-      additionalLinks: [] as Array<{ url: string; label: string }>,
+      additionalLinks: [] as string[],
     };
   });
 
@@ -187,6 +205,9 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
   });
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showActivitiesSection, setShowActivitiesSection] = useState(editingLesson ? true : false);
+  const [showAssessmentObjectivesSelector, setShowAssessmentObjectivesSelector] = useState(false);
+  const [showObjectiveSelector, setShowObjectiveSelector] = useState(false);
+  const [showSuccessCriteriaSelector, setShowSuccessCriteriaSelector] = useState(false);
 
   // Auto-resize textareas on mount and when values change
   React.useEffect(() => {
@@ -228,6 +249,26 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
     }));
   };
 
+  // Handle importing lesson content
+  const handleImportLesson = (importedData: ParsedLessonData) => {
+    setLesson((prev) => ({
+      ...prev,
+      lessonTitle: importedData.lessonTitle || prev.lessonTitle,
+      lessonName: importedData.lessonName || prev.lessonName,
+      duration: importedData.duration || prev.duration,
+      learningOutcome: importedData.learningOutcome || prev.learningOutcome,
+      successCriteria: importedData.successCriteria || prev.successCriteria,
+      introduction: importedData.introduction || prev.introduction,
+      mainActivity: importedData.mainActivity || prev.mainActivity,
+      plenary: importedData.plenary || prev.plenary,
+      vocabulary: importedData.vocabulary || prev.vocabulary,
+      keyQuestions: importedData.keyQuestions || prev.keyQuestions,
+      resources: importedData.resources || prev.resources,
+      differentiation: importedData.differentiation || prev.differentiation,
+      assessment: importedData.assessment || prev.assessment,
+    }));
+  };
+
   const handleRemoveLink = (index: number) => {
     setLesson((prev) => ({
       ...prev,
@@ -249,9 +290,28 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
     if (!lesson.lessonTitle.trim()) newErrors.lessonTitle = 'Lesson title is required';
     if (!lesson.lessonName.trim()) newErrors.lessonName = 'Lesson name is required';
     if (!lesson.duration || lesson.duration <= 0) newErrors.duration = 'Duration must be greater than 0';
-    if (!lesson.learningOutcome.trim()) newErrors.learningOutcome = 'Learning outcome is required';
+    
+    // Check if learning outcome has actual content (strip HTML tags)
+    const learningOutcomeText = lesson.learningOutcome.replace(/<[^>]*>/g, '').trim();
+    if (!learningOutcomeText) newErrors.learningOutcome = 'Learning outcome is required';
 
     setErrors(newErrors);
+    
+    // If there are errors, show an alert and scroll to the top
+    if (Object.keys(newErrors).length > 0) {
+      const errorMessages = Object.values(newErrors).join('\n• ');
+      alert(`Please fill in the required fields:\n\n• ${errorMessages}`);
+      
+      // Switch to main tab where the errors are
+      setActiveTab('main');
+      
+      // Scroll to top of the modal content
+      const modalContent = document.querySelector('.overflow-y-auto');
+      if (modalContent) {
+        modalContent.scrollTop = 0;
+      }
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
@@ -347,57 +407,66 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
 
     console.log('✅ Validation passed');
 
-    // Group activities by category
-    const grouped: Record<string, Activity[]> = {};
-    const categoryOrder: string[] = [];
-    
-    selectedActivities.forEach(activity => {
-      const category = activity.category || 'Other';
-      if (!grouped[category]) {
-        grouped[category] = [];
-        categoryOrder.push(category);
+    try {
+      // Group activities by category
+      const grouped: Record<string, Activity[]> = {};
+      const categoryOrder: string[] = [];
+      
+      selectedActivities.forEach(activity => {
+        const category = activity.category || 'Other';
+        if (!grouped[category]) {
+          grouped[category] = [];
+          categoryOrder.push(category);
+        }
+        grouped[category].push(activity);
+      });
+
+      const lessonData = {
+        title: lesson.lessonTitle,
+        lessonName: lesson.lessonName,
+        totalTime: lesson.duration,
+        type: 'standalone',
+        createdAt: editingLesson?.lessonData?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        assessmentObjectives: lesson.assessmentObjectives,
+        learningOutcome: lesson.learningOutcome,
+        successCriteria: lesson.successCriteria,
+        introduction: lesson.introduction,
+        mainActivity: lesson.mainActivity,
+        plenary: lesson.plenary,
+        vocabulary: lesson.vocabulary,
+        keyQuestions: lesson.keyQuestions,
+        resources: lesson.resources,
+        differentiation: lesson.differentiation,
+        assessment: lesson.assessment,
+        videoLink: lesson.videoLink,
+        resourceLink: lesson.resourceLink,
+        imageLink: lesson.imageLink,
+        additionalLinks: lesson.additionalLinks,
+        grouped: grouped,
+        categoryOrder: categoryOrder,
+        orderedActivities: selectedActivities.map(a => {
+          const { _uniqueId, ...cleanActivity } = a;
+          return cleanActivity;
+        })
+      };
+
+      console.log('📦 Final lesson data to save:', lessonData);
+
+      // If editing, use updateLessonData
+      if (editingLesson && updateLessonData) {
+        console.log('💾 Updating existing lesson:', editingLesson.lessonNumber);
+        await updateLessonData(editingLesson.lessonNumber, lessonData);
+        console.log('✅ Lesson updated successfully');
+        onClose();
+      } else {
+        console.log('💾 Creating new lesson - calling onSave...');
+        await onSave(lessonData);
+        console.log('✅ onSave completed');
       }
-      grouped[category].push(activity);
-    });
-
-    const lessonData = {
-      title: lesson.lessonTitle,
-      lessonName: lesson.lessonName,
-      totalTime: lesson.duration,
-      type: 'standalone',
-      createdAt: editingLesson?.lessonData?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      learningOutcome: lesson.learningOutcome,
-      successCriteria: lesson.successCriteria,
-      introduction: lesson.introduction,
-      mainActivity: lesson.mainActivity,
-      plenary: lesson.plenary,
-      vocabulary: lesson.vocabulary,
-      keyQuestions: lesson.keyQuestions,
-      resources: lesson.resources,
-      differentiation: lesson.differentiation,
-      assessment: lesson.assessment,
-      videoLink: lesson.videoLink,
-      resourceLink: lesson.resourceLink,
-      imageLink: lesson.imageLink,
-      additionalLinks: lesson.additionalLinks,
-      grouped: grouped,
-      categoryOrder: categoryOrder,
-      orderedActivities: selectedActivities.map(a => {
-        const { _uniqueId, ...cleanActivity } = a;
-        return cleanActivity;
-      })
-    };
-
-    // If editing, use updateLessonData
-    if (editingLesson && updateLessonData) {
-      console.log('💾 Updating existing lesson:', editingLesson.lessonNumber);
-      await updateLessonData(editingLesson.lessonNumber, lessonData);
-      console.log('✅ Lesson updated successfully');
-      onClose();
-    } else {
-      console.log('💾 Creating new lesson');
-      onSave(lessonData);
+    } catch (error) {
+      console.error('❌ Error saving lesson:', error);
+      alert(`Error saving lesson: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -414,12 +483,25 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
               {editingLesson ? `Editing: ${editingLesson.lessonData?.title || `Lesson ${editingLesson.lessonNumber}`}` : 'Create Lesson Plan'}
             </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors duration-200 flex-shrink-0"
-          >
-            <X className="h-5 w-5 text-white" />
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Import Button - Admin Only */}
+            {isAdmin && (
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors duration-200"
+                title="Import Lesson Content"
+              >
+                <Upload className="h-4 w-4 text-white" />
+                <span className="text-sm text-white hidden sm:inline">Import</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors duration-200 flex-shrink-0"
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -561,17 +643,82 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                 </div>
               </div>
 
+              {/* Assessment Objectives Card - Applies to whole lesson */}
+              <div className="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Target className="h-5 w-5 text-purple-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Assessment Objectives</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAssessmentObjectivesSelector(true)}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg transition-colors"
+                  >
+                    <List className="h-3.5 w-3.5" />
+                    <span>Select Objectives</span>
+                  </button>
+                </div>
+                <p className="text-xs text-purple-700 mb-3">
+                  Select curriculum objectives that this lesson addresses. These apply to the entire lesson.
+                </p>
+                {lesson.assessmentObjectives.length > 0 ? (
+                  <div className="space-y-2">
+                    {lesson.assessmentObjectives.map((objective, index) => (
+                      <div 
+                        key={index}
+                        className="flex items-start space-x-2 bg-white rounded-lg p-3 border border-purple-100"
+                      >
+                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center mt-0.5">
+                          <span className="text-xs font-medium text-purple-700">{index + 1}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 flex-1">{objective}</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLesson(prev => ({
+                              ...prev,
+                              assessmentObjectives: prev.assessmentObjectives.filter((_, i) => i !== index)
+                            }));
+                          }}
+                          className="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-lg p-4 border border-dashed border-purple-200 text-center">
+                    <p className="text-sm text-gray-500">No assessment objectives selected</p>
+                    <p className="text-xs text-gray-400 mt-1">Click "Select Objectives" to add curriculum objectives</p>
+                  </div>
+                )}
+              </div>
+
               {/* Learning Objectives Card */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Target className="h-5 w-5 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Learning Objectives</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Target className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Learning Objectives</h3>
+                  </div>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Learning Outcome <span className="text-red-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Learning Outcome <span className="text-red-500">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowObjectiveSelector(true)}
+                        className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
+                      >
+                        <List className="h-3.5 w-3.5" />
+                        <span>Select from Library</span>
+                      </button>
+                    </div>
                     <div className="bg-white rounded-lg border border-gray-300">
                       <RichTextEditor
                         value={lesson.learningOutcome}
@@ -585,9 +732,19 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Success Criteria
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Success Criteria
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowSuccessCriteriaSelector(true)}
+                        className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
+                      >
+                        <List className="h-3.5 w-3.5" />
+                        <span>Select from Library</span>
+                      </button>
+                    </div>
                     <div className="bg-white rounded-lg border border-gray-300">
                       <RichTextEditor
                         value={lesson.successCriteria}
@@ -637,71 +794,50 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                     />
                   </div>
                 ) : null}
+              </div>
 
-                {/* Activities Section - Collapsible at bottom of Main Activity */}
-                <div className="mt-4 pt-4 border-t border-green-200">
-                  <button
-                    onClick={() => setShowActivitiesSection(!showActivitiesSection)}
-                    className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Plus className="h-4 w-4 text-teal-600" />
-                      <span className="text-sm font-medium text-gray-900">Activities</span>
-                      {selectedActivities.length > 0 && (
-                        <span className="text-xs text-gray-500">({selectedActivities.length} selected)</span>
-                      )}
-                    </div>
-                    {showActivitiesSection ? (
-                      <ChevronUp className="h-4 w-4 text-gray-500" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-gray-500" />
+              {/* Activities Section - Standalone card below Main Activity */}
+              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-lg p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Layers className="h-5 w-5 text-teal-600" />
+                    <h3 className="text-base font-semibold text-gray-900">Activities from Library</h3>
+                    {selectedActivities.length > 0 && (
+                      <span className="text-xs text-gray-500 bg-teal-100 px-2 py-0.5 rounded-full">
+                        {selectedActivities.length} selected
+                      </span>
                     )}
+                  </div>
+                  <button
+                    onClick={() => setShowActivityModal(true)}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded transition-colors"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Add Activities</span>
                   </button>
-
-                  {/* Collapsible Activities Content */}
-                  {showActivitiesSection && (
-                    <DndProvider backend={HTML5Backend}>
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between mb-3">
-                          <button
-                            onClick={() => setShowActivityModal(true)}
-                            className="flex items-center space-x-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded transition-colors"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                            <span>Add Activities</span>
-                          </button>
-                        </div>
-                        
-                        {selectedActivities.length === 0 ? (
-                          <p className="text-sm text-gray-600 py-4 text-center">
-                            Click "Add Activities" to select activities for this lesson plan.
-                          </p>
-                        ) : (
-                          <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
-                            {selectedActivities.map((activity, index) => (
-                              <CompactDraggableActivity
-                                key={activity._uniqueId || `${activity._id || activity.id || activity.activity}-${index}`}
-                                activity={activity}
-                                index={index}
-                                onRemove={() => handleActivityRemove(index)}
-                                onReorder={handleActivityReorder}
-                              />
-                            ))}
-                            <div className="p-3 border-t border-gray-200">
-                              <button
-                                onClick={() => setShowActivityModal(true)}
-                                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-                              >
-                                <Plus className="h-4 w-4" />
-                                <span>Add Activity to Lesson</span>
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </DndProvider>
-                  )}
                 </div>
+                
+                <DndProvider backend={HTML5Backend}>
+                  {selectedActivities.length === 0 ? (
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+                      <p className="text-sm text-gray-500">
+                        Click "Add Activities" to select activities from your library.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+                      {selectedActivities.map((activity, index) => (
+                        <CompactDraggableActivity
+                          key={activity._uniqueId || `${activity._id || activity.id || activity.activity}-${index}`}
+                          activity={activity}
+                          index={index}
+                          onRemove={() => handleActivityRemove(index)}
+                          onReorder={handleActivityReorder}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </DndProvider>
               </div>
 
               {/* Plenary Card */}
@@ -1002,6 +1138,28 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                 </div>
               </div>
 
+              {/* Assessment Objectives */}
+              {lesson.assessmentObjectives && lesson.assessmentObjectives.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                    <Target className="h-5 w-5 text-purple-600" />
+                    <span>Assessment Objectives</span>
+                  </h4>
+                  <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                    <ul className="space-y-2">
+                      {lesson.assessmentObjectives.map((objective, index) => (
+                        <li key={index} className="flex items-start space-x-2 text-sm text-gray-700">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center text-xs font-medium text-purple-700">
+                            {index + 1}
+                          </span>
+                          <span>{objective}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
               {/* Learning Outcome */}
               {lesson.learningOutcome && (
                 <div className="space-y-2">
@@ -1186,6 +1344,93 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         onRemoveActivity={handleRemoveActivity}
         selectedActivities={selectedActivities}
       />
+
+      {/* Objective Selector for Assessment Objectives (whole lesson) */}
+      <ObjectiveSelector
+        isOpen={showAssessmentObjectivesSelector}
+        onClose={() => setShowAssessmentObjectivesSelector(false)}
+        onSelect={(objectiveText) => {
+          // Add single objective if not already present
+          if (!lesson.assessmentObjectives.includes(objectiveText)) {
+            setLesson(prev => ({
+              ...prev,
+              assessmentObjectives: [...prev.assessmentObjectives, objectiveText]
+            }));
+          }
+        }}
+        selectedObjectives={lesson.assessmentObjectives}
+        multiSelect={true}
+        onMultiSelect={(objectives) => {
+          setLesson(prev => ({
+            ...prev,
+            assessmentObjectives: objectives
+          }));
+        }}
+        filterByYearGroup={yearGroup}
+      />
+
+      {/* Objective Selector for Learning Outcome */}
+      <ObjectiveSelector
+        isOpen={showObjectiveSelector}
+        onClose={() => setShowObjectiveSelector(false)}
+        onSelect={(objectiveText) => {
+          // Append to existing learning outcome or replace if empty
+          const currentValue = lesson.learningOutcome.replace(/<[^>]*>/g, '').trim();
+          if (currentValue) {
+            handleRichTextChange('learningOutcome', `${lesson.learningOutcome}<p>${objectiveText}</p>`);
+          } else {
+            handleRichTextChange('learningOutcome', `<p>${objectiveText}</p>`);
+          }
+        }}
+        multiSelect={true}
+        onMultiSelect={(objectives) => {
+          // Format multiple objectives as a list
+          const formattedObjectives = objectives.map(obj => `<li>${obj}</li>`).join('');
+          const currentValue = lesson.learningOutcome.replace(/<[^>]*>/g, '').trim();
+          if (currentValue) {
+            handleRichTextChange('learningOutcome', `${lesson.learningOutcome}<ul>${formattedObjectives}</ul>`);
+          } else {
+            handleRichTextChange('learningOutcome', `<ul>${formattedObjectives}</ul>`);
+          }
+        }}
+        filterByYearGroup={yearGroup}
+      />
+
+      {/* Objective Selector for Success Criteria */}
+      <ObjectiveSelector
+        isOpen={showSuccessCriteriaSelector}
+        onClose={() => setShowSuccessCriteriaSelector(false)}
+        onSelect={(objectiveText) => {
+          // Append to existing success criteria or replace if empty
+          const currentValue = lesson.successCriteria.replace(/<[^>]*>/g, '').trim();
+          if (currentValue) {
+            handleRichTextChange('successCriteria', `${lesson.successCriteria}<p>• ${objectiveText}</p>`);
+          } else {
+            handleRichTextChange('successCriteria', `<p>• ${objectiveText}</p>`);
+          }
+        }}
+        multiSelect={true}
+        onMultiSelect={(objectives) => {
+          // Format multiple objectives as bullet points
+          const formattedObjectives = objectives.map(obj => `<li>${obj}</li>`).join('');
+          const currentValue = lesson.successCriteria.replace(/<[^>]*>/g, '').trim();
+          if (currentValue) {
+            handleRichTextChange('successCriteria', `${lesson.successCriteria}<ul>${formattedObjectives}</ul>`);
+          } else {
+            handleRichTextChange('successCriteria', `<ul>${formattedObjectives}</ul>`);
+          }
+        }}
+        filterByYearGroup={yearGroup}
+      />
+
+      {/* Lesson Import Modal - Admin Only */}
+      {isAdmin && (
+        <LessonImportModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImport={handleImportLesson}
+        />
+      )}
     </>
   );
 };
