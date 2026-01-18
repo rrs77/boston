@@ -19,75 +19,47 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const quillRef = useRef<ReactQuill>(null);
 
-  // Set up the editor with RTL support and paste handling
+  // Set up the editor with paste handling
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
       editor.root.dir = 'ltr';
       
-      // Configure clipboard to preserve formatting
-      const clipboard = editor.getModule('clipboard');
-      if (clipboard) {
-        // Preserve lists (UL and OL)
-        clipboard.addMatcher(Node.ELEMENT_NODE, (node: any, delta: any) => {
-          if (node.tagName === 'UL') {
-            const listItems = Array.from(node.querySelectorAll('li'));
-            let newDelta = delta;
-            listItems.forEach((li: any) => {
-              const text = li.textContent || '';
-              if (text.trim()) {
-                newDelta = newDelta.insert(text, { list: 'bullet' });
-                newDelta = newDelta.insert('\n');
-              }
-            });
-            return newDelta;
+      // Custom paste handler to prevent doubling
+      editor.root.addEventListener('paste', (e: ClipboardEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const clipboardData = e.clipboardData;
+        if (!clipboardData) return;
+        
+        // Get plain text
+        const text = clipboardData.getData('text/plain');
+        if (!text) return;
+        
+        // Get current selection
+        const range = editor.getSelection();
+        if (!range) return;
+        
+        // Process text to preserve line breaks
+        const lines = text.split('\n');
+        let position = range.index;
+        
+        lines.forEach((line, index) => {
+          if (index > 0) {
+            // Insert line break
+            editor.insertText(position, '\n');
+            position++;
           }
-          if (node.tagName === 'OL') {
-            const listItems = Array.from(node.querySelectorAll('li'));
-            let newDelta = delta;
-            listItems.forEach((li: any) => {
-              const text = li.textContent || '';
-              if (text.trim()) {
-                newDelta = newDelta.insert(text, { list: 'ordered' });
-                newDelta = newDelta.insert('\n');
-              }
-            });
-            return newDelta;
+          if (line.trim()) {
+            editor.insertText(position, line);
+            position += line.length;
           }
-          // Preserve line breaks
-          if (node.tagName === 'BR') {
-            return delta.insert('\n');
-          }
-          // Preserve paragraphs and divs as line breaks
-          if (node.tagName === 'P' || node.tagName === 'DIV') {
-            const text = node.textContent || '';
-            if (text.trim()) {
-              return delta.insert(text + '\n');
-            }
-            return delta.insert('\n');
-          }
-          return delta;
         });
         
-        // Preserve plain text line breaks
-        clipboard.addMatcher(Node.TEXT_NODE, (node: any, delta: any) => {
-          const text = node.data || '';
-          if (text.includes('\n')) {
-            const lines = text.split('\n');
-            let newDelta = delta;
-            lines.forEach((line: string, index: number) => {
-              if (index > 0) {
-                newDelta = newDelta.insert('\n');
-              }
-              if (line) {
-                newDelta = newDelta.insert(line);
-              }
-            });
-            return newDelta;
-          }
-          return delta.insert(text);
-        });
-      }
+        // Set cursor to end of pasted content
+        editor.setSelection(position, 0);
+      });
     }
   }, []);
 
