@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, ChevronDown, ChevronRight, Check, Target, Plus } from 'lucide-react';
 import { customObjectivesApi } from '../config/customObjectivesApi';
+import { useSettings } from '../contexts/SettingsContextNew';
 import type { CustomObjectiveYearGroupWithAreas } from '../types/customObjectives';
 
 interface ObjectiveSelectorProps {
@@ -22,6 +23,7 @@ export function ObjectiveSelector({
   onMultiSelect,
   filterByYearGroup
 }: ObjectiveSelectorProps) {
+  const { customYearGroups } = useSettings();
   const [yearGroups, setYearGroups] = useState<CustomObjectiveYearGroupWithAreas[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,13 +126,55 @@ export function ObjectiveSelector({
     return { ...yearGroup, areas: filteredAreas };
   };
 
+  // Helper function to normalize strings for comparison (case-insensitive, handle spaces)
+  const normalizeString = (str: string): string => {
+    return str.toLowerCase().trim().replace(/\s+/g, ' ');
+  };
+
+  // Get all possible identifiers for the filter year group (ID, name, normalized versions)
+  const getYearGroupIdentifiers = (filterValue: string): string[] => {
+    const identifiers = [filterValue];
+    
+    // Find the year group in customYearGroups to get both ID and name
+    if (customYearGroups) {
+      const matchingYearGroup = customYearGroups.find(yg => 
+        yg.id === filterValue || 
+        yg.name === filterValue ||
+        normalizeString(yg.id) === normalizeString(filterValue) ||
+        normalizeString(yg.name) === normalizeString(filterValue)
+      );
+      
+      if (matchingYearGroup) {
+        identifiers.push(matchingYearGroup.id, matchingYearGroup.name);
+      }
+    }
+    
+    // Add normalized versions
+    identifiers.push(normalizeString(filterValue));
+    
+    // Remove duplicates
+    return [...new Set(identifiers)];
+  };
+
   // Filter by linked year group first, then by search term
   // Only show objectives that are EXPLICITLY linked to the current year group
   const yearGroupFiltered = filterByYearGroup && !showAllObjectives
     ? yearGroups.filter(yg => {
         // Must have linked_year_groups AND include the current year group
         if (!yg.linked_year_groups || yg.linked_year_groups.length === 0) return false;
-        return yg.linked_year_groups.includes(filterByYearGroup);
+        
+        // Get all possible identifiers for the filter year group
+        const filterIdentifiers = getYearGroupIdentifiers(filterByYearGroup);
+        
+        // Check if any linked year group matches any of the identifiers (case-insensitive, flexible matching)
+        return yg.linked_year_groups.some(linked => {
+          const normalizedLinked = normalizeString(linked);
+          return filterIdentifiers.some(filterId => 
+            normalizeString(filterId) === normalizedLinked ||
+            normalizedLinked.includes(normalizeString(filterId)) ||
+            normalizeString(filterId).includes(normalizedLinked)
+          );
+        });
       })
     : yearGroups;
 

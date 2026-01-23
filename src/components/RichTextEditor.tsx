@@ -25,41 +25,47 @@ export function RichTextEditor({
       const editor = quillRef.current.getEditor();
       editor.root.dir = 'ltr';
       
-      // Custom paste handler to prevent doubling
-      editor.root.addEventListener('paste', (e: ClipboardEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+      // Override clipboard matchers to prevent doubling
+      const clipboard = editor.getModule('clipboard');
+      if (clipboard) {
+        // Store original matchers
+        const originalMatchers = clipboard.matchers.slice(0);
         
-        const clipboardData = e.clipboardData;
-        if (!clipboardData) return;
+        // Clear all matchers
+        clipboard.matchers = [];
         
-        // Get plain text
-        const text = clipboardData.getData('text/plain');
-        if (!text) return;
-        
-        // Get current selection
-        const range = editor.getSelection();
-        if (!range) return;
-        
-        // Process text to preserve line breaks
-        const lines = text.split('\n');
-        let position = range.index;
-        
-        lines.forEach((line, index) => {
-          if (index > 0) {
-            // Insert line break
-            editor.insertText(position, '\n');
-            position++;
+        // Add single comprehensive matcher to prevent doubling
+        clipboard.addMatcher(Node.ELEMENT_NODE, (node: any, delta: any) => {
+          // Handle lists
+          if (node.tagName === 'UL' || node.tagName === 'OL') {
+            const listItems = Array.from(node.querySelectorAll('li'));
+            const ops: any[] = [];
+            listItems.forEach((li: any) => {
+              const text = li.textContent?.trim() || '';
+              if (text) {
+                ops.push({ insert: text });
+                ops.push({ insert: '\n', attributes: { list: node.tagName === 'OL' ? 'ordered' : 'bullet' } });
+              }
+            });
+            return { ops };
           }
-          if (line.trim()) {
-            editor.insertText(position, line);
-            position += line.length;
+          
+          // Handle line breaks
+          if (node.tagName === 'BR') {
+            return { ops: [{ insert: '\n' }] };
           }
+          
+          // Default: just get text content
+          const text = node.textContent || '';
+          return { ops: [{ insert: text }] };
         });
         
-        // Set cursor to end of pasted content
-        editor.setSelection(position, 0);
-      });
+        // Handle plain text with line breaks
+        clipboard.addMatcher(Node.TEXT_NODE, (node: any, delta: any) => {
+          const text = node.data || '';
+          return { ops: [{ insert: text }] };
+        });
+      }
     }
   }, []);
 

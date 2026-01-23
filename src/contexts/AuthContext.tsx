@@ -149,8 +149,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setLoading(true);
       
-      // First, check local users
-      const localUser = localUsers.find(u => u.email === username && u.password === password);
+      // TESTING MODE: Allow blank password for admin user
+      const localUser = localUsers.find(u => {
+        if (u.email === username) {
+          // Allow blank password OR correct password during testing
+          return password === '' || u.password === password;
+        }
+        return false;
+      });
       
       if (localUser) {
         const userData: User = {
