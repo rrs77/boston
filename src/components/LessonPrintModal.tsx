@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Download, X, Check, Tag, ChevronDown, Share2, Copy, Link2 } from 'lucide-react';
+import { Download, X, Check, Tag, ChevronDown, Share2, Copy, Link2, Target } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { Activity } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
@@ -352,11 +352,26 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
           
           .section-content ul {
             margin: 0;
-            padding-left: 16px;
+            padding-left: 20px;
+            list-style-type: disc;
           }
           
-          .section-content li {
+          .section-content ul li {
             margin-bottom: 3px;
+            list-style-type: disc;
+            display: list-item;
+          }
+          
+          .section-content ol {
+            margin: 0;
+            padding-left: 20px;
+            list-style-type: decimal;
+          }
+          
+          .section-content ol li {
+            margin-bottom: 3px;
+            list-style-type: decimal;
+            display: list-item;
           }
           
           .section-content p {
@@ -438,6 +453,30 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
             padding: 10px 12px;
             font-size: 10px;
             color: #374151;
+          }
+          
+          .activity-body ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin: 4px 0;
+          }
+          
+          .activity-body ul li {
+            list-style-type: disc;
+            display: list-item;
+            margin-bottom: 2px;
+          }
+          
+          .activity-body ol {
+            list-style-type: decimal;
+            padding-left: 20px;
+            margin: 4px 0;
+          }
+          
+          .activity-body ol li {
+            list-style-type: decimal;
+            display: list-item;
+            margin-bottom: 2px;
           }
           
           .activity-resources {
@@ -662,23 +701,23 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
 
       if (hasLessonPlanDetails) {
         
-        // Helper function for clean section rendering
+        // Helper function for clean section rendering - matching Full Lesson Preview
         const renderCleanSection = (title: string, content: string, iconSvg?: string) => {
           return `
-            <div style="margin-bottom: 16px;">
-              <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                ${iconSvg ? `<span style="margin-right: 8px; color: #0d9488;">${iconSvg}</span>` : ''}
-                <h3 style="font-size: 14px; font-weight: 700; color: #1f2937; margin: 0;">${title}</h3>
+            <div style="margin-bottom: 12px;">
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                ${iconSvg ? `<span style="margin-right: 8px; color: #0d9488; display: inline-flex; align-items: center;">${iconSvg}</span>` : ''}
+                <h3 style="font-size: 13px; font-weight: 600; color: #111827; margin: 0;">${title}</h3>
               </div>
-              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;">
-                <div style="font-size: 11px; color: #374151; line-height: 1.6;">${content}</div>
+              <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;">
+                <div style="font-size: 10px; color: #374151; line-height: 1.5;">${content}</div>
               </div>
             </div>
           `;
         };
 
-        // Target icon SVG
-        const targetIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+        // Target icon SVG (matching Full Lesson Preview)
+        const targetIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
 
         // Learning Outcome
         if (lessonData.learningOutcome) {
@@ -1754,80 +1793,86 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                         </div>
                       )}
 
-                      {/* Lesson Plan Details - Compact Layout - Only show on first page */}
+                      {/* Lesson Plan Details - Match Full Lesson Preview Styling - Only show on first page */}
                       {pageIndex === 0 && (lessonData.learningOutcome || lessonData.successCriteria || 
                         lessonData.introduction || lessonData.mainActivity || lessonData.plenary ||
                         lessonData.vocabulary || lessonData.keyQuestions || lessonData.resources ||
                         lessonData.differentiation || lessonData.assessment) && (
-                        <div className="mb-2">
-                          {/* Learning Outcome & Success Criteria side by side */}
-                          {(lessonData.learningOutcome || lessonData.successCriteria) && (
-                            <div className="grid grid-cols-2 gap-1 mb-1">
-                              {lessonData.learningOutcome && (
-                                <div className="rounded p-1.5 border-l-4 border-blue-500 bg-blue-50">
-                                  <h4 className="font-bold text-blue-800 text-xs mb-0.5">Learning Outcome</h4>
-                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.learningOutcome }} />
-                                </div>
-                              )}
-                              {lessonData.successCriteria && (
-                                <div className="rounded p-1.5 border-l-4 border-green-500 bg-green-50">
-                                  <h4 className="font-bold text-green-800 text-xs mb-0.5">Success Criteria</h4>
-                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.successCriteria }} />
-                                </div>
-                              )}
+                        <div className="mb-4 space-y-3">
+                          {/* Learning Outcome */}
+                          {lessonData.learningOutcome && (
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+                                <Target className="h-4 w-4 text-teal-600" />
+                                <span>Learning Outcome</span>
+                              </h4>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.learningOutcome }} />
                             </div>
                           )}
+                          {/* Success Criteria */}
+                          {lessonData.successCriteria && (
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+                                <Target className="h-4 w-4 text-teal-600" />
+                                <span>Success Criteria</span>
+                              </h4>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.successCriteria }} />
+                            </div>
+                          )}
+                          {/* Introduction */}
                           {lessonData.introduction && (
-                            <div className="rounded p-1.5 border-l-4 border-purple-500 bg-purple-50 mb-1">
-                              <h4 className="font-bold text-purple-800 text-xs mb-0.5">Introduction</h4>
-                              <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.introduction }} />
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-gray-900">Introduction</h4>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.introduction }} />
                             </div>
                           )}
+                          {/* Main Activity */}
                           {lessonData.mainActivity && (
-                            <div className="rounded p-1.5 border-l-4 border-orange-500 bg-orange-50 mb-1">
-                              <h4 className="font-bold text-orange-800 text-xs mb-0.5">Main Activity</h4>
-                              <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.mainActivity }} />
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-gray-900">Main Activity</h4>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.mainActivity }} />
                             </div>
                           )}
+                          {/* Plenary */}
                           {lessonData.plenary && (
-                            <div className="rounded p-1.5 border-l-4 border-teal-500 bg-teal-50 mb-1">
-                              <h4 className="font-bold text-teal-800 text-xs mb-0.5">Plenary / Conclusion</h4>
-                              <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.plenary }} />
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-gray-900">Plenary</h4>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.plenary }} />
                             </div>
                           )}
-                          {/* 4-column grid for smaller sections */}
-                          {(lessonData.vocabulary || lessonData.keyQuestions || lessonData.resources || lessonData.differentiation) && (
-                            <div className="grid grid-cols-2 gap-1 mb-1">
-                              {lessonData.vocabulary && (
-                                <div className="rounded p-1 border-l-4 border-yellow-500 bg-yellow-50">
-                                  <h4 className="font-bold text-yellow-700 text-xs mb-0.5">Vocabulary</h4>
-                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.vocabulary }} />
-                                </div>
-                              )}
-                              {lessonData.keyQuestions && (
-                                <div className="rounded p-1 border-l-4 border-indigo-500 bg-indigo-50">
-                                  <h4 className="font-bold text-indigo-700 text-xs mb-0.5">Key Questions</h4>
-                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.keyQuestions }} />
-                                </div>
-                              )}
-                              {lessonData.resources && (
-                                <div className="rounded p-1 border-l-4 border-pink-500 bg-pink-50">
-                                  <h4 className="font-bold text-pink-700 text-xs mb-0.5">Resources</h4>
-                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.resources }} />
-                                </div>
-                              )}
-                              {lessonData.differentiation && (
-                                <div className="rounded p-1 border-l-4 border-cyan-500 bg-cyan-50">
-                                  <h4 className="font-bold text-cyan-700 text-xs mb-0.5">Differentiation</h4>
-                                  <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.differentiation }} />
-                                </div>
-                              )}
+                          {/* Vocabulary */}
+                          {lessonData.vocabulary && (
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-gray-900">Vocabulary</h4>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.vocabulary }} />
                             </div>
                           )}
+                          {/* Key Questions */}
+                          {lessonData.keyQuestions && (
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-gray-900">Key Questions</h4>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.keyQuestions }} />
+                            </div>
+                          )}
+                          {/* Resources */}
+                          {lessonData.resources && (
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-gray-900">Resources</h4>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.resources }} />
+                            </div>
+                          )}
+                          {/* Differentiation */}
+                          {lessonData.differentiation && (
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-gray-900">Differentiation</h4>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.differentiation }} />
+                            </div>
+                          )}
+                          {/* Assessment */}
                           {lessonData.assessment && (
-                            <div className="rounded p-1.5 border-l-4 border-red-500 bg-red-50 mb-1">
-                              <h4 className="font-bold text-red-800 text-xs mb-0.5">Assessment</h4>
-                              <div className="text-xs text-black leading-tight" dangerouslySetInnerHTML={{ __html: lessonData.assessment }} />
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold text-gray-900">Assessment</h4>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.assessment }} />
                             </div>
                           )}
                         </div>

@@ -131,50 +131,123 @@ export function ObjectiveSelector({
     return str.toLowerCase().trim().replace(/\s+/g, ' ');
   };
 
-  // Get all possible identifiers for the filter year group (ID, name, normalized versions)
-  const getYearGroupIdentifiers = (filterValue: string): string[] => {
-    const identifiers = [filterValue];
+  // Comprehensive year group normalization - maps all variations to canonical IDs
+  const normalizeYearGroup = (input: string): string[] => {
+    const normalized = normalizeString(input);
+    const identifiers: string[] = [input]; // Always include original
     
-    // Find the year group in customYearGroups to get both ID and name
+    // Legacy/backward compatibility mappings
+    const legacyMappings: Record<string, string[]> = {
+      'eyfs': ['LKG', 'UKG', 'Reception'], // EYFS covers all early years
+      'eyfs u': ['UKG'],
+      'eyfs l': ['LKG'],
+      'upper kindergarten': ['UKG'],
+      'lower kindergarten': ['LKG'],
+      'ukg': ['UKG'],
+      'lkg': ['LKG'],
+      'reception': ['Reception'],
+    };
+    
+    // Check legacy mappings first
+    if (legacyMappings[normalized]) {
+      identifiers.push(...legacyMappings[normalized]);
+    }
+    
+    // Find matching year group in customYearGroups
     if (customYearGroups) {
-      const matchingYearGroup = customYearGroups.find(yg => 
-        yg.id === filterValue || 
-        yg.name === filterValue ||
-        normalizeString(yg.id) === normalizeString(filterValue) ||
-        normalizeString(yg.name) === normalizeString(filterValue)
-      );
+      const matchingYearGroup = customYearGroups.find(yg => {
+        const ygIdNorm = normalizeString(yg.id);
+        const ygNameNorm = normalizeString(yg.name);
+        return ygIdNorm === normalized || 
+               ygNameNorm === normalized ||
+               ygIdNorm.includes(normalized) ||
+               ygNameNorm.includes(normalized) ||
+               normalized.includes(ygIdNorm) ||
+               normalized.includes(ygNameNorm);
+      });
       
       if (matchingYearGroup) {
         identifiers.push(matchingYearGroup.id, matchingYearGroup.name);
+        
+        // Also add variations based on the ID
+        if (matchingYearGroup.id === 'UKG') {
+          identifiers.push('Upper Kindergarten', 'EYFS U', 'EYFS');
+        } else if (matchingYearGroup.id === 'LKG') {
+          identifiers.push('Lower Kindergarten', 'EYFS L', 'EYFS');
+        } else if (matchingYearGroup.id === 'Reception') {
+          identifiers.push('EYFS');
+        }
       }
     }
     
-    // Add normalized versions
-    identifiers.push(normalizeString(filterValue));
-    
-    // Remove duplicates
+    // Remove duplicates and return
     return [...new Set(identifiers)];
   };
 
+  // Get all possible identifiers for the filter year group (ID, name, normalized versions)
+  const getYearGroupIdentifiers = (filterValue: string): string[] => {
+    return normalizeYearGroup(filterValue);
+  };
+
   // Filter by linked year group first, then by search term
-  // Only show objectives that are EXPLICITLY linked to the current year group
+  // Show objectives that match the current year group (by name, ID, or linked_year_groups)
   const yearGroupFiltered = filterByYearGroup && !showAllObjectives
     ? yearGroups.filter(yg => {
-        // Must have linked_year_groups AND include the current year group
-        if (!yg.linked_year_groups || yg.linked_year_groups.length === 0) return false;
-        
-        // Get all possible identifiers for the filter year group
+        // Get all possible identifiers for the filter year group (includes EYFS, UKG, Upper Kindergarten, etc.)
         const filterIdentifiers = getYearGroupIdentifiers(filterByYearGroup);
         
-        // Check if any linked year group matches any of the identifiers (case-insensitive, flexible matching)
-        return yg.linked_year_groups.some(linked => {
-          const normalizedLinked = normalizeString(linked);
-          return filterIdentifiers.some(filterId => 
-            normalizeString(filterId) === normalizedLinked ||
-            normalizedLinked.includes(normalizeString(filterId)) ||
-            normalizeString(filterId).includes(normalizedLinked)
-          );
+        console.log('🔍 ObjectiveSelector Filtering:', {
+          yearGroupName: yg.name,
+          yearGroupId: yg.id,
+          filterByYearGroup,
+          filterIdentifiers,
+          linked_year_groups: yg.linked_year_groups
         });
+        
+        // Helper to check if two strings match (normalized)
+        const checkMatch = (str1: string, str2: string): boolean => {
+          const n1 = normalizeString(str1);
+          const n2 = normalizeString(str2);
+          return n1 === n2 || n1.includes(n2) || n2.includes(n1);
+        };
+        
+        // First, check if the objective year group's own name or ID matches any filter identifier
+        const ygNameMatches = filterIdentifiers.some(filterId => 
+          checkMatch(yg.name, filterId) || checkMatch(yg.id, filterId)
+        );
+        
+        if (ygNameMatches) {
+          console.log('  → ✅ Year group name/ID matches');
+          return true;
+        }
+        
+        // Special case: If filter is UKG/LKG/Reception and objective year group is EYFS, include it
+        const filterNormalized = normalizeString(filterByYearGroup);
+        const isEarlyYearsFilter = filterNormalized.includes('ukg') || 
+                                   filterNormalized.includes('lkg') || 
+                                   filterNormalized.includes('reception') ||
+                                   filterNormalized.includes('upper kindergarten') ||
+                                   filterNormalized.includes('lower kindergarten');
+        const isEyfsObjective = normalizeString(yg.name).includes('eyfs') || 
+                                normalizeString(yg.id).includes('eyfs');
+        
+        if (isEarlyYearsFilter && isEyfsObjective) {
+          console.log('  → ✅ EYFS objective matches early years filter');
+          return true;
+        }
+        
+        // Then check linked_year_groups if they exist
+        if (yg.linked_year_groups && yg.linked_year_groups.length > 0) {
+          const linkedMatches = yg.linked_year_groups.some(linked => 
+            filterIdentifiers.some(filterId => checkMatch(linked, filterId))
+          );
+          console.log('  → Linked groups check:', linkedMatches);
+          return linkedMatches;
+        }
+        
+        // If no linked_year_groups, don't show (objectives must be explicitly linked)
+        console.log('  → ❌ No match found');
+        return false;
       })
     : yearGroups;
 

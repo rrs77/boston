@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Settings, Palette, RotateCcw, X, Plus, Trash2, GripVertical, Edit3, Save, Users, Database, AlertTriangle, GraduationCap, Package, Filter, Video, Music, Volume2, FileText, Link as LinkIcon, Image, FileVideo, FileMusic, File, Globe, ExternalLink, Share2, Download, Upload, Eye, Play, Pause, Headphones, Mic, Speaker, Film, Camera, BookOpen, Book, Folder, Cloud, Network } from 'lucide-react';
+import { Settings, Palette, RotateCcw, X, Plus, Trash2, GripVertical, Edit3, Save, Users, Database, AlertTriangle, GraduationCap, Package, Filter, Video, Music, Volume2, FileText, Link as LinkIcon, Image, FileVideo, FileMusic, File, Globe, ExternalLink, Share2, Download, Upload, Eye, Play, Pause, Headphones, Mic, Speaker, Film, Camera, BookOpen, Book, Folder, Cloud, Network, Target } from 'lucide-react';
 import { useSettings, Category, ResourceLinkConfig } from '../contexts/SettingsContextNew';
 import { DataSourceSettings } from './DataSourceSettings';
 import { CustomObjectivesAdmin } from './CustomObjectivesAdmin';
@@ -148,6 +148,7 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [draggedYearGroup, setDraggedYearGroup] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showYearGroupsModal, setShowYearGroupsModal] = useState(false);
+  const [newlyAddedYearGroup, setNewlyAddedYearGroup] = useState<{ id: string; name: string } | null>(null);
 
   // Check if user is admin
   const isAdmin = user?.email === 'rob.reichstorer@gmail.com' || 
@@ -175,6 +176,13 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     setTempYearGroups(customYearGroups);
     }
   }, [customYearGroups, isDeletingYearGroup]);
+
+  // Clear notification when switching away from yeargroups tab (except when going to admin)
+  React.useEffect(() => {
+    if (activeTab !== 'yeargroups' && activeTab !== 'admin' && newlyAddedYearGroup) {
+      setNewlyAddedYearGroup(null);
+    }
+  }, [activeTab]);
 
   // Update temp resource links when resource links change
   React.useEffect(() => {
@@ -514,6 +522,9 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
     setNewYearGroupId('');
     setNewYearGroupName('');
     setNewYearGroupColor('#3B82F6');
+    
+    // Set newly added year group to show notification
+    setNewlyAddedYearGroup({ id: newYearGroup.id, name: newYearGroup.name });
     
     console.log('✅ Year group added and persisted:', newYearGroup.name);
   };
@@ -870,6 +881,51 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                     </div>
                   </div>
                 </div>
+
+                {/* Notification: Link Year Group to Objectives */}
+                {newlyAddedYearGroup && (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-4 mb-4 shadow-md">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Target className="h-5 w-5 text-blue-600" />
+                          <h4 className="font-semibold text-gray-900">Link Year Group to Objectives</h4>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-3">
+                          You've created <strong>"{newlyAddedYearGroup.name}"</strong>. To use objectives in lesson plans for this year group, you need to:
+                        </p>
+                        <ol className="text-sm text-gray-700 list-decimal list-inside space-y-1 mb-3">
+                          <li>Create a custom objective year group in the <strong>Custom Objectives</strong> tab</li>
+                          <li>Link it to <strong>"{newlyAddedYearGroup.name}"</strong> when creating/editing objectives</li>
+                        </ol>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => {
+                              setActiveTab('admin');
+                              setNewlyAddedYearGroup(null);
+                            }}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center space-x-2"
+                          >
+                            <Target className="h-4 w-4" />
+                            <span>Go to Custom Objectives</span>
+                          </button>
+                          <button
+                            onClick={() => setNewlyAddedYearGroup(null)}
+                            className="px-3 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium"
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setNewlyAddedYearGroup(null)}
+                        className="ml-4 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Year Groups List */}
                 <div className="bg-white rounded-lg border border-teal-200 p-4">

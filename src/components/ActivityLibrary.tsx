@@ -293,6 +293,13 @@ export function ActivityLibrary({
 
   // Filter and sort activities and stacks
   const { filteredAndSortedActivities, filteredAndSortedStacks } = useMemo(() => {
+    // Get current year group keys for activity matching
+    const yearGroupKeys = getCurrentYearGroupKeys();
+    const currentYearGroupName = className || currentSheetInfo?.sheet;
+    const currentYearGroup = customYearGroups?.find(
+      yg => yg.id === currentYearGroupName || yg.name === currentYearGroupName
+    );
+    
     // Filter activities - filter by year group AND allow category/level filtering
     let filteredActivities = allActivities.filter(activity => {
       const matchesSearch = activity.activity.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -304,15 +311,48 @@ export function ActivityLibrary({
       // Level filtering removed - show all levels
       const matchesLevel = true;
       
-      // CRITICAL: Only show activities whose categories are assigned to the current year group
+      // CRITICAL: Check BOTH category assignment AND activity's yearGroups field
       // If availableCategoriesForYearGroup is null, show all activities (fallback)
       const categoryIsAssignedToYearGroup = availableCategoriesForYearGroup === null || 
                                              availableCategoriesForYearGroup.includes(activity.category);
       
+      // Check activity's yearGroups field
+      // Logic: Show activity if EITHER category is assigned OR activity's yearGroups includes current year group
+      let activityIsAssignedToYearGroup = categoryIsAssignedToYearGroup; // Start with category check
+      
+      // If activity has explicit yearGroups with values, also check those
+      if (activity.yearGroups && Array.isArray(activity.yearGroups) && activity.yearGroups.length > 0 && yearGroupKeys.length > 0) {
+        // Activity has explicit yearGroups - check if current year group is included
+        const normalizedActivityYearGroups = activity.yearGroups.map(yg => yg.toLowerCase().trim());
+        const yearGroupsMatch = yearGroupKeys.some(key => {
+          const keyLower = key.toLowerCase().trim();
+          return normalizedActivityYearGroups.includes(keyLower) ||
+                 normalizedActivityYearGroups.some(ayg => ayg.includes(keyLower) || keyLower.includes(ayg));
+        });
+        
+        // Show if EITHER category matches OR yearGroups matches
+        activityIsAssignedToYearGroup = categoryIsAssignedToYearGroup || yearGroupsMatch;
+        
+        if (!activityIsAssignedToYearGroup) {
+          console.log('❌ Activity filtered out:', {
+            activityName: activity.activity,
+            category: activity.category,
+            activityYearGroups: activity.yearGroups,
+            yearGroupKeys,
+            currentYearGroup: currentYearGroup?.name,
+            categoryMatches: categoryIsAssignedToYearGroup,
+            yearGroupsMatch
+          });
+        }
+      } else {
+        // No yearGroups field OR empty array = rely on category assignment (backward compatibility)
+        // activityIsAssignedToYearGroup already set to categoryIsAssignedToYearGroup above
+      }
+      
       // Check if user owns required pack (if activity requires one)
       const hasPackAccess = !activity.requiredPack || userOwnedPacks.includes(activity.requiredPack);
       
-      return matchesSearch && matchesCategory && matchesLevel && categoryIsAssignedToYearGroup && hasPackAccess;
+      return matchesSearch && matchesCategory && matchesLevel && categoryIsAssignedToYearGroup && activityIsAssignedToYearGroup && hasPackAccess;
     });
 
     // Filter stacks - only show stacks with activities for the current year group
@@ -391,8 +431,46 @@ export function ActivityLibrary({
     });
 
     return { filteredAndSortedActivities: filteredActivities, filteredAndSortedStacks: filteredStacks };
-  }, [allActivities, activityStacks, searchQuery, localSelectedCategory, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup, userOwnedPacks, availableCategoriesForYearGroup]);
+  }, [allActivities, activityStacks, searchQuery, localSelectedCategory, sortBy, sortOrder, categories, className, mapActivityLevelToYearGroup, userOwnedPacks, availableCategoriesForYearGroup, getCurrentYearGroupKeys, customYearGroups, currentSheetInfo]);
 
+  // Calculate total activities available for the current year group (without search/category filters)
+  const totalActivitiesForYearGroup = useMemo(() => {
+    const yearGroupKeys = getCurrentYearGroupKeys();
+    const currentYearGroupName = className || currentSheetInfo?.sheet;
+    const currentYearGroup = customYearGroups?.find(
+      yg => yg.id === currentYearGroupName || yg.name === currentYearGroupName
+    );
+    
+    return allActivities.filter(activity => {
+      // CRITICAL: Check BOTH category assignment AND activity's yearGroups field
+      // If availableCategoriesForYearGroup is null, show all activities (fallback)
+      const categoryIsAssignedToYearGroup = availableCategoriesForYearGroup === null || 
+                                             availableCategoriesForYearGroup.includes(activity.category);
+      
+      // Check activity's yearGroups field
+      // Logic: Show activity if EITHER category is assigned OR activity's yearGroups includes current year group
+      let activityIsAssignedToYearGroup = categoryIsAssignedToYearGroup; // Start with category check
+      
+      // If activity has explicit yearGroups with values, also check those
+      if (activity.yearGroups && Array.isArray(activity.yearGroups) && activity.yearGroups.length > 0 && yearGroupKeys.length > 0) {
+        // Activity has explicit yearGroups - check if current year group is included
+        const normalizedActivityYearGroups = activity.yearGroups.map(yg => yg.toLowerCase().trim());
+        const yearGroupsMatch = yearGroupKeys.some(key => {
+          const keyLower = key.toLowerCase().trim();
+          return normalizedActivityYearGroups.includes(keyLower) ||
+                 normalizedActivityYearGroups.some(ayg => ayg.includes(keyLower) || keyLower.includes(ayg));
+        });
+        
+        // Show if EITHER category matches OR yearGroups matches
+        activityIsAssignedToYearGroup = categoryIsAssignedToYearGroup || yearGroupsMatch;
+      }
+      
+      // Check if user owns required pack (if activity requires one)
+      const hasPackAccess = !activity.requiredPack || userOwnedPacks.includes(activity.requiredPack);
+      
+      return activityIsAssignedToYearGroup && hasPackAccess;
+    }).length;
+  }, [allActivities, className, customYearGroups, currentSheetInfo, availableCategoriesForYearGroup, getCurrentYearGroupKeys, userOwnedPacks]);
 
   const toggleSort = (field: 'name' | 'category' | 'time' | 'level') => {
     if (sortBy === field) {
@@ -628,7 +706,7 @@ export function ActivityLibrary({
             <div className="min-w-0">
               <h2 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">Activity Library</h2>
               <p className="text-white text-xs sm:text-sm">
-                {filteredAndSortedActivities.length} of {allActivities.length} activities
+                {filteredAndSortedActivities.length} of {totalActivitiesForYearGroup} activities
               </p>
             </div>
           </div>

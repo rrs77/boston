@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { X, Plus, Trash2, Eye, BookOpen, Target, Link2, Clock, Search, GripVertical, ChevronDown, ChevronUp, List, Layers, Upload } from 'lucide-react';
+import { X, Plus, Trash2, Eye, BookOpen, Target, Link2, Clock, Search, GripVertical, ChevronDown, ChevronUp, List, Layers, Upload, Save } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { ActivityCard } from './ActivityCard';
 import { SimpleNestedCategoryDropdown } from './SimpleNestedCategoryDropdown';
@@ -206,8 +206,6 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showActivitiesSection, setShowActivitiesSection] = useState(editingLesson ? true : false);
   const [showAssessmentObjectivesSelector, setShowAssessmentObjectivesSelector] = useState(false);
-  const [showObjectiveSelector, setShowObjectiveSelector] = useState(false);
-  const [showSuccessCriteriaSelector, setShowSuccessCriteriaSelector] = useState(false);
 
   // Auto-resize textareas on mount and when values change
   React.useEffect(() => {
@@ -476,7 +474,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[100]">
         <div className="bg-white rounded-card shadow-soft w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[98vh] sm:max-h-[95vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600">
+        <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 text-white" style={{ background: 'linear-gradient(135deg, #0BA596 0%, #0BA596 100%)' }}>
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white flex-shrink-0" />
             <h2 className="text-base sm:text-xl font-bold text-white truncate">
@@ -510,9 +508,10 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
             onClick={() => setActiveTab('main')}
             className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
               activeTab === 'main'
-                ? 'text-white bg-teal-600'
+                ? 'text-white'
                 : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
+            style={activeTab === 'main' ? { background: 'linear-gradient(135deg, #0BA596 0%, #0BA596 100%)' } : {}}
             style={{ 
               border: 'none !important', 
               borderBottom: 'none !important', 
@@ -545,9 +544,10 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
             onClick={() => setActiveTab('extended')}
             className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
               activeTab === 'extended'
-                ? 'text-white bg-teal-600'
+                ? 'text-white'
                 : 'text-gray-600 hover:text-teal-600 hover:bg-teal-50'
             }`}
+            style={activeTab === 'extended' ? { background: 'linear-gradient(135deg, #0BA596 0%, #0BA596 100%)' } : {}}
             style={{
               border: 'none !important',
               borderBottom: 'none !important',
@@ -598,7 +598,8 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                       name="lessonTitle"
                       value={lesson.lessonTitle}
                       onChange={handleChange}
-                      className={`w-full h-10 px-3 border ${errors.lessonTitle ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm bg-white`}
+                      className={`w-full h-10 px-3 border ${errors.lessonTitle ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
+                      style={{ '--tw-ring-color': '#0BA596' } as React.CSSProperties}
                       placeholder="e.g., Musical Rhythms"
                     />
                     {errors.lessonTitle && (
@@ -615,7 +616,8 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                       name="lessonName"
                       value={lesson.lessonName}
                       onChange={handleChange}
-                      className={`w-full h-10 px-3 border ${errors.lessonName ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm bg-white`}
+                      className={`w-full h-10 px-3 border ${errors.lessonName ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
+                      style={{ '--tw-ring-color': '#0BA596' } as React.CSSProperties}
                       placeholder="e.g., Exploring Tempo"
                     />
                     {errors.lessonName && (
@@ -632,7 +634,8 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                       name="duration"
                       value={lesson.duration || ''}
                       onChange={handleChange}
-                      className={`w-full h-10 px-3 border ${errors.duration ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm bg-white`}
+                      className={`w-full h-10 px-3 border ${errors.duration ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
+                      style={{ '--tw-ring-color': '#0BA596' } as React.CSSProperties}
                       placeholder="60"
                       min="0"
                     />
@@ -644,22 +647,25 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
               </div>
 
               {/* Assessment Objectives Card - Applies to whole lesson */}
-              <div className="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-5">
+              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-lg p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <Target className="h-5 w-5 text-purple-600" />
+                    <Target className="h-5 w-5 text-teal-600" />
                     <h3 className="text-lg font-semibold text-gray-900">Assessment Objectives</h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowAssessmentObjectivesSelector(true)}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg transition-colors"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors"
+                    style={{ background: 'linear-gradient(135deg, #0BA596 0%, #0BA596 100%)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                   >
                     <List className="h-3.5 w-3.5" />
                     <span>Select Objectives</span>
                   </button>
                 </div>
-                <p className="text-xs text-purple-700 mb-3">
+                <p className="text-xs text-teal-700 mb-3">
                   Select curriculum objectives that this lesson addresses. These apply to the entire lesson.
                 </p>
                 {lesson.assessmentObjectives.length > 0 ? (
@@ -667,10 +673,10 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                     {lesson.assessmentObjectives.map((objective, index) => (
                       <div 
                         key={index}
-                        className="flex items-start space-x-2 bg-white rounded-lg p-3 border border-purple-100"
+                        className="flex items-start space-x-2 bg-white rounded-lg p-3 border border-teal-100"
                       >
-                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center mt-0.5">
-                          <span className="text-xs font-medium text-purple-700">{index + 1}</span>
+                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-teal-100 flex items-center justify-center mt-0.5">
+                          <span className="text-xs font-medium text-teal-700">{index + 1}</span>
                         </div>
                         <p className="text-sm text-gray-700 flex-1">{objective}</p>
                         <button
@@ -689,7 +695,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white rounded-lg p-4 border border-dashed border-purple-200 text-center">
+                  <div className="bg-white rounded-lg p-4 border border-dashed border-teal-200 text-center">
                     <p className="text-sm text-gray-500">No assessment objectives selected</p>
                     <p className="text-xs text-gray-400 mt-1">Click "Select Objectives" to add curriculum objectives</p>
                   </div>
@@ -697,27 +703,19 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
               </div>
 
               {/* Learning Objectives Card */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5">
+              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-lg p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <Target className="h-5 w-5 text-blue-600" />
+                    <Target className="h-5 w-5 text-teal-600" />
                     <h3 className="text-lg font-semibold text-gray-900">Learning Objectives</h3>
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="mb-2">
                       <label className="block text-sm font-medium text-gray-700">
                         Learning Outcome <span className="text-red-500">*</span>
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowObjectiveSelector(true)}
-                        className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
-                      >
-                        <List className="h-3.5 w-3.5" />
-                        <span>Select from Library</span>
-                      </button>
                     </div>
                     <div className="bg-white rounded-lg border border-gray-300">
                       <RichTextEditor
@@ -732,18 +730,10 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="mb-2">
                       <label className="block text-sm font-medium text-gray-700">
                         Success Criteria
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowSuccessCriteriaSelector(true)}
-                        className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
-                      >
-                        <List className="h-3.5 w-3.5" />
-                        <span>Select from Library</span>
-                      </button>
                     </div>
                     <div className="bg-white rounded-lg border border-gray-300">
                       <RichTextEditor
@@ -757,9 +747,9 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
               </div>
 
               {/* Introduction Card */}
-              <div className={`bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg transition-all duration-300 ${lesson.introduction ? 'p-5' : 'p-4'}`}>
+              <div className={`bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-lg transition-all duration-300 ${lesson.introduction ? 'p-5' : 'p-4'}`}>
                 <div className="flex items-center space-x-2 mb-3">
-                  <BookOpen className="h-5 w-5 text-purple-600" />
+                  <BookOpen className="h-5 w-5 text-teal-600" />
                   <h3 className="text-base font-semibold text-gray-900">Introduction/Context</h3>
                 </div>
                 {lesson.introduction || true ? (
@@ -780,9 +770,9 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
               </div>
 
               {/* Main Activity Card */}
-              <div className={`bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg transition-all duration-300 ${lesson.mainActivity ? 'p-5' : 'p-4'}`}>
+              <div className={`bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-lg transition-all duration-300 ${lesson.mainActivity ? 'p-5' : 'p-4'}`}>
                 <div className="flex items-center space-x-2 mb-3">
-                  <Target className="h-5 w-5 text-green-600" />
+                  <Target className="h-5 w-5 text-teal-600" />
                   <h3 className="text-base font-semibold text-gray-900">Main Activity</h3>
                 </div>
                 {lesson.mainActivity || true ? (
@@ -810,7 +800,10 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
                   </div>
                   <button
                     onClick={() => setShowActivityModal(true)}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded transition-colors"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors"
+                    style={{ background: 'linear-gradient(135deg, #0BA596 0%, #0BA596 100%)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>Add Activities</span>
@@ -841,9 +834,9 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
               </div>
 
               {/* Plenary Card */}
-              <div className={`bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg transition-all duration-300 ${lesson.plenary ? 'p-5' : 'p-4'}`}>
+              <div className={`bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-lg transition-all duration-300 ${lesson.plenary ? 'p-5' : 'p-4'}`}>
                 <div className="flex items-center space-x-2 mb-3">
-                  <Target className="h-5 w-5 text-orange-600" />
+                  <Target className="h-5 w-5 text-teal-600" />
                   <h3 className="text-base font-semibold text-gray-900">Plenary/Conclusion</h3>
                 </div>
                 {lesson.plenary || true ? (
@@ -974,9 +967,9 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
               ) : null}
 
               {/* Web Links Card */}
-              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 border border-cyan-200 rounded-lg p-5">
+              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-lg p-5">
                 <div className="flex items-center space-x-2 mb-4">
-                  <Link2 className="h-5 w-5 text-cyan-600" />
+                  <Link2 className="h-5 w-5 text-teal-600" />
                   <h3 className="text-base font-semibold text-gray-900">Web Links & Resources</h3>
                 </div>
 
@@ -1083,16 +1076,20 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 text-sm font-medium transition-colors"
+              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSubmit}
-              className="px-5 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 text-sm font-medium transition-all shadow-sm"
+              className="px-6 py-3 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
+              style={{ backgroundColor: '#0BA596' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0A9688'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0BA596'}
             >
-              {editingLesson ? 'Save Changes' : 'Create Lesson'}
+              <Save className="h-5 w-5" />
+              <span>{editingLesson ? 'Save Changes' : 'Create Lesson'}</span>
             </button>
           </div>
         </div>
@@ -1104,7 +1101,7 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-2 sm:p-4 animate-fade-in">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col animate-scale-in">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-500 to-teal-600">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200 text-white" style={{ background: 'linear-gradient(135deg, #0BA596 0%, #0BA596 100%)' }}>
               <div className="flex items-center space-x-3">
                 <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 <h3 className="text-lg sm:text-xl font-bold text-white">Full Lesson Preview</h3>
@@ -1142,10 +1139,10 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
               {lesson.assessmentObjectives && lesson.assessmentObjectives.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                    <Target className="h-5 w-5 text-purple-600" />
+                    <Target className="h-5 w-5 text-teal-600" />
                     <span>Assessment Objectives</span>
                   </h4>
-                  <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                  <div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
                     <ul className="space-y-2">
                       {lesson.assessmentObjectives.map((objective, index) => (
                         <li key={index} className="flex items-start space-x-2 text-sm text-gray-700">
@@ -1365,60 +1362,6 @@ export const StandaloneLessonCreator: React.FC<StandaloneLessonCreatorProps> = (
             ...prev,
             assessmentObjectives: objectives
           }));
-        }}
-        filterByYearGroup={yearGroup}
-      />
-
-      {/* Objective Selector for Learning Outcome */}
-      <ObjectiveSelector
-        isOpen={showObjectiveSelector}
-        onClose={() => setShowObjectiveSelector(false)}
-        onSelect={(objectiveText) => {
-          // Append to existing learning outcome or replace if empty
-          const currentValue = lesson.learningOutcome.replace(/<[^>]*>/g, '').trim();
-          if (currentValue) {
-            handleRichTextChange('learningOutcome', `${lesson.learningOutcome}<p>${objectiveText}</p>`);
-          } else {
-            handleRichTextChange('learningOutcome', `<p>${objectiveText}</p>`);
-          }
-        }}
-        multiSelect={true}
-        onMultiSelect={(objectives) => {
-          // Format multiple objectives as a list
-          const formattedObjectives = objectives.map(obj => `<li>${obj}</li>`).join('');
-          const currentValue = lesson.learningOutcome.replace(/<[^>]*>/g, '').trim();
-          if (currentValue) {
-            handleRichTextChange('learningOutcome', `${lesson.learningOutcome}<ul>${formattedObjectives}</ul>`);
-          } else {
-            handleRichTextChange('learningOutcome', `<ul>${formattedObjectives}</ul>`);
-          }
-        }}
-        filterByYearGroup={yearGroup}
-      />
-
-      {/* Objective Selector for Success Criteria */}
-      <ObjectiveSelector
-        isOpen={showSuccessCriteriaSelector}
-        onClose={() => setShowSuccessCriteriaSelector(false)}
-        onSelect={(objectiveText) => {
-          // Append to existing success criteria or replace if empty
-          const currentValue = lesson.successCriteria.replace(/<[^>]*>/g, '').trim();
-          if (currentValue) {
-            handleRichTextChange('successCriteria', `${lesson.successCriteria}<p>• ${objectiveText}</p>`);
-          } else {
-            handleRichTextChange('successCriteria', `<p>• ${objectiveText}</p>`);
-          }
-        }}
-        multiSelect={true}
-        onMultiSelect={(objectives) => {
-          // Format multiple objectives as bullet points
-          const formattedObjectives = objectives.map(obj => `<li>${obj}</li>`).join('');
-          const currentValue = lesson.successCriteria.replace(/<[^>]*>/g, '').trim();
-          if (currentValue) {
-            handleRichTextChange('successCriteria', `${lesson.successCriteria}<ul>${formattedObjectives}</ul>`);
-          } else {
-            handleRichTextChange('successCriteria', `<ul>${formattedObjectives}</ul>`);
-          }
         }}
         filterByYearGroup={yearGroup}
       />

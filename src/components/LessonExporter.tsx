@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, FileText, File, Printer, X, Check, ChevronDown, ChevronUp, Tag, Share2, Copy, Link2 } from 'lucide-react';
+import { Download, FileText, File, Printer, X, Check, ChevronDown, ChevronUp, Tag, Share2, Copy, Link2, Target } from 'lucide-react';
 import { supabase } from '../config/supabase';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
@@ -485,7 +485,7 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
             style={{ minHeight: '297mm' }}
           >
             {/* Lesson Plan Preview */}
-            <div className="p-8 print:p-4">
+            <div className="p-8 print:p-4 pb-16 print:pb-12">
               {/* Header */}
               <div className="text-center border-b-4 border-blue-500 pb-6 mb-6 relative print:pb-4 print:mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-t-lg">
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-lg shadow-lg mb-4">
@@ -540,174 +540,378 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
                 </div>
               )}
               
+              {/* Lesson Plan Details - Match Full Lesson Preview Styling */}
+              {(lessonData.learningOutcome || lessonData.successCriteria || lessonData.introduction || 
+                lessonData.mainActivity || lessonData.plenary || lessonData.vocabulary || 
+                lessonData.keyQuestions || lessonData.resources || lessonData.differentiation || 
+                lessonData.assessment) && (
+                <div className="mb-8 print:mb-6 space-y-6 print:space-y-4">
+                  {/* Learning Outcome */}
+                  {lessonData.learningOutcome && (
+                    <div className="space-y-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                        <Target className="h-5 w-5 text-teal-600" />
+                        <span>Learning Outcome</span>
+                      </h4>
+                      <div 
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: lessonData.learningOutcome }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Success Criteria */}
+                  {lessonData.successCriteria && (
+                    <div className="space-y-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                        <Target className="h-5 w-5 text-teal-600" />
+                        <span>Success Criteria</span>
+                      </h4>
+                      <div 
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: lessonData.successCriteria }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Introduction */}
+                  {lessonData.introduction && (
+                    <div className="space-y-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Introduction</h4>
+                      <div 
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: lessonData.introduction }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Main Activity */}
+                  {lessonData.mainActivity && (
+                    <div className="space-y-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Main Activity</h4>
+                      <div 
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: lessonData.mainActivity }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Plenary */}
+                  {lessonData.plenary && (
+                    <div className="space-y-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Plenary</h4>
+                      <div 
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: lessonData.plenary }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Vocabulary */}
+                  {lessonData.vocabulary && (
+                    <div className="space-y-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Vocabulary</h4>
+                      <div 
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: lessonData.vocabulary }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Key Questions */}
+                  {lessonData.keyQuestions && (
+                    <div className="space-y-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Key Questions</h4>
+                      <div 
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: lessonData.keyQuestions }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Resources */}
+                  {lessonData.resources && (
+                    <div className="space-y-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Resources</h4>
+                      <div 
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: lessonData.resources }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Differentiation */}
+                  {lessonData.differentiation && (
+                    <div className="space-y-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Differentiation</h4>
+                      <div 
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: lessonData.differentiation }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Assessment */}
+                  {lessonData.assessment && (
+                    <div className="space-y-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Assessment</h4>
+                      <div 
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: lessonData.assessment }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              
               {/* Activities by Category */}
-              {lessonData.categoryOrder.map((category) => {
-                const activities = lessonData.grouped[category] || [];
-                if (activities.length === 0) return null;
+              {lessonData.categoryOrder && lessonData.categoryOrder.length > 0 && (() => {
+                // Check if lesson has lesson plan details
+                const hasLessonPlanDetails = lessonData.learningOutcome || lessonData.successCriteria || 
+                  lessonData.introduction || lessonData.mainActivity || lessonData.plenary ||
+                  lessonData.vocabulary || lessonData.keyQuestions || lessonData.resources ||
+                  lessonData.differentiation || lessonData.assessment;
                 
-                const categoryColor = getCategoryColor(category);
+                // Use original simpler formatting if lesson only has activities
+                const useOriginalFormatting = !hasLessonPlanDetails;
                 
                 return (
-                  <div key={category} className="mb-10 print:mb-8">
-                    {/* Enhanced Category Header */}
-                    <div 
-                      className="text-white p-4 rounded-xl mb-6 shadow-lg print:mb-4 print:p-3"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${categoryColor} 0%, ${categoryColor}dd 100%)`,
-                        borderLeft: `6px solid ${categoryColor}`
-                      }}
-                    >
-                      <h2 className="text-2xl font-bold print:text-xl flex items-center">
-                        <div 
-                          className="w-4 h-4 rounded-full mr-3 border-2 border-white"
-                          style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}
-                        ></div>
-                        {category}
-                        <span className="ml-auto bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
-                          {activities.length} {activities.length === 1 ? 'activity' : 'activities'}
-                        </span>
-                      </h2>
-                    </div>
-                    
-                    <div className="space-y-6 print:space-y-4">
-                      {activities.map((activity, index) => (
-                        <div 
-                          key={`${category}-${index}`} 
-                          className="bg-white rounded-xl border-2 shadow-lg overflow-hidden print:border print:rounded-lg print:mb-4"
-                          style={{ 
-                            borderLeftWidth: '6px',
-                            borderLeftColor: categoryColor,
-                            borderColor: `${categoryColor}40`
-                          }}
-                        >
-                          {/* Activity Header */}
-                          <div 
-                            className="p-4 border-b-2 flex justify-between items-center print:p-3"
-                            style={{ 
-                              backgroundColor: `${categoryColor}10`,
-                              borderBottomColor: `${categoryColor}30`
-                            }}
-                          >
-                            <h3 className="font-bold text-gray-900 text-lg print:text-base">
-                              {activity.activity}
-                            </h3>
-                            {activity.time > 0 && (
-                              <div 
-                                className="text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm print:text-xs"
-                                style={{ backgroundColor: categoryColor }}
-                              >
-                                {activity.time} min
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Activity Content */}
-                          <div className="p-4 print:p-3">
-                            {/* Activity Text (if available) */}
-                            {activity.activityText && (
-                              <div 
-                                className="mb-4 text-base text-gray-800 print:text-sm bg-blue-50 p-3 rounded-lg border border-blue-200"
-                                dangerouslySetInnerHTML={{ __html: activity.activityText }}
-                              />
-                            )}
-                            
-                            {/* Description */}
-                            <div 
-                              className={`text-base text-gray-700 leading-relaxed print:text-sm ${activity.activityText ? 'pt-4 border-t-2 border-gray-200' : ''}`}
-                              dangerouslySetInnerHTML={{ 
-                                __html: activity.description.includes('<') ? 
-                                  activity.description : 
-                                  activity.description.replace(/\n/g, '<br>') 
+                  <div className="mb-8 print:mb-6">
+                    {lessonData.categoryOrder.map((category) => {
+                      const activities = lessonData.grouped[category] || [];
+                      if (activities.length === 0) return null;
+                      
+                      const categoryColor = getCategoryColor(category);
+                      
+                      return (
+                        <div key={category} className={useOriginalFormatting ? "mb-6 print:mb-4" : "mb-10 print:mb-8"}>
+                          {/* Category Header - Original or Enhanced based on lesson type */}
+                          {useOriginalFormatting ? (
+                            <h2 
+                              className="text-lg font-bold mb-4 print:text-base print:mb-3 border-b-2 pb-2"
+                              style={{ 
+                                color: categoryColor,
+                                borderBottomColor: categoryColor
                               }}
-                            />
-                            
-                            {/* Resources */}
-                            {(activity.videoLink || activity.musicLink || activity.backingLink || 
-                              activity.resourceLink || activity.link || activity.vocalsLink || 
-                              activity.imageLink) && (
-                              <div className="mt-4 pt-4 border-t-2 border-gray-100 print:mt-3 print:pt-3">
-                                <h4 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">Resources:</h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {activity.videoLink && (
-                                    <a 
-                                      href={activity.videoLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center px-3 py-2 bg-red-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-red-600 transition-colors"
+                            >
+                              {category}
+                            </h2>
+                          ) : (
+                            <div 
+                              className="text-white p-4 rounded-xl mb-6 shadow-lg print:mb-4 print:p-3"
+                              style={{ 
+                                background: `linear-gradient(135deg, ${categoryColor} 0%, ${categoryColor}dd 100%)`,
+                                borderLeft: `6px solid ${categoryColor}`
+                              }}
+                            >
+                              <h2 className="text-2xl font-bold print:text-xl flex items-center">
+                                <div 
+                                  className="w-4 h-4 rounded-full mr-3 border-2 border-white"
+                                  style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}
+                                ></div>
+                                {category}
+                                <span className="ml-auto bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
+                                  {activities.length} {activities.length === 1 ? 'activity' : 'activities'}
+                                </span>
+                              </h2>
+                            </div>
+                          )}
+                          
+                          <div className={useOriginalFormatting ? "space-y-4 print:space-y-3" : "space-y-6 print:space-y-4"}>
+                            {activities.map((activity, index) => (
+                              <div 
+                                key={`${category}-${index}`} 
+                                className={useOriginalFormatting 
+                                  ? "bg-white rounded-lg border overflow-hidden print:border print:rounded-lg print:mb-3"
+                                  : "bg-white rounded-xl border-2 shadow-lg overflow-hidden print:border print:rounded-lg print:mb-4"
+                                }
+                                style={useOriginalFormatting ? {
+                                  borderLeftWidth: '4px',
+                                  borderLeftColor: categoryColor,
+                                  borderColor: '#e5e7eb'
+                                } : {
+                                  borderLeftWidth: '6px',
+                                  borderLeftColor: categoryColor,
+                                  borderColor: `${categoryColor}40`
+                                }}
+                              >
+                                {/* Activity Header */}
+                                <div 
+                                  className={useOriginalFormatting 
+                                    ? "px-3 py-2 border-b flex justify-between items-center print:p-2"
+                                    : "p-4 border-b-2 flex justify-between items-center print:p-3"
+                                  }
+                                  style={useOriginalFormatting ? {
+                                    backgroundColor: '#f9fafb',
+                                    borderBottomColor: '#e5e7eb'
+                                  } : {
+                                    backgroundColor: `${categoryColor}10`,
+                                    borderBottomColor: `${categoryColor}30`
+                                  }}
+                                >
+                                  <h3 className={`font-bold text-gray-900 ${useOriginalFormatting ? 'text-base print:text-sm' : 'text-lg print:text-base'}`}>
+                                    {activity.activity}
+                                  </h3>
+                                  {activity.time > 0 && (
+                                    <div 
+                                      className={useOriginalFormatting
+                                        ? "px-2 py-1 rounded-full text-xs font-bold"
+                                        : "text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm print:text-xs"
+                                      }
+                                      style={useOriginalFormatting ? {
+                                        backgroundColor: 'rgba(0,0,0,0.1)',
+                                        color: '#374151'
+                                      } : {
+                                        backgroundColor: categoryColor
+                                      }}
                                     >
-                                      🎥 Video
-                                    </a>
+                                      {activity.time} min
+                                    </div>
                                   )}
-                                  {activity.musicLink && (
-                                    <a 
-                                      href={activity.musicLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center px-3 py-2 bg-green-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-green-600 transition-colors"
-                                    >
-                                      🎵 Music
-                                    </a>
+                                </div>
+                                
+                                {/* Activity Content */}
+                                <div className={useOriginalFormatting ? "p-3 print:p-2" : "p-4 print:p-3"}>
+                                  {/* Activity Text (if available) */}
+                                  {activity.activityText && (
+                                    <div 
+                                      className={useOriginalFormatting
+                                        ? "mb-2 text-sm text-gray-800 print:text-xs font-medium"
+                                        : "mb-4 text-base text-gray-800 print:text-sm bg-blue-50 p-3 rounded-lg border border-blue-200"
+                                      }
+                                      dangerouslySetInnerHTML={{ __html: activity.activityText }}
+                                    />
                                   )}
-                                  {activity.backingLink && (
-                                    <a 
-                                      href={activity.backingLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center px-3 py-2 bg-blue-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-blue-600 transition-colors"
-                                    >
-                                      🎼 Backing
-                                    </a>
-                                  )}
-                                  {activity.resourceLink && (
-                                    <a 
-                                      href={activity.resourceLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center px-3 py-2 bg-purple-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-purple-600 transition-colors"
-                                    >
-                                      📁 Resource
-                                    </a>
-                                  )}
-                                  {activity.link && (
-                                    <a 
-                                      href={activity.link}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center px-3 py-2 bg-gray-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-gray-600 transition-colors"
-                                    >
-                                      🔗 Link
-                                    </a>
-                                  )}
-                                  {activity.vocalsLink && (
-                                    <a 
-                                      href={activity.vocalsLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center px-3 py-2 bg-orange-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-orange-600 transition-colors"
-                                    >
-                                      🎤 Vocals
-                                    </a>
-                                  )}
-                                  {activity.imageLink && (
-                                    <a 
-                                      href={activity.imageLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center px-3 py-2 bg-pink-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-pink-600 transition-colors"
-                                    >
-                                      🖼️ Image
-                                    </a>
+                                  
+                                  {/* Description */}
+                                  <div 
+                                    className={useOriginalFormatting
+                                      ? `text-sm text-gray-700 leading-relaxed print:text-xs ${activity.activityText ? 'mt-2 pt-2 border-t border-gray-200' : ''}`
+                                      : `text-base text-gray-700 leading-relaxed print:text-sm ${activity.activityText ? 'pt-4 border-t-2 border-gray-200' : ''}`
+                                    }
+                                    dangerouslySetInnerHTML={{ 
+                                      __html: activity.description.includes('<') ? 
+                                        activity.description : 
+                                        activity.description.replace(/\n/g, '<br>') 
+                                    }}
+                                  />
+                                  
+                                  {/* Resources */}
+                                  {(activity.videoLink || activity.musicLink || activity.backingLink || 
+                                    activity.resourceLink || activity.link || activity.vocalsLink || 
+                                    activity.imageLink) && (
+                                    <div className={useOriginalFormatting 
+                                      ? "mt-3 pt-3 border-t border-gray-200 print:mt-2 print:pt-2"
+                                      : "mt-4 pt-4 border-t-2 border-gray-100 print:mt-3 print:pt-3"
+                                    }>
+                                      <h4 className={`text-gray-600 mb-2 ${useOriginalFormatting ? 'text-xs font-medium print:text-xs' : 'text-sm font-semibold uppercase tracking-wide'}`}>
+                                        Resources:
+                                      </h4>
+                                      <div className="flex flex-wrap gap-2">
+                                        {activity.videoLink && (
+                                          <a 
+                                            href={activity.videoLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={useOriginalFormatting
+                                              ? "inline-flex items-center px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-red-200 transition-colors"
+                                              : "inline-flex items-center px-3 py-2 bg-red-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-red-600 transition-colors"
+                                            }
+                                          >
+                                            🎥 Video
+                                          </a>
+                                        )}
+                                        {activity.musicLink && (
+                                          <a 
+                                            href={activity.musicLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={useOriginalFormatting
+                                              ? "inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-green-200 transition-colors"
+                                              : "inline-flex items-center px-3 py-2 bg-green-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-green-600 transition-colors"
+                                            }
+                                          >
+                                            🎵 Music
+                                          </a>
+                                        )}
+                                        {activity.backingLink && (
+                                          <a 
+                                            href={activity.backingLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={useOriginalFormatting
+                                              ? "inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-blue-200 transition-colors"
+                                              : "inline-flex items-center px-3 py-2 bg-blue-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-blue-600 transition-colors"
+                                            }
+                                          >
+                                            🎼 Backing
+                                          </a>
+                                        )}
+                                        {activity.resourceLink && (
+                                          <a 
+                                            href={activity.resourceLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={useOriginalFormatting
+                                              ? "inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-purple-200 transition-colors"
+                                              : "inline-flex items-center px-3 py-2 bg-purple-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-purple-600 transition-colors"
+                                            }
+                                          >
+                                            📁 Resource
+                                          </a>
+                                        )}
+                                        {activity.link && (
+                                          <a 
+                                            href={activity.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={useOriginalFormatting
+                                              ? "inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-gray-200 transition-colors"
+                                              : "inline-flex items-center px-3 py-2 bg-gray-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-gray-600 transition-colors"
+                                            }
+                                          >
+                                            🔗 Link
+                                          </a>
+                                        )}
+                                        {activity.vocalsLink && (
+                                          <a 
+                                            href={activity.vocalsLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={useOriginalFormatting
+                                              ? "inline-flex items-center px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-orange-200 transition-colors"
+                                              : "inline-flex items-center px-3 py-2 bg-orange-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-orange-600 transition-colors"
+                                            }
+                                          >
+                                            🎤 Vocals
+                                          </a>
+                                        )}
+                                        {activity.imageLink && (
+                                          <a 
+                                            href={activity.imageLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={useOriginalFormatting
+                                              ? "inline-flex items-center px-2 py-1 bg-pink-100 text-pink-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-pink-200 transition-colors"
+                                              : "inline-flex items-center px-3 py-2 bg-pink-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-pink-600 transition-colors"
+                                            }
+                                          >
+                                            🖼️ Image
+                                          </a>
+                                        )}
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
                               </div>
-                            )}
+                            ))}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                 );
-              })}
+              })()}
               
               {/* Notes Section */}
               {lessonData.notes && (
@@ -726,7 +930,7 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
               )}
               
               {/* Enhanced Footer */}
-              <div className="mt-12 pt-8 border-t-4 border-gradient-to-r from-blue-500 to-indigo-500 print:mt-8 print:pt-4">
+              <div className="mt-16 pt-8 mb-8 border-t-4 border-gradient-to-r from-blue-500 to-indigo-500 print:mt-12 print:pt-6 print:mb-6">
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-xl shadow-lg text-center">
                   <div className="flex items-center justify-center space-x-4 mb-3">
                     <div className="bg-white bg-opacity-20 p-2 rounded-lg">

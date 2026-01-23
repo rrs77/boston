@@ -116,6 +116,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: Cus
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showCloneDialog, setShowCloneDialog] = useState(false);
   const [cloneData, setCloneData] = useState({ sourceId: '', targetName: '', targetColor: '#3B82F6' });
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Helper function to auto-resize textarea
   const autoResizeTextarea = (textarea: HTMLTextAreaElement) => {
@@ -216,6 +217,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: Cus
       areas: []
     });
     setEditingYearGroup(null);
+    setSaveStatus('idle');
     setShowForm(true);
   };
 
@@ -241,6 +243,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: Cus
       }))
     });
     setEditingYearGroup(yearGroup.id);
+    setSaveStatus('idle');
     setShowForm(true);
   };
 
@@ -334,6 +337,12 @@ export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: Cus
         }
         
         setMessage({ type: 'success', text: 'Year group updated successfully' });
+        setSaveStatus('success');
+        // Auto-dismiss message after 3 seconds
+        setTimeout(() => {
+          setSaveStatus('idle');
+        }, 3000);
+        // Keep form open so user can see the success message
       } else {
         // Create new year group
         const newYearGroup = await customObjectivesApi.yearGroups.create({
@@ -369,12 +378,17 @@ export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: Cus
         }
 
         setMessage({ type: 'success', text: 'Year group created successfully' });
+        setSaveStatus('success');
+        // Auto-dismiss message after 3 seconds
+        setTimeout(() => {
+          setSaveStatus('idle');
+        }, 3000);
+        // Keep form open so user can see the success message
       }
 
       console.log('✅ Year group saved successfully');
-      setShowForm(false);
-      setEditingYearGroup(null);
       await loadData();
+      // Don't auto-close - let user see the success message and close manually
     } catch (error) {
       console.error('❌ Failed to save year group:', error);
       console.error('❌ Error details:', {
@@ -384,6 +398,11 @@ export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: Cus
         hint: error?.hint
       });
       setMessage({ type: 'error', text: `Failed to save year group: ${error.message}` });
+      setSaveStatus('error');
+      // Auto-dismiss error after 5 seconds
+      setTimeout(() => {
+        setSaveStatus('idle');
+      }, 5000);
     }
   };
 
@@ -1015,12 +1034,49 @@ export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: Cus
                   onClick={() => {
                     setShowForm(false);
                     setEditingYearGroup(null);
+                    setSaveStatus('idle');
                   }}
                   className="p-2 text-teal-100 hover:text-white hover:bg-teal-800 rounded-lg transition-colors duration-200"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
+
+              {/* Save Status Message */}
+              {saveStatus !== 'idle' && (
+                <div className={`mx-6 mt-4 p-4 rounded-lg shadow-md transition-all duration-300 ${
+                  saveStatus === 'success' ? 'bg-teal-50 border border-teal-200' :
+                  'bg-red-50 border border-red-200'
+                }`}>
+                  <div className="flex items-center space-x-3">
+                    {saveStatus === 'success' ? (
+                      <>
+                        <div className="flex-shrink-0 w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                          <Check className="h-6 w-6 text-teal-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-medium text-teal-800">
+                            {editingYearGroup ? 'Subject area updated successfully!' : 'Subject area created successfully!'}
+                          </h3>
+                          <p className="text-sm text-teal-600">
+                            {editingYearGroup ? 'Your changes have been saved.' : 'Your new subject area has been created.'}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                          <AlertTriangle className="h-6 w-6 text-red-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-medium text-red-800">Failed to save</h3>
+                          <p className="text-sm text-red-600">Please check the form and try again.</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
               
               {/* Scrollable content */}
               <div className="flex-1 overflow-y-auto p-6">
@@ -1274,6 +1330,7 @@ export function CustomObjectivesAdmin({ isOpen, onClose, embedded = false }: Cus
                   onClick={() => {
                     setShowForm(false);
                     setEditingYearGroup(null);
+                    setSaveStatus('idle');
                   }}
                   className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
                 >

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Download, Edit3, Save, Check, Tag, Clock, Users, ExternalLink, FileText, Trash2, Share2 } from 'lucide-react';
+import { X, Download, Edit3, Save, Check, Tag, Clock, Users, ExternalLink, FileText, Trash2, Share2, Target } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { ActivityDetails } from './ActivityDetails';
@@ -263,22 +263,21 @@ export function LessonDetailsModal({
             </div>
           )}
 
-          {/* Lesson Plan Details Section - Only show if there's content */}
+          {/* Lesson Plan Details Section - Match Full Lesson Preview Styling */}
           {(lessonData.learningOutcome || lessonData.successCriteria || lessonData.introduction || 
             lessonData.mainActivity || lessonData.plenary || lessonData.vocabulary || 
             lessonData.keyQuestions || lessonData.resources || lessonData.differentiation || 
             lessonData.assessment) && (
-            <div className="mb-8 space-y-4">
-              <h3 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2">
-                Lesson Plan Details
-              </h3>
-              
+            <div className="mb-8 space-y-6">
               {/* Learning Outcome */}
               {lessonData.learningOutcome && (
-                <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
-                  <h4 className="font-semibold text-blue-800 mb-2">Learning Outcome</h4>
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                    <Target className="h-5 w-5 text-teal-600" />
+                    <span>Learning Outcome</span>
+                  </h4>
                   <div 
-                    className="text-gray-700 prose prose-sm max-w-none"
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: lessonData.learningOutcome }}
                   />
                 </div>
@@ -286,10 +285,13 @@ export function LessonDetailsModal({
 
               {/* Success Criteria */}
               {lessonData.successCriteria && (
-                <div className="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
-                  <h4 className="font-semibold text-green-800 mb-2">Success Criteria</h4>
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                    <Target className="h-5 w-5 text-teal-600" />
+                    <span>Success Criteria</span>
+                  </h4>
                   <div 
-                    className="text-gray-700 prose prose-sm max-w-none"
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: lessonData.successCriteria }}
                   />
                 </div>
@@ -297,10 +299,10 @@ export function LessonDetailsModal({
 
               {/* Introduction */}
               {lessonData.introduction && (
-                <div className="bg-purple-50 rounded-lg p-4 border-l-4 border-purple-500">
-                  <h4 className="font-semibold text-purple-800 mb-2">Introduction</h4>
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Introduction</h4>
                   <div 
-                    className="text-gray-700 prose prose-sm max-w-none"
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: lessonData.introduction }}
                   />
                 </div>
@@ -308,10 +310,10 @@ export function LessonDetailsModal({
 
               {/* Main Activity */}
               {lessonData.mainActivity && (
-                <div className="bg-orange-50 rounded-lg p-4 border-l-4 border-orange-500">
-                  <h4 className="font-semibold text-orange-800 mb-2">Main Activity</h4>
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Main Activity</h4>
                   <div 
-                    className="text-gray-700 prose prose-sm max-w-none"
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: lessonData.mainActivity }}
                   />
                 </div>
@@ -319,68 +321,65 @@ export function LessonDetailsModal({
 
               {/* Plenary */}
               {lessonData.plenary && (
-                <div className="bg-teal-50 rounded-lg p-4 border-l-4 border-teal-500">
-                  <h4 className="font-semibold text-teal-800 mb-2">Plenary / Conclusion</h4>
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Plenary</h4>
                   <div 
-                    className="text-gray-700 prose prose-sm max-w-none"
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: lessonData.plenary }}
                   />
                 </div>
               )}
 
-              {/* Two column layout for smaller sections */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Vocabulary */}
-                {lessonData.vocabulary && (
-                  <div className="bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-500">
-                    <h4 className="font-semibold text-yellow-800 mb-2">Vocabulary</h4>
-                    <div 
-                      className="text-gray-700 prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: lessonData.vocabulary }}
-                    />
-                  </div>
-                )}
+              {/* Vocabulary */}
+              {lessonData.vocabulary && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Vocabulary</h4>
+                  <div 
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: lessonData.vocabulary }}
+                  />
+                </div>
+              )}
 
-                {/* Key Questions */}
-                {lessonData.keyQuestions && (
-                  <div className="bg-indigo-50 rounded-lg p-4 border-l-4 border-indigo-500">
-                    <h4 className="font-semibold text-indigo-800 mb-2">Key Questions</h4>
-                    <div 
-                      className="text-gray-700 prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: lessonData.keyQuestions }}
-                    />
-                  </div>
-                )}
+              {/* Key Questions */}
+              {lessonData.keyQuestions && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Key Questions</h4>
+                  <div 
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: lessonData.keyQuestions }}
+                  />
+                </div>
+              )}
 
-                {/* Resources */}
-                {lessonData.resources && (
-                  <div className="bg-pink-50 rounded-lg p-4 border-l-4 border-pink-500">
-                    <h4 className="font-semibold text-pink-800 mb-2">Resources</h4>
-                    <div 
-                      className="text-gray-700 prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: lessonData.resources }}
-                    />
-                  </div>
-                )}
+              {/* Resources */}
+              {lessonData.resources && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Resources</h4>
+                  <div 
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: lessonData.resources }}
+                  />
+                </div>
+              )}
 
-                {/* Differentiation */}
-                {lessonData.differentiation && (
-                  <div className="bg-cyan-50 rounded-lg p-4 border-l-4 border-cyan-500">
-                    <h4 className="font-semibold text-cyan-800 mb-2">Differentiation</h4>
-                    <div 
-                      className="text-gray-700 prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: lessonData.differentiation }}
-                    />
-                  </div>
-                )}
-              </div>
+              {/* Differentiation */}
+              {lessonData.differentiation && (
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Differentiation</h4>
+                  <div 
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: lessonData.differentiation }}
+                  />
+                </div>
+              )}
 
               {/* Assessment */}
               {lessonData.assessment && (
-                <div className="bg-red-50 rounded-lg p-4 border-l-4 border-red-500">
-                  <h4 className="font-semibold text-red-800 mb-2">Assessment</h4>
+                <div className="space-y-2">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Assessment</h4>
                   <div 
-                    className="text-gray-700 prose prose-sm max-w-none"
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: lessonData.assessment }}
                   />
                 </div>
