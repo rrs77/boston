@@ -37,6 +37,8 @@ interface LessonPrintModalProps {
   unitName?: string;
   lessonNumbers?: string[];
   isUnitPrint?: boolean;
+  /** When true, modal runs PDF export once and then closes (no preview). */
+  autoDownload?: boolean;
 }
 
 export function LessonPrintModal({
@@ -47,7 +49,8 @@ export function LessonPrintModal({
                                    unitId,
                                    unitName,
                                    lessonNumbers,
-                                   isUnitPrint = false
+                                   isUnitPrint = false,
+                                   autoDownload = false
                                  }: LessonPrintModalProps) {
   const { 
     allLessonsData, 
@@ -71,14 +74,7 @@ export function LessonPrintModal({
   const [exportMode, setExportMode] = useState<'single' | 'unit'>(
       isUnitPrint || unitId || halfTermId ? 'unit' : 'single'
   );
-  const previewRef = useRef<HTMLDivElement>(null);
-  
-  // Track page assignments for each lesson - which elements go on which page
-  // Structure: { lessonNum: { pageIndex: [elementIds] } }
-  const [lessonPageAssignments, setLessonPageAssignments] = useState<Record<string, { pages: number; elementPages: Record<string, number> }>>({});
-  const measurementContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Determine which lessons to print - FIXED ORDER (must be before calculatePageAssignments)
+  // Determine which lessons to print
   const lessonsToRender = React.useMemo(() => {
     let lessons: string[] = [];
 
@@ -106,64 +102,6 @@ export function LessonPrintModal({
       return numA - numB;
     });
   }, [exportMode, lessonNumber, lessonNumbers, unitId, halfTermId, halfTerms, currentSheetInfo.sheet]);
-  
-  // Calculate page assignments by measuring elements and simulating PDFBolt's page break logic
-  const calculatePageAssignments = useCallback(() => {
-    if (!measurementContainerRef.current) return;
-    
-    const newAssignments: Record<string, { pages: number; elementPages: Record<string, number> }> = {};
-    
-    // For each lesson, find all measurable elements and calculate page assignments
-    lessonsToRender.forEach(lessonNum => {
-      const lessonContainer = measurementContainerRef.current?.querySelector(`[data-lesson="${lessonNum}"]`);
-      if (!lessonContainer) {
-        newAssignments[lessonNum] = { pages: 1, elementPages: {} };
-        return;
-      }
-      
-      // Find all elements that should not be broken (activities, headers, etc.)
-      const elements = lessonContainer.querySelectorAll('[data-element-id]');
-      const elementPages: Record<string, number> = {};
-      
-      let currentPage = 0;
-      let currentPageHeight = 0;
-      const maxPageHeight = PAGE_CONTENT_HEIGHT_PX - 40; // Leave some margin for footer
-      
-      elements.forEach((el) => {
-        const elementId = el.getAttribute('data-element-id') || '';
-        const elementHeight = (el as HTMLElement).offsetHeight + 8; // Add margin
-        
-        // If adding this element would exceed page height, move to next page
-        // (unless it's the first element on the page or element is taller than page)
-        if (currentPageHeight > 0 && currentPageHeight + elementHeight > maxPageHeight) {
-          currentPage++;
-          currentPageHeight = 0;
-        }
-        
-        elementPages[elementId] = currentPage;
-        currentPageHeight += elementHeight;
-      });
-      
-      newAssignments[lessonNum] = { 
-        pages: currentPage + 1, 
-        elementPages 
-      };
-      
-      console.log(`📄 Lesson ${lessonNum}: ${currentPage + 1} pages, elements:`, elementPages);
-    });
-    
-    setLessonPageAssignments(newAssignments);
-  }, [lessonsToRender]);
-  
-  // Recalculate page assignments when lessons change or modal opens
-  useEffect(() => {
-    // Delay to ensure content is rendered and measured
-    const timer = setTimeout(() => {
-      calculatePageAssignments();
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [lessonNumber, lessonNumbers, exportMode, calculatePageAssignments, allLessonsData]);
 
   // Load custom objectives data
   useEffect(() => {
@@ -280,49 +218,51 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
             min-height: calc(100vh - 25mm);
           }
           
-          /* Header Section */
+          /* Header Section - dark teal-green banner (preview style) */
           .lesson-header {
-            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            background: #0f766e;
             color: white;
-            padding: 16px 20px;
+            padding: 20px 24px;
             border-radius: 8px 8px 0 0;
             margin-bottom: 0;
           }
           
           .lesson-header h1 {
-            font-size: 18px;
+            font-size: 22px;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             letter-spacing: -0.02em;
+            color: white;
           }
           
           .lesson-header .subtitle {
-            font-size: 11px;
-            opacity: 0.9;
+            font-size: 14px;
+            opacity: 0.95;
             font-weight: 500;
+            margin-bottom: 10px;
           }
           
           .lesson-header .meta {
             display: flex;
-            gap: 16px;
+            gap: 20px;
             margin-top: 8px;
-            font-size: 10px;
-            opacity: 0.85;
+            font-size: 11px;
+            opacity: 0.9;
           }
           
           .lesson-header .meta-item {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
           }
           
-          /* Content Container */
+          /* Content Container - clean white */
           .content-wrapper {
             border: 1px solid #e5e7eb;
             border-top: none;
             border-radius: 0 0 8px 8px;
             padding: 16px;
-            background: #fafafa;
+            background: #fff;
           }
           
           /* Section Cards */
@@ -402,57 +342,61 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
           .theme-slate .section-header { background: #f8fafc; color: #475569; border-left: 4px solid #64748b; }
           .theme-gray .section-header { background: #f9fafb; color: #4b5563; border-left: 4px solid #6b7280; }
           
-          /* Activity Cards */
+          /* Activity Section - preview style */
           .activity-section {
-            margin-top: 12px;
+            margin-top: 16px;
           }
           
+          /* Section headings (Welcome, Introduce Bailey, etc.) - orange-brown/gold */
           .activity-category {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 700;
-            color: #0f766e;
-            padding: 6px 0;
-            border-bottom: 2px solid #0d9488;
-            margin-bottom: 8px;
+            color: #B8860B;
+            padding: 8px 0;
+            margin-bottom: 10px;
+            border-bottom: none;
           }
           
+          /* Activity card - light mint green header bar and left border */
           .activity-card {
             background: white;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #d1e7dd;
             border-radius: 6px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             overflow: hidden;
-            border-left: 3px solid #0d9488;
+            border-left: 4px solid #0f766e;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
           }
           
           .activity-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 12px;
-            background: #f0fdfa;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 10px 14px;
+            background: #E6F7ED;
+            border-bottom: 1px solid #d1e7dd;
           }
           
           .activity-title {
-            font-weight: 600;
-            font-size: 11px;
+            font-weight: 700;
+            font-size: 12px;
             color: #0f766e;
           }
           
           .activity-time {
-            background: #ccfbf1;
-            color: #0f766e;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 9px;
+            background: #0f766e;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 10px;
             font-weight: 600;
           }
           
           .activity-body {
-            padding: 10px 12px;
-            font-size: 10px;
-            color: #374151;
+            padding: 12px 14px;
+            font-size: 11px;
+            color: #1f2937;
+            line-height: 1.5;
           }
           
           .activity-body ul {
@@ -482,18 +426,21 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
           .activity-resources {
             display: flex;
             flex-wrap: wrap;
-            gap: 4px;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px dashed #d1d5db;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
           }
           
           .resource-tag {
-            font-size: 8px;
-            padding: 2px 6px;
-            border-radius: 10px;
+            font-size: 10px;
+            padding: 2px 0;
             font-weight: 500;
-            background: #f0fdfa;
+            color: #6b7280;
+            text-decoration: underline;
+          }
+          
+          .resource-tag:hover {
             color: #0f766e;
           }
           
@@ -844,20 +791,20 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
                   <div>${activity.description.includes('<') ? activity.description : activity.description.replace(/\n/g, '<br>')}</div>
             `;
 
-            // Resources
-            const resources = [];
-            if (activity.videoLink) resources.push({ label: 'Video', class: 'resource-video' });
-            if (activity.musicLink) resources.push({ label: 'Music', class: 'resource-music' });
-            if (activity.backingLink) resources.push({ label: 'Backing', class: 'resource-backing' });
-            if (activity.resourceLink) resources.push({ label: 'Resource', class: 'resource-resource' });
-            if (activity.link) resources.push({ label: 'Link', class: 'resource-link' });
-            if (activity.vocalsLink) resources.push({ label: 'Vocals', class: 'resource-vocals' });
-            if (activity.imageLink) resources.push({ label: 'Image', class: 'resource-image' });
+            // Resources - clickable shortcuts at bottom of each activity (original export style)
+            const resources: { label: string; url: string; class: string }[] = [];
+            if (activity.videoLink) resources.push({ label: 'Video', url: activity.videoLink, class: 'resource-video' });
+            if (activity.musicLink) resources.push({ label: 'Music', url: activity.musicLink, class: 'resource-music' });
+            if (activity.backingLink) resources.push({ label: 'Backing', url: activity.backingLink, class: 'resource-backing' });
+            if (activity.resourceLink) resources.push({ label: 'Resource', url: activity.resourceLink, class: 'resource-resource' });
+            if (activity.link) resources.push({ label: 'Link', url: activity.link, class: 'resource-link' });
+            if (activity.vocalsLink) resources.push({ label: 'Vocals', url: activity.vocalsLink, class: 'resource-vocals' });
+            if (activity.imageLink) resources.push({ label: 'Image', url: activity.imageLink, class: 'resource-image' });
 
             if (resources.length > 0) {
               htmlContent += `<div class="activity-resources">`;
               resources.forEach(r => {
-                htmlContent += `<span class="resource-tag ${r.class}">${r.label}</span>`;
+                htmlContent += `<a href="${r.url}" target="_blank" rel="noopener noreferrer" class="resource-tag ${r.class}" style="color: inherit; text-decoration: none;">${r.label}</a>`;
               });
               htmlContent += `</div>`;
             }
@@ -1374,9 +1321,19 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
     }
   };
 
+  // When autoDownload is true, run export once then close (no preview)
+  const autoDownloadDone = useRef(false);
+  useEffect(() => {
+    if (!autoDownload || lessonsToRender.length === 0 || isExporting || autoDownloadDone.current) return;
+    autoDownloadDone.current = true;
+    handleExport()
+      .then(() => onClose())
+      .catch(() => { autoDownloadDone.current = false; });
+  }, [autoDownload, lessonsToRender.length, isExporting]);
+
   return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-        <div className="bg-white rounded-card shadow-soft w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="bg-white rounded-card shadow-soft w-full max-w-md flex flex-col overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div>
@@ -1430,18 +1387,12 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
             </div>
           </div>
 
-          {/* Options */}
+          {/* Options - no preview, export via external PDF service only */}
           <div className="p-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-4">
                 <div className="text-sm text-gray-600">
                   Lessons: {lessonsToRender.length}
-                </div>
-                <div className="text-sm text-gray-600">
-                  •
-                </div>
-                <div className="text-sm text-gray-600">
-                  Total Pages: {lessonsToRender.reduce((sum, ln) => sum + (lessonPageAssignments[ln]?.pages || 1), 0)}
                 </div>
               </div>
               <div className="flex space-x-3">
@@ -1503,7 +1454,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
             </div>
           </div>
 
-          {/* Share URL Display - Show immediately when share is successful, moved outside options */}
+          {/* Share URL Display - Show immediately when share is successful */}
           {shareUrl && shareSuccess && (
             <div 
               data-share-url
@@ -1524,499 +1475,6 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
               </div>
             </div>
           )}
-
-          {/* Hidden measurement container - used to calculate element heights */}
-          <div 
-            ref={measurementContainerRef}
-            style={{ 
-              position: 'absolute', 
-              visibility: 'hidden', 
-              pointerEvents: 'none',
-              width: '210mm',
-              left: '-9999px'
-            }}
-          >
-            {lessonsToRender.map((lessonNum, lessonIndex) => {
-              const lessonData = allLessonsData[lessonNum];
-              if (!lessonData) return null;
-              
-              const lessonStandardsList = lessonStandards[lessonNum] || lessonStandards[lessonIndex + 1] || lessonStandards[(lessonIndex + 1).toString()] || [];
-              const groupedEyfs: Record<string, string[]> = {};
-              lessonStandardsList.forEach(statement => {
-                const parts = statement.split(':');
-                const area = parts[0].trim();
-                const detail = parts.length > 1 ? parts[1].trim() : statement;
-                if (!groupedEyfs[area]) groupedEyfs[area] = [];
-                groupedEyfs[area].push(detail);
-              });
-              
-              const lessonCustomObjectives = getCustomObjectivesForLesson(lessonNum);
-              const groupedCustomObjectives: Record<string, CustomObjective[]> = {};
-              lessonCustomObjectives.forEach(objective => {
-                const area = customAreas.find(a => a.id === objective.area_id);
-                if (area) {
-                  if (!groupedCustomObjectives[area.name]) groupedCustomObjectives[area.name] = [];
-                  groupedCustomObjectives[area.name].push(objective);
-                }
-              });
-              const hasCustomObjectives = Object.keys(groupedCustomObjectives).length > 0;
-              const hasEyfsObjectives = lessonStandardsList.length > 0;
-              const shouldShowCustom = showEyfs && hasCustomObjectives;
-              const shouldShowEyfs = showEyfs && hasEyfsObjectives && !hasCustomObjectives;
-              
-              let elementIndex = 0;
-              
-              return (
-                <div key={lessonNum} data-lesson={lessonNum} style={{ padding: `${PDFBOLT_MARGIN_TOP_PX}px ${PDFBOLT_MARGIN_RIGHT_PX}px ${PDFBOLT_MARGIN_BOTTOM_PX}px ${PDFBOLT_MARGIN_LEFT_PX}px` }}>
-                  {/* Title */}
-                  <div data-element-id={`${lessonNum}-title`} className="mb-3 border-b border-black pb-2">
-                    <h3 className="text-xl font-bold text-black">
-                      {lessonData.customHeader || `Lesson - ${currentSheetInfo.display}, Music`}
-                    </h3>
-                  </div>
-                  
-                  {/* Learning Goals */}
-                  {(shouldShowEyfs || shouldShowCustom) && (
-                    <div data-element-id={`${lessonNum}-goals`} className="mb-4">
-                      <h3 className="text-base font-semibold text-gray-900 mb-2">Learning Goals</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {shouldShowEyfs && Object.entries(groupedEyfs).map(([area, statements]) => (
-                          <div key={area} className="bg-yellow-50 rounded-lg p-2 border border-gray-200">
-                            <h4 className="font-medium text-gray-800 text-xs mb-1">{area}</h4>
-                            <ul className="space-y-0.5">
-                              {statements.map((statement, idx) => (
-                                <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
-                                  <span className="text-green-500 font-bold">✓</span>
-                                  <span>{statement}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
-                        {shouldShowCustom && Object.entries(groupedCustomObjectives).map(([areaName, objectives]) => (
-                          <div key={areaName} className="bg-purple-50 rounded-lg p-2 border border-gray-200">
-                            <h4 className="font-medium text-gray-800 text-xs mb-1">{areaName}</h4>
-                            <ul className="space-y-0.5">
-                              {objectives.map((objective) => (
-                                <li key={objective.id} className="flex items-start space-x-2 text-sm text-gray-700">
-                                  <span className="text-purple-500 font-bold">✓</span>
-                                  <span>{objective.objective_text}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Activities */}
-                  {lessonData.categoryOrder.map((category) => {
-                    const activities = lessonData.grouped[category] || [];
-                    if (activities.length === 0) return null;
-                    const categoryColor = getCategoryColor(category);
-                    
-                    return (
-                      <div key={category}>
-                        <div data-element-id={`${lessonNum}-cat-${category}`} className="mb-1">
-                          <h2 className="text-sm font-bold border-b border-black pb-0.5" style={{ color: categoryColor }}>{category}</h2>
-                        </div>
-                        {activities.map((activity, index) => {
-                          elementIndex++;
-                          return (
-                            <div 
-                              key={`${category}-${index}`} 
-                              data-element-id={`${lessonNum}-activity-${elementIndex}`}
-                              className="mb-2 bg-white rounded-lg border overflow-hidden"
-                              style={{ borderLeftWidth: '4px', borderLeftColor: categoryColor }}
-                            >
-                              <div className="px-2 py-0.5 border-b flex justify-between items-center" style={{ backgroundColor: `${categoryColor}20` }}>
-                                <h3 className="text-xs font-bold text-black">{activity.activity}</h3>
-                                {activity.time > 0 && <div className="px-1 py-0.5 rounded-full text-xs font-bold bg-gray-200">{activity.time}m</div>}
-                              </div>
-                              <div className="p-1.5">
-                                {activity.activityText && <div className="mb-1 text-xs text-black font-medium" dangerouslySetInnerHTML={{ __html: activity.activityText }} />}
-                                <div className="text-xs text-black" dangerouslySetInnerHTML={{ __html: activity.description.includes('<') ? activity.description : activity.description.replace(/\n/g, '<br>') }} />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                  
-                  {/* Notes */}
-                  {lessonData.notes && (
-                    <div data-element-id={`${lessonNum}-notes`} className="mt-4 pt-4 border-t border-black">
-                      <h3 className="text-lg font-bold text-black mb-2">Lesson Notes</h3>
-                      <div className="bg-gray-200 rounded-lg p-3 text-black border border-gray-600" dangerouslySetInnerHTML={{ __html: lessonData.notes }} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Preview - PDF-style view with separate A4 pages */}
-          <div 
-            className="flex-1 overflow-y-auto print-preview-container"
-            style={{
-              minHeight: 0,
-              maxHeight: 'calc(90vh - 300px)',
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              backgroundColor: '#525659',
-              padding: '24px'
-            }}
-          >
-            {/* Render each lesson - pages based on calculated assignments */}
-            {lessonsToRender.map((lessonNum, lessonIndex) => {
-              const lessonData = allLessonsData[lessonNum];
-              if (!lessonData) return null;
-
-              const lessonStandardsList = lessonStandards[lessonNum] || lessonStandards[lessonIndex + 1] || lessonStandards[(lessonIndex + 1).toString()] || [];
-              const groupedEyfs: Record<string, string[]> = {};
-              lessonStandardsList.forEach(statement => {
-                const parts = statement.split(':');
-                const area = parts[0].trim();
-                const detail = parts.length > 1 ? parts[1].trim() : statement;
-                if (!groupedEyfs[area]) groupedEyfs[area] = [];
-                groupedEyfs[area].push(detail);
-              });
-
-              // Get page assignments for this lesson
-              const assignments = lessonPageAssignments[lessonNum] || { pages: 1, elementPages: {} };
-              const numPages = assignments.pages;
-              
-              // Helper to check if element belongs on a page
-              const isElementOnPage = (elementId: string, pageIndex: number) => {
-                return (assignments.elementPages[elementId] ?? 0) === pageIndex;
-              };
-
-              // Get custom objectives
-              const lessonCustomObjectives = getCustomObjectivesForLesson(lessonNum);
-              const groupedCustomObjectives: Record<string, CustomObjective[]> = {};
-              lessonCustomObjectives.forEach(objective => {
-                const area = customAreas.find(a => a.id === objective.area_id);
-                if (area) {
-                  if (!groupedCustomObjectives[area.name]) groupedCustomObjectives[area.name] = [];
-                  groupedCustomObjectives[area.name].push(objective);
-                }
-              });
-              const hasCustomObjectives = Object.keys(groupedCustomObjectives).length > 0;
-              const hasEyfsObjectives = lessonStandardsList.length > 0;
-              const shouldShowCustom = showEyfs && hasCustomObjectives;
-              const shouldShowEyfs = showEyfs && hasEyfsObjectives && !hasCustomObjectives;
-              
-              // Render each page
-              return Array.from({ length: numPages }, (_, pageIndex) => {
-                let elementIndex = 0;
-                
-                return (
-                  <div
-                    key={`${lessonNum}-page-${pageIndex}`}
-                    className="pdf-page-card"
-                    style={{
-                      width: '210mm',
-                      height: `${A4_HEIGHT_PX}px`,
-                      margin: '0 auto 16px auto',
-                      background: 'white',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      borderRadius: '2px'
-                    }}
-                  >
-                    <div
-                      style={{
-                        paddingTop: `${PDFBOLT_MARGIN_TOP_PX}px`,
-                        paddingRight: `${PDFBOLT_MARGIN_RIGHT_PX}px`,
-                        paddingBottom: `${PDFBOLT_MARGIN_BOTTOM_PX}px`,
-                        paddingLeft: `${PDFBOLT_MARGIN_LEFT_PX}px`,
-                        height: '100%',
-                        boxSizing: 'border-box',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      {/* Title - only on first page */}
-                      {isElementOnPage(`${lessonNum}-title`, pageIndex) && (
-                        <div className="mb-3 border-b border-black pb-2">
-                          <h3 className="text-xl font-bold text-black">
-                            {lessonData.customHeader || (() => {
-                              const getLessonDisplayNumber = (num: string): string => {
-                                const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
-                                return numericPart || num;
-                              };
-                              const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
-                              const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
-                              return `Lesson ${termSpecificNumber}, ${halfTermName || unitName || 'Autumn 1'} - ${currentSheetInfo.display}, Music`;
-                            })()}
-                          </h3>
-                        </div>
-                      )}
-
-                      {/* Learning Goals */}
-                      {isElementOnPage(`${lessonNum}-goals`, pageIndex) && (shouldShowEyfs || shouldShowCustom) && (
-                        <div className="mb-4">
-                          <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center space-x-2">
-                            <Tag className="h-4 w-4 text-blue-600" />
-                            <span>Learning Goals</span>
-                          </h3>
-                          <div className="grid grid-cols-2 gap-2">
-                            {shouldShowEyfs && Object.entries(groupedEyfs).map(([area, statements]) => (
-                              <div key={area} className="bg-yellow-50 rounded-lg p-2 border border-gray-200">
-                                <h4 className="font-medium text-gray-800 text-xs mb-1">{area}</h4>
-                                <ul className="space-y-0.5">
-                                  {statements.map((statement, index) => (
-                                    <li key={index} className="flex items-start space-x-2 text-sm text-gray-700">
-                                      <span className="text-green-500 font-bold">✓</span>
-                                      <span>{statement}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ))}
-                            {shouldShowCustom && Object.entries(groupedCustomObjectives).map(([areaName, objectives]) => (
-                              <div key={areaName} className="bg-purple-50 rounded-lg p-2 border border-gray-200">
-                                <h4 className="font-medium text-gray-800 text-xs mb-1">{areaName}</h4>
-                                <ul className="space-y-0.5">
-                                  {objectives.map((objective) => (
-                                    <li key={objective.id} className="flex items-start space-x-2 text-sm text-gray-700">
-                                      <span className="text-purple-500 font-bold">✓</span>
-                                      <span>{objective.objective_text}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Lesson Plan Details - Match Full Lesson Preview Styling - Only show on first page */}
-                      {pageIndex === 0 && (lessonData.learningOutcome || lessonData.successCriteria || 
-                        lessonData.introduction || lessonData.mainActivity || lessonData.plenary ||
-                        lessonData.vocabulary || lessonData.keyQuestions || lessonData.resources ||
-                        lessonData.differentiation || lessonData.assessment) && (
-                        <div className="mb-4 space-y-3">
-                          {/* Learning Outcome */}
-                          {lessonData.learningOutcome && (
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
-                                <Target className="h-4 w-4 text-teal-600" />
-                                <span>Learning Outcome</span>
-                              </h4>
-                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.learningOutcome }} />
-                            </div>
-                          )}
-                          {/* Success Criteria */}
-                          {lessonData.successCriteria && (
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
-                                <Target className="h-4 w-4 text-teal-600" />
-                                <span>Success Criteria</span>
-                              </h4>
-                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.successCriteria }} />
-                            </div>
-                          )}
-                          {/* Introduction */}
-                          {lessonData.introduction && (
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold text-gray-900">Introduction</h4>
-                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.introduction }} />
-                            </div>
-                          )}
-                          {/* Main Activity */}
-                          {lessonData.mainActivity && (
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold text-gray-900">Main Activity</h4>
-                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.mainActivity }} />
-                            </div>
-                          )}
-                          {/* Plenary */}
-                          {lessonData.plenary && (
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold text-gray-900">Plenary</h4>
-                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.plenary }} />
-                            </div>
-                          )}
-                          {/* Vocabulary */}
-                          {lessonData.vocabulary && (
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold text-gray-900">Vocabulary</h4>
-                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.vocabulary }} />
-                            </div>
-                          )}
-                          {/* Key Questions */}
-                          {lessonData.keyQuestions && (
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold text-gray-900">Key Questions</h4>
-                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.keyQuestions }} />
-                            </div>
-                          )}
-                          {/* Resources */}
-                          {lessonData.resources && (
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold text-gray-900">Resources</h4>
-                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.resources }} />
-                            </div>
-                          )}
-                          {/* Differentiation */}
-                          {lessonData.differentiation && (
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold text-gray-900">Differentiation</h4>
-                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.differentiation }} />
-                            </div>
-                          )}
-                          {/* Assessment */}
-                          {lessonData.assessment && (
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold text-gray-900">Assessment</h4>
-                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-xs text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: lessonData.assessment }} />
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Activities by Category */}
-                      {lessonData.categoryOrder.map((category) => {
-                        const activities = lessonData.grouped[category] || [];
-                        if (activities.length === 0) return null;
-
-                        const categoryColor = getCategoryColor(category);
-                        const getCategoryBgColor = (cat: string) => {
-                          switch(cat) {
-                            case 'Welcome': return '#FEF3C7';
-                            case 'Kodaly Songs': return '#EDE9FE';
-                            case 'Goodbye': return '#D1FAE5';
-                            default: return `${categoryColor}20`;
-                          }
-                        };
-                        const getCategoryLightBorder = (cat: string) => {
-                          switch(cat) {
-                            case 'Welcome': return '#FDE68A';
-                            case 'Kodaly Songs': return '#DDD6FE';
-                            case 'Goodbye': return '#A7F3D0';
-                            default: return `${categoryColor}60`;
-                          }
-                        };
-
-                        // Check if category header or any activity from this category is on this page
-                        const categoryOnThisPage = isElementOnPage(`${lessonNum}-cat-${category}`, pageIndex) ||
-                          activities.some((_, idx) => {
-                            elementIndex++;
-                            return isElementOnPage(`${lessonNum}-activity-${elementIndex}`, pageIndex);
-                          });
-                        
-                        // Reset elementIndex for actual rendering
-                        elementIndex = lessonData.categoryOrder.slice(0, lessonData.categoryOrder.indexOf(category))
-                          .reduce((sum, cat) => sum + (lessonData.grouped[cat]?.length || 0), 0);
-
-                        if (!categoryOnThisPage) return null;
-
-                        return (
-                          <div key={category} className="mb-4">
-                            {isElementOnPage(`${lessonNum}-cat-${category}`, pageIndex) && (
-                              <h2 className="text-sm font-bold mb-1 border-b border-black pb-0.5" style={{ color: categoryColor }}>
-                                {category}
-                              </h2>
-                            )}
-                            <div className="space-y-2">
-                              {activities.map((activity, index) => {
-                                elementIndex++;
-                                if (!isElementOnPage(`${lessonNum}-activity-${elementIndex}`, pageIndex)) return null;
-                                
-                                return (
-                                  <div
-                                    key={`${category}-${index}`}
-                                    className="bg-white rounded-lg border overflow-hidden"
-                                    style={{
-                                      borderLeftWidth: '4px',
-                                      borderLeftColor: categoryColor,
-                                      borderColor: getCategoryLightBorder(category)
-                                    }}
-                                  >
-                                    <div
-                                      className="px-2 py-0.5 border-b flex justify-between items-center"
-                                      style={{
-                                        backgroundColor: getCategoryBgColor(category),
-                                        borderBottomColor: categoryColor
-                                      }}
-                                    >
-                                      <h3 className="text-xs font-bold text-black">{activity.activity}</h3>
-                                      {activity.time > 0 && (
-                                        <div className="px-1 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'rgba(0,0,0,0.15)', color: '#374151' }}>
-                                          {activity.time}m
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="p-1.5">
-                                      {activity.activityText && (
-                                        <div className="mb-1 text-xs text-black font-medium" dangerouslySetInnerHTML={{ __html: activity.activityText }} />
-                                      )}
-                                      <div
-                                        className={`text-xs text-black ${activity.activityText ? 'pt-1.5 border-t border-gray-300' : ''}`}
-                                        dangerouslySetInnerHTML={{
-                                          __html: activity.description.includes('<') ? activity.description : activity.description.replace(/\n/g, '<br>')
-                                        }}
-                                      />
-                                      {(activity.videoLink || activity.musicLink || activity.backingLink || activity.resourceLink || activity.link || activity.vocalsLink || activity.imageLink) && (
-                                        <div className="mt-1 pt-1 border-t border-gray-600">
-                                          <p className="text-xs font-bold text-black mb-0.5">Resources:</p>
-                                          <div className="flex flex-wrap gap-0.5">
-                                            {activity.videoLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">Video</span>}
-                                            {activity.musicLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">Music</span>}
-                                            {activity.backingLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">Backing</span>}
-                                            {activity.resourceLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full">Resource</span>}
-                                            {activity.link && <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full">Link</span>}
-                                            {activity.vocalsLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-orange-100 text-orange-800 text-xs rounded-full">Vocals</span>}
-                                            {activity.imageLink && <span className="inline-flex items-center px-1.5 py-0.5 bg-pink-100 text-pink-800 text-xs rounded-full">Image</span>}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {/* Notes Section */}
-                      {isElementOnPage(`${lessonNum}-notes`, pageIndex) && lessonData.notes && (
-                        <div className="mt-6 pt-4 border-t border-black">
-                          <h3 className="text-lg font-bold text-black mb-2">Lesson Notes</h3>
-                          <div className="bg-gray-200 rounded-lg p-3 text-black border border-gray-600" dangerouslySetInnerHTML={{ __html: lessonData.notes }} />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Page Footer */}
-                    <div 
-                      className="text-center text-xs text-gray-600"
-                      style={{
-                        position: 'absolute',
-                        bottom: '12px',
-                        left: `${PDFBOLT_MARGIN_LEFT_PX}px`,
-                        right: `${PDFBOLT_MARGIN_RIGHT_PX}px`
-                      }}
-                    >
-                      <p><strong>{lessonData.customFooter || (() => {
-                        const getLessonDisplayNumber = (num: string): string => {
-                          const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
-                          return numericPart || num;
-                        };
-                        const lessonDisplayNumber = getLessonDisplayNumber(lessonNum);
-                        const termSpecificNumber = halfTermId ? getTermSpecificLessonNumber(lessonNum, halfTermId) : lessonDisplayNumber;
-                        return `Creative Curriculum Designer • Lesson ${termSpecificNumber} • ${currentSheetInfo.display} • ${halfTermName || unitName || ''} • © Forward Thinking 2026`;
-                      })()}</strong></p>
-                    </div>
-                  </div>
-                );
-              });
-            })}
-          </div>
         </div>
       </div>
   );

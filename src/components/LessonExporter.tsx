@@ -1,11 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Download, FileText, File, Printer, X, Check, ChevronDown, ChevronUp, Tag, Share2, Copy, Link2, Target } from 'lucide-react';
-import { supabase } from '../config/supabase';
+import React, { useState } from 'react';
+import { Download, X, Check, Tag, Copy, Link2 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
-import { useSettings } from '../contexts/SettingsContextNew';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
-import html2canvas from 'html2canvas';
+import { LessonPrintModal } from './LessonPrintModal';
+import { useShareLesson } from '../hooks/useShareLesson';
 
 interface LessonExporterProps {
   lessonNumber: string;
@@ -14,15 +11,11 @@ interface LessonExporterProps {
 
 export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
   const { allLessonsData, currentSheetInfo, lessonStandards } = useData();
-  const { getCategoryColor } = useSettings();
-  const [exportFormat, setExportFormat] = useState<'pdf' | 'preview'>('preview');
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportSuccess, setExportSuccess] = useState(false);
+  const { shareLesson, isSharing } = useShareLesson();
   const [showStandards, setShowStandards] = useState(true);
-  const [isSharing, setIsSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareSuccess, setShareSuccess] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   const lessonData = allLessonsData[lessonNumber];
   const lessonStandardsList = lessonStandards[lessonNumber] || [];
@@ -63,256 +56,21 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
     groupedEyfs[area].push(detail);
   });
 
-  const handleExport = async () => {
-    setIsExporting(true);
-    
-    try {
-      if (exportFormat === 'pdf') {
-        // Export to PDF using html2canvas to capture the styled preview
-        if (previewRef.current) {
-          const canvas = await html2canvas(previewRef.current, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff'
-          });
-          
-          const imgData = canvas.toDataURL('image/png');
-          
-          // Create PDF with proper A4 dimensions
-          const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-          });
-          
-          // A4 dimensions: 210mm x 297mm
-          const imgWidth = 210;
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
-          
-          // Add image to PDF
-          pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-          
-          // If the content is longer than one page, create additional pages
-          if (imgHeight > 297) {
-            let remainingHeight = imgHeight;
-            let currentPosition = 0;
-            
-            while (remainingHeight > 0) {
-              currentPosition += 297;
-              remainingHeight -= 297;
-              
-              if (remainingHeight > 0) {
-                pdf.addPage();
-                pdf.addImage(
-                  imgData, 
-                  'PNG', 
-                  0, 
-                  -currentPosition, 
-                  imgWidth, 
-                  imgHeight
-                );
-              }
-            }
-          }
-          
-          // Save the PDF - use lesson number in filename
-          // Extract numeric lesson number (handle "lesson1" format)
-          const getLessonDisplayNumber = (num: string): string => {
-            const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
-            return numericPart || num;
-          };
-          const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber);
-          const fileName = `${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
-          pdf.save(fileName);
-        }
-      }
-      
-      setExportSuccess(true);
-      setTimeout(() => setExportSuccess(false), 3000);
-    } catch (error) {
-      console.error('Export failed:', error);
-      alert('Export failed. Please try again.');
-    } finally {
-      setIsExporting(false);
-    }
+  // Download PDF via external service (PDFBolt) – no in-app preview
+  const handleDownloadPdf = () => {
+    setShowPrintModal(true);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Check and create bucket if it doesn't exist
-  const ensureBucketExists = async () => {
-    const bucketName = 'lesson-pdfs';
-    
-    // Try to access the bucket directly instead of listing all buckets
-    try {
-      const { data: files, error: accessError } = await supabase.storage
-        .from(bucketName)
-        .list('', { limit: 1 });
-      
-      if (!accessError) {
-        console.log('✅ Bucket exists and is accessible');
-        return { exists: true, created: false };
-      }
-      
-      if (accessError.message?.includes('not found') || accessError.message?.includes('Bucket not found')) {
-        console.log('Bucket does not exist, attempting to create...');
-        const { data: newBucket, error: createError } = await supabase.storage.createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 52428800,
-          allowedMimeTypes: ['application/pdf']
-        });
-        
-        if (createError) {
-          console.error('Error creating bucket:', createError);
-          return { exists: false, error: createError.message, requiresManualSetup: true };
-        }
-        
-        console.log('Bucket created successfully:', newBucket);
-        return { exists: true, created: true };
-      }
-      
-      console.error('Error accessing bucket:', accessError);
-      return { exists: false, error: accessError.message, requiresManualSetup: true };
-      
-    } catch (error: any) {
-      console.error('Unexpected error checking bucket:', error);
-      return { exists: false, error: error.message || 'Unknown error', requiresManualSetup: true };
-    }
-  };
-
+  // Copy Link uses external PDF service via useShareLesson (Netlify generate-pdf + upload)
   const handleShare = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    
-    setIsSharing(true);
-    setShareUrl(null);
-    setShareSuccess(false);
-
-    try {
-      // Ensure bucket exists
-      const bucketCheck = await ensureBucketExists();
-      if (!bucketCheck.exists) {
-        const setupUrl = 'https://supabase.com/dashboard/project/_/storage/buckets';
-        const errorMsg = bucketCheck.requiresManualSetup
-          ? `The 'lesson-pdfs' storage bucket needs to be created manually in Supabase Dashboard.\n\n` +
-            `This is required because bucket creation needs admin permissions.\n\n` +
-            `Quick Setup:\n` +
-            `1. Go to: ${setupUrl}\n` +
-            `2. Click "New bucket"\n` +
-            `3. Name: "lesson-pdfs"\n` +
-            `4. Enable "Public bucket"\n` +
-            `5. Click "Create bucket"\n\n` +
-            `See SUPABASE_STORAGE_SETUP.md for detailed instructions.`
-          : `Storage bucket 'lesson-pdfs' does not exist. Please create it manually.\n\nError: ${bucketCheck.error || 'Unknown error'}`;
-        
-        alert(errorMsg);
-        throw new Error('Storage bucket not configured');
-      }
-
-      // Generate PDF using html2canvas
-      if (!previewRef.current) {
-        throw new Error('Preview not available');
-      }
-
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      
-      // Create PDF
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      
-      if (imgHeight > 297) {
-        let remainingHeight = imgHeight;
-        let currentPosition = 0;
-        
-        while (remainingHeight > 0) {
-          currentPosition += 297;
-          remainingHeight -= 297;
-          
-          if (remainingHeight > 0) {
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, -currentPosition, imgWidth, imgHeight);
-          }
-        }
-      }
-
-      // Convert PDF to blob
-      const pdfBlob = pdf.output('blob');
-
-      // Generate filename
-      const getLessonDisplayNumber = (num: string): string => {
-        const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
-        return numericPart || num;
-      };
-      const lessonDisplayNumber = getLessonDisplayNumber(lessonNumber);
-      const fileName = `${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
-
-      // Convert blob to base64 for Netlify function
-      const arrayBuffer = await pdfBlob.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-
-      // Upload via Netlify function to bypass RLS
-      // Use helper to route through Netlify subdomain on custom domains (fixes SSL issues)
-      const timestamp = Date.now();
-      const netlifyFileName = `${timestamp}_${fileName}`;
-      const { getNetlifyFunctionUrl } = await import('../utils/netlifyFunctions');
-      const netlifyFunctionUrl = getNetlifyFunctionUrl('/.netlify/functions/upload-pdf');
-      const uploadResponse = await fetch(netlifyFunctionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fileName: netlifyFileName,
-          fileData: base64
-        })
-      });
-
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json().catch(() => ({ error: 'Upload failed' }));
-        console.error('Upload error:', errorData);
-        throw new Error(errorData.error || `Failed to upload PDF: ${uploadResponse.status}`);
-      }
-
-      const { url: publicUrl } = await uploadResponse.json();
-      
-      if (!publicUrl) {
-        throw new Error('No URL returned from upload');
-      }
-      setShareUrl(publicUrl);
+    const url = await shareLesson(lessonNumber);
+    if (url) {
+      setShareUrl(url);
       setShareSuccess(true);
-
-      // Copy to clipboard directly - NO native sharing, NO window.open, NO auto-open
-      // This is the ONLY action allowed - clipboard copy only
-      const clipboardSuccess = await copyToClipboard(publicUrl);
-      
-      if (!clipboardSuccess) {
-        throw new Error('Failed to copy URL to clipboard. Please copy it manually from the URL shown.');
-      }
-    } catch (error: any) {
-      console.error('Share failed:', error);
-      alert(`Share failed: ${error.message}`);
-    } finally {
-      setIsSharing(false);
     }
   };
 
@@ -339,8 +97,9 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
   };
 
   return (
+    <>
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-      <div className="bg-white rounded-card shadow-soft w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-card shadow-soft w-full max-w-md flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div>
@@ -349,94 +108,48 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
               {lessonData.title || `Lesson ${lessonNumber}`} - {currentSheetInfo.display}
             </p>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
-              <button
-                onClick={() => setExportFormat('preview')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium ${
-                  exportFormat === 'preview' 
-                    ? 'bg-white shadow-sm text-gray-900' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Preview
-              </button>
-              <button
-                onClick={() => setExportFormat('pdf')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium ${
-                  exportFormat === 'pdf' 
-                    ? 'bg-white shadow-sm text-gray-900' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                PDF
-              </button>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+          >
+            <X className="h-6 w-6" />
+          </button>
         </div>
 
-        {/* Options */}
+        {/* Options - external PDF service only, no preview */}
         <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center space-x-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={showStandards}
-                  onChange={() => setShowEyfs(!showStandards)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span>Include EYFS Standards</span>
-              </label>
-            </div>
-            <div className="flex space-x-3">
+          <div className="flex items-center justify-between mb-3">
+            <label className="flex items-center space-x-2 text-sm">
+              <input
+                type="checkbox"
+                checked={showStandards}
+                onChange={() => setShowEyfs(!showStandards)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span>Include EYFS Standards</span>
+            </label>
+          </div>
+          <div className="flex space-x-3">
               <button
-                onClick={handlePrint}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
-              >
-                <Printer className="h-4 w-4" />
-                <span>Print</span>
-              </button>
-              <button
-                onClick={handleExport}
-                disabled={isExporting || isSharing}
+                onClick={handleDownloadPdf}
+                disabled={isSharing}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:bg-blue-400"
               >
-                {isExporting ? (
-                  <>
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    <span>Exporting...</span>
-                  </>
-                ) : exportSuccess ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    <span>Exported!</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4" />
-                    <span>Export {exportFormat.toUpperCase()}</span>
-                  </>
-                )}
+                <Download className="h-4 w-4" />
+                <span>Download PDF</span>
               </button>
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
-                  if (!isExporting && !isSharing) {
+                  if (!isSharing) {
                     handleShare(e);
                   }
                 }}
-                disabled={isExporting || isSharing}
+                disabled={isSharing}
                 aria-label="Copy share link to clipboard"
                 className={`px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2 ${
-                  isExporting || isSharing ? 'opacity-50 cursor-not-allowed' : ''
+                  isSharing ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
                 {isSharing ? (
@@ -476,486 +189,14 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
             )}
           </div>
         </div>
-
-        {/* Preview */}
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-100 print:bg-white print:p-0">
-          <div 
-            ref={previewRef}
-            className="bg-white mx-auto shadow-md max-w-[210mm] print:shadow-none print:max-w-none"
-            style={{ minHeight: '297mm' }}
-          >
-            {/* Lesson Plan Preview */}
-            <div className="p-8 print:p-4 pb-16 print:pb-12">
-              {/* Header */}
-              <div className="text-center border-b-4 border-blue-500 pb-6 mb-6 relative print:pb-4 print:mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-t-lg">
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-lg shadow-lg mb-4">
-                  <h1 className="text-3xl font-bold mb-2 print:text-2xl">
-                    {currentSheetInfo.display} Lesson Plan
-                  </h1>
-                  <h2 className="text-2xl font-semibold mb-2 print:text-xl">
-                    {lessonData.title || (() => {
-                      // Extract numeric lesson number (handle "lesson1" format)
-                      const getLessonDisplayNumber = (num: string): string => {
-                        const numericPart = num.replace(/^lesson/i, '').replace(/[^0-9]/g, '');
-                        return numericPart || num;
-                      };
-                      return `Lesson ${getLessonDisplayNumber(lessonNumber)}`;
-                    })()}
-                  </h2>
-                  <div className="text-blue-100 font-medium text-lg">
-                    Total Time: {totalDuration} minutes
-                  </div>
-                </div>
-                
-                {/* Page number - only visible when printing */}
-                <div className="hidden print:block absolute top-0 right-0 text-xs text-gray-500">
-                  Page <span className="pageNumber"></span>
-                </div>
-              </div>
-              
-              {/* EYFS Goals */}
-              {showStandards && lessonStandardsList.length > 0 && (
-                <div className="mb-8 print:mb-6 bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-200 shadow-sm">
-                  <h3 className="text-2xl font-bold mb-4 flex items-center space-x-3 print:text-xl print:mb-3" style={{color: '#0BA596'}}>
-                    <div className="bg-green-600 p-2 rounded-lg">
-                      <Tag className="h-6 w-6 text-white print:h-5 print:w-5" />
-                    </div>
-                    <span>Learning Goals</span>
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:gap-3">
-                    {Object.entries(groupedEyfs).map(([area, statements]) => (
-                      <div key={area} className="bg-white rounded-xl p-4 border-2 border-green-100 shadow-sm print:p-3">
-                        <h4 className="font-bold text-lg mb-3 print:text-base print:mb-2 border-b border-green-200 pb-2" style={{color: '#0BA596'}}>{area}</h4>
-                        <ul className="space-y-2">
-                          {statements.map((statement, index) => (
-                            <li key={index} className="flex items-start space-x-3 text-base text-gray-700 print:text-sm">
-                              <span className="text-green-600 font-bold text-lg">✓</span>
-                              <span className="leading-relaxed">{statement}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Lesson Plan Details - Match Full Lesson Preview Styling */}
-              {(lessonData.learningOutcome || lessonData.successCriteria || lessonData.introduction || 
-                lessonData.mainActivity || lessonData.plenary || lessonData.vocabulary || 
-                lessonData.keyQuestions || lessonData.resources || lessonData.differentiation || 
-                lessonData.assessment) && (
-                <div className="mb-8 print:mb-6 space-y-6 print:space-y-4">
-                  {/* Learning Outcome */}
-                  {lessonData.learningOutcome && (
-                    <div className="space-y-2">
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                        <Target className="h-5 w-5 text-teal-600" />
-                        <span>Learning Outcome</span>
-                      </h4>
-                      <div 
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: lessonData.learningOutcome }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Success Criteria */}
-                  {lessonData.successCriteria && (
-                    <div className="space-y-2">
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                        <Target className="h-5 w-5 text-teal-600" />
-                        <span>Success Criteria</span>
-                      </h4>
-                      <div 
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: lessonData.successCriteria }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Introduction */}
-                  {lessonData.introduction && (
-                    <div className="space-y-2">
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Introduction</h4>
-                      <div 
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: lessonData.introduction }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Main Activity */}
-                  {lessonData.mainActivity && (
-                    <div className="space-y-2">
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Main Activity</h4>
-                      <div 
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: lessonData.mainActivity }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Plenary */}
-                  {lessonData.plenary && (
-                    <div className="space-y-2">
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Plenary</h4>
-                      <div 
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: lessonData.plenary }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Vocabulary */}
-                  {lessonData.vocabulary && (
-                    <div className="space-y-2">
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Vocabulary</h4>
-                      <div 
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: lessonData.vocabulary }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Key Questions */}
-                  {lessonData.keyQuestions && (
-                    <div className="space-y-2">
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Key Questions</h4>
-                      <div 
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: lessonData.keyQuestions }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Resources */}
-                  {lessonData.resources && (
-                    <div className="space-y-2">
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Resources</h4>
-                      <div 
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: lessonData.resources }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Differentiation */}
-                  {lessonData.differentiation && (
-                    <div className="space-y-2">
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Differentiation</h4>
-                      <div 
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: lessonData.differentiation }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Assessment */}
-                  {lessonData.assessment && (
-                    <div className="space-y-2">
-                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Assessment</h4>
-                      <div 
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-gray-700 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: lessonData.assessment }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Activities by Category */}
-              {lessonData.categoryOrder && lessonData.categoryOrder.length > 0 && (() => {
-                // Check if lesson has lesson plan details
-                const hasLessonPlanDetails = lessonData.learningOutcome || lessonData.successCriteria || 
-                  lessonData.introduction || lessonData.mainActivity || lessonData.plenary ||
-                  lessonData.vocabulary || lessonData.keyQuestions || lessonData.resources ||
-                  lessonData.differentiation || lessonData.assessment;
-                
-                // Use original simpler formatting if lesson only has activities
-                const useOriginalFormatting = !hasLessonPlanDetails;
-                
-                return (
-                  <div className="mb-8 print:mb-6">
-                    {lessonData.categoryOrder.map((category) => {
-                      const activities = lessonData.grouped[category] || [];
-                      if (activities.length === 0) return null;
-                      
-                      const categoryColor = getCategoryColor(category);
-                      
-                      return (
-                        <div key={category} className={useOriginalFormatting ? "mb-6 print:mb-4" : "mb-10 print:mb-8"}>
-                          {/* Category Header - Original or Enhanced based on lesson type */}
-                          {useOriginalFormatting ? (
-                            <h2 
-                              className="text-lg font-bold mb-4 print:text-base print:mb-3 border-b-2 pb-2"
-                              style={{ 
-                                color: categoryColor,
-                                borderBottomColor: categoryColor
-                              }}
-                            >
-                              {category}
-                            </h2>
-                          ) : (
-                            <div 
-                              className="text-white p-4 rounded-xl mb-6 shadow-lg print:mb-4 print:p-3"
-                              style={{ 
-                                background: `linear-gradient(135deg, ${categoryColor} 0%, ${categoryColor}dd 100%)`,
-                                borderLeft: `6px solid ${categoryColor}`
-                              }}
-                            >
-                              <h2 className="text-2xl font-bold print:text-xl flex items-center">
-                                <div 
-                                  className="w-4 h-4 rounded-full mr-3 border-2 border-white"
-                                  style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}
-                                ></div>
-                                {category}
-                                <span className="ml-auto bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
-                                  {activities.length} {activities.length === 1 ? 'activity' : 'activities'}
-                                </span>
-                              </h2>
-                            </div>
-                          )}
-                          
-                          <div className={useOriginalFormatting ? "space-y-4 print:space-y-3" : "space-y-6 print:space-y-4"}>
-                            {activities.map((activity, index) => (
-                              <div 
-                                key={`${category}-${index}`} 
-                                className={useOriginalFormatting 
-                                  ? "bg-white rounded-lg border overflow-hidden print:border print:rounded-lg print:mb-3"
-                                  : "bg-white rounded-xl border-2 shadow-lg overflow-hidden print:border print:rounded-lg print:mb-4"
-                                }
-                                style={useOriginalFormatting ? {
-                                  borderLeftWidth: '4px',
-                                  borderLeftColor: categoryColor,
-                                  borderColor: '#e5e7eb'
-                                } : {
-                                  borderLeftWidth: '6px',
-                                  borderLeftColor: categoryColor,
-                                  borderColor: `${categoryColor}40`
-                                }}
-                              >
-                                {/* Activity Header */}
-                                <div 
-                                  className={useOriginalFormatting 
-                                    ? "px-3 py-2 border-b flex justify-between items-center print:p-2"
-                                    : "p-4 border-b-2 flex justify-between items-center print:p-3"
-                                  }
-                                  style={useOriginalFormatting ? {
-                                    backgroundColor: '#f9fafb',
-                                    borderBottomColor: '#e5e7eb'
-                                  } : {
-                                    backgroundColor: `${categoryColor}10`,
-                                    borderBottomColor: `${categoryColor}30`
-                                  }}
-                                >
-                                  <h3 className={`font-bold text-gray-900 ${useOriginalFormatting ? 'text-base print:text-sm' : 'text-lg print:text-base'}`}>
-                                    {activity.activity}
-                                  </h3>
-                                  {activity.time > 0 && (
-                                    <div 
-                                      className={useOriginalFormatting
-                                        ? "px-2 py-1 rounded-full text-xs font-bold"
-                                        : "text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm print:text-xs"
-                                      }
-                                      style={useOriginalFormatting ? {
-                                        backgroundColor: 'rgba(0,0,0,0.1)',
-                                        color: '#374151'
-                                      } : {
-                                        backgroundColor: categoryColor
-                                      }}
-                                    >
-                                      {activity.time} min
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {/* Activity Content */}
-                                <div className={useOriginalFormatting ? "p-3 print:p-2" : "p-4 print:p-3"}>
-                                  {/* Activity Text (if available) */}
-                                  {activity.activityText && (
-                                    <div 
-                                      className={useOriginalFormatting
-                                        ? "mb-2 text-sm text-gray-800 print:text-xs font-medium"
-                                        : "mb-4 text-base text-gray-800 print:text-sm bg-blue-50 p-3 rounded-lg border border-blue-200"
-                                      }
-                                      dangerouslySetInnerHTML={{ __html: activity.activityText }}
-                                    />
-                                  )}
-                                  
-                                  {/* Description */}
-                                  <div 
-                                    className={useOriginalFormatting
-                                      ? `text-sm text-gray-700 leading-relaxed print:text-xs ${activity.activityText ? 'mt-2 pt-2 border-t border-gray-200' : ''}`
-                                      : `text-base text-gray-700 leading-relaxed print:text-sm ${activity.activityText ? 'pt-4 border-t-2 border-gray-200' : ''}`
-                                    }
-                                    dangerouslySetInnerHTML={{ 
-                                      __html: activity.description.includes('<') ? 
-                                        activity.description : 
-                                        activity.description.replace(/\n/g, '<br>') 
-                                    }}
-                                  />
-                                  
-                                  {/* Resources */}
-                                  {(activity.videoLink || activity.musicLink || activity.backingLink || 
-                                    activity.resourceLink || activity.link || activity.vocalsLink || 
-                                    activity.imageLink) && (
-                                    <div className={useOriginalFormatting 
-                                      ? "mt-3 pt-3 border-t border-gray-200 print:mt-2 print:pt-2"
-                                      : "mt-4 pt-4 border-t-2 border-gray-100 print:mt-3 print:pt-3"
-                                    }>
-                                      <h4 className={`text-gray-600 mb-2 ${useOriginalFormatting ? 'text-xs font-medium print:text-xs' : 'text-sm font-semibold uppercase tracking-wide'}`}>
-                                        Resources:
-                                      </h4>
-                                      <div className="flex flex-wrap gap-2">
-                                        {activity.videoLink && (
-                                          <a 
-                                            href={activity.videoLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={useOriginalFormatting
-                                              ? "inline-flex items-center px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-red-200 transition-colors"
-                                              : "inline-flex items-center px-3 py-2 bg-red-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-red-600 transition-colors"
-                                            }
-                                          >
-                                            🎥 Video
-                                          </a>
-                                        )}
-                                        {activity.musicLink && (
-                                          <a 
-                                            href={activity.musicLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={useOriginalFormatting
-                                              ? "inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-green-200 transition-colors"
-                                              : "inline-flex items-center px-3 py-2 bg-green-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-green-600 transition-colors"
-                                            }
-                                          >
-                                            🎵 Music
-                                          </a>
-                                        )}
-                                        {activity.backingLink && (
-                                          <a 
-                                            href={activity.backingLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={useOriginalFormatting
-                                              ? "inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-blue-200 transition-colors"
-                                              : "inline-flex items-center px-3 py-2 bg-blue-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-blue-600 transition-colors"
-                                            }
-                                          >
-                                            🎼 Backing
-                                          </a>
-                                        )}
-                                        {activity.resourceLink && (
-                                          <a 
-                                            href={activity.resourceLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={useOriginalFormatting
-                                              ? "inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-purple-200 transition-colors"
-                                              : "inline-flex items-center px-3 py-2 bg-purple-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-purple-600 transition-colors"
-                                            }
-                                          >
-                                            📁 Resource
-                                          </a>
-                                        )}
-                                        {activity.link && (
-                                          <a 
-                                            href={activity.link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={useOriginalFormatting
-                                              ? "inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-gray-200 transition-colors"
-                                              : "inline-flex items-center px-3 py-2 bg-gray-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-gray-600 transition-colors"
-                                            }
-                                          >
-                                            🔗 Link
-                                          </a>
-                                        )}
-                                        {activity.vocalsLink && (
-                                          <a 
-                                            href={activity.vocalsLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={useOriginalFormatting
-                                              ? "inline-flex items-center px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-orange-200 transition-colors"
-                                              : "inline-flex items-center px-3 py-2 bg-orange-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-orange-600 transition-colors"
-                                            }
-                                          >
-                                            🎤 Vocals
-                                          </a>
-                                        )}
-                                        {activity.imageLink && (
-                                          <a 
-                                            href={activity.imageLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={useOriginalFormatting
-                                              ? "inline-flex items-center px-2 py-1 bg-pink-100 text-pink-800 text-xs font-medium rounded print:text-xs print:py-0.5 print:px-1.5 hover:bg-pink-200 transition-colors"
-                                              : "inline-flex items-center px-3 py-2 bg-pink-500 text-white text-sm font-bold rounded-lg shadow-md print:text-xs print:py-1 print:px-2 hover:bg-pink-600 transition-colors"
-                                            }
-                                          >
-                                            🖼️ Image
-                                          </a>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-              
-              {/* Notes Section */}
-              {lessonData.notes && (
-                <div className="mt-10 pt-8 border-t-4 border-blue-500 print:mt-6 print:pt-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl shadow-sm">
-                  <h3 className="text-2xl font-bold text-blue-800 mb-4 print:text-xl print:mb-3 flex items-center">
-                    <div className="bg-blue-600 p-2 rounded-lg mr-3">
-                      <FileText className="h-6 w-6 text-white" />
-                    </div>
-                    Lesson Notes
-                  </h3>
-                  <div 
-                    className="bg-white rounded-xl p-4 text-gray-700 border-2 border-blue-200 shadow-sm print:p-3 print:text-sm leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: lessonData.notes }}
-                  />
-                </div>
-              )}
-              
-              {/* Enhanced Footer */}
-              <div className="mt-16 pt-8 mb-8 border-t-4 border-gradient-to-r from-blue-500 to-indigo-500 print:mt-12 print:pt-6 print:mb-6">
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-xl shadow-lg text-center">
-                  <div className="flex items-center justify-center space-x-4 mb-3">
-                    <div className="bg-white bg-opacity-20 p-2 rounded-lg">
-                      <FileText className="h-6 w-6" />
-                    </div>
-                    <h4 className="text-xl font-bold">EYFS Lesson Builder</h4>
-                  </div>
-                  <p className="text-blue-100 text-lg font-medium mb-2">Creative Curriculum Designer - {currentSheetInfo.display}</p>
-                  <p className="text-blue-200 text-sm">
-                    Generated on {new Date().toLocaleDateString('en-GB', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
-                  <div className="mt-4 pt-4 border-t border-blue-400 text-xs text-blue-200">
-                    All resource links are clickable in this document
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
+    {showPrintModal && (
+      <LessonPrintModal
+        lessonNumber={lessonNumber}
+        onClose={() => { setShowPrintModal(false); onClose(); }}
+        autoDownload={true}
+      />
+    )}
+  </>
   );
 }

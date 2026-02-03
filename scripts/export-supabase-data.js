@@ -21,12 +21,22 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Tables to export
+// Tables to export (matches all tables used by the app; export is read-only, Supabase stays intact)
 const TABLES = [
   'activities',
-  'lessons', 
+  'lessons',
   'lesson_plans',
   'eyfs_statements',
+  'half_terms',
+  'custom_categories',
+  'category_groups',
+  'year_groups',
+  'lesson_stacks',
+  'activity_stacks',
+  'custom_objective_year_groups',
+  'custom_objective_areas',
+  'custom_objectives',
+  'activity_custom_objectives',
   'subjects',
   'subject_categories',
   'activity_packs',

@@ -1013,10 +1013,12 @@ style={{ background: 'linear-gradient(to right, #2DD4BF, #14B8A6)' }}>
                       Academic Year {currentAcademicYear}
                     </span>
                     {(() => {
-                      const currentYear = new Date().getFullYear();
-                      const nextYear = currentYear + 1;
-                      const currentAcademicYearCheck = `${currentYear}-${nextYear}`;
-                      return currentAcademicYear === currentAcademicYearCheck && (
+                      // Academic year runs Sept–Aug: current year is 2025-2026 until Sept 2026, then 2026-2027
+                      const now = new Date();
+                      const month = now.getMonth(); // 0=Jan, 8=Sep
+                      const year = now.getFullYear();
+                      const currentSchoolYear = month >= 8 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+                      return currentAcademicYear === currentSchoolYear && (
                         <span className="text-xs font-medium px-2 sm:px-3 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: '#F0FDFA', color: '#0F766E' }}>
                           Current Year
                         </span>

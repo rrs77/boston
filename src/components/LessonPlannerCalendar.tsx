@@ -64,6 +64,7 @@ import { LessonDetailsModal } from './LessonDetailsModal';
 import { LessonPrintModal } from './LessonPrintModal';
 import { CalendarLessonAssignmentModal } from './CalendarLessonAssignmentModal';
 import { TimeSlotLessonModal } from './TimeSlotLessonModal';
+import { WeekLessonView } from './WeekLessonView';
 import { useLessonStacks } from '../hooks/useLessonStacks';
 import type { Activity, LessonPlan } from '../contexts/DataContext';
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Plus, Save, Trash2, Clock, MapPin, GripVertical, Edit3, Users, BookOpen, Settings, Calendar } from 'lucide-react';
+import { X, Plus, Save, Trash2, Clock, MapPin, GripVertical, Edit3, Users, BookOpen, Settings, Calendar, ChevronDown, Copy, CopyPlus } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { useDrop, useDrag, DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -32,16 +32,30 @@ const DAY_SHORT_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const SCHOOL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const SCHOOL_DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
-// Generate time slots from 7am to 6pm (every hour for cleaner grid)
-const TIME_SLOTS = Array.from({ length: 12 }, (_, i) => {
-  const hour = i + 7; // Start at 7:00am
-  return {
-    hour,
-    minute: 0,
-    label: `${hour}:00`,
-    value: `${hour}:00`,
-    totalMinutes: hour * 60
-  };
+// Terms in order (for "previous term" and "same for year")
+const TERM_IDS = ['A1', 'A2', 'SP1', 'SP2', 'SM1', 'SM2'] as const;
+const TERM_LABELS: Record<string, string> = {
+  A1: 'Autumn 1',
+  A2: 'Autumn 2',
+  SP1: 'Spring 1',
+  SP2: 'Spring 2',
+  SM1: 'Summer 1',
+  SM2: 'Summer 2'
+};
+
+const DRAG_TYPE_TIMETABLE_BLOCK = 'timetable-block';
+
+// Continuous time strip: 7:00–18:00, 1.5px per minute (660 min = 990px)
+const DAY_START_MINUTES = 7 * 60;   // 7:00
+const DAY_END_MINUTES = 18 * 60;   // 18:00
+const TOTAL_MINUTES = DAY_END_MINUTES - DAY_START_MINUTES;
+const PX_PER_MINUTE = 1.5;
+const GRID_HEIGHT_PX = TOTAL_MINUTES * PX_PER_MINUTE;
+
+// Hour labels for the time ruler
+const HOUR_LABELS = Array.from({ length: 12 }, (_, i) => {
+  const hour = i + 7;
+  return { hour, label: `${hour}:00`, topPx: (hour * 60 - DAY_START_MINUTES) * PX_PER_MINUTE };
 });
 
 export function TimetableBuilder({
@@ -52,83 +66,111 @@ export function TimetableBuilder({
   initialEditClass
 }: TimetableBuilderProps) {
   const { customYearGroups, getThemeForClass } = useSettings();
+  const [selectedTermId, setSelectedTermId] = useState<string>('A1');
   const [timetableClasses, setTimetableClasses] = useState<TimetableClass[]>([]);
   const [editingClass, setEditingClass] = useState<TimetableClass | null>(initialEditClass || null);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{day: number, time: string} | null>(null);
-  const [viewMode, setViewMode] = useState<'week' | 'days'>('days'); // 'week' shows Mon-Fri, 'days' shows all days
+  const [viewMode, setViewMode] = useState<'week' | 'days'>('days');
 
-  // Load timetable from Supabase
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    loadTimetable();
-    
-    // If initialEditClass is provided, set it for editing
-    if (initialEditClass) {
-      setEditingClass(initialEditClass);
-    } else {
-      setEditingClass(null);
-    }
-  }, [isOpen, className, initialEditClass]);
+  const getStorageKey = (termId: string) => `timetable-${className}-${termId}`;
+  const globalFlagKey = () => `timetable-${className}-global`;
 
-  const loadTimetable = async () => {
+  const [isGlobalTimetable, setIsGlobalTimetable] = useState<boolean>(() => {
     try {
-      // Try Supabase first
-      if (isSupabaseConfigured()) {
-        const { data, error } = await supabase
-          .from(TABLES.TIMETABLE_CLASSES || 'timetable_classes')
-          .select('*')
-          .eq('class_name', className);
-        
-        if (!error && data) {
-          const classes = data.map((item: any) => ({
-            id: item.id,
-            day: item.day,
-            startTime: item.start_time,
-            endTime: item.end_time,
-            className: item.class_name_display || item.class_name,
-            location: item.location || '',
-            color: item.color || getThemeForClass(className).primary,
-            type: item.type || 'curriculum',
-            yearGroupId: item.year_group_id,
-            recurringUnitId: item.recurring_unit_id
-          }));
+      return localStorage.getItem(globalFlagKey()) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const loadTimetable = React.useCallback(async (termId: string) => {
+    try {
+      const useGlobal = localStorage.getItem(globalFlagKey()) === 'true';
+      let saved: string | null;
+      if (useGlobal) {
+        saved = localStorage.getItem(`timetable-${className}`);
+      } else {
+        saved = localStorage.getItem(getStorageKey(termId));
+      }
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setTimetableClasses(Array.isArray(parsed) ? parsed : []);
+        return;
+      }
+      if (!useGlobal) {
+        const legacy = localStorage.getItem(`timetable-${className}`);
+        if (legacy) {
+          const parsed = JSON.parse(legacy);
+          const classes = Array.isArray(parsed) ? parsed : [];
           setTimetableClasses(classes);
+          localStorage.setItem(getStorageKey(termId), JSON.stringify(classes));
           return;
         }
+        if (isSupabaseConfigured()) {
+          const { data, error } = await supabase
+            .from(TABLES.TIMETABLE_CLASSES || 'timetable_classes')
+            .select('*')
+            .eq('class_name', className);
+          if (!error && data?.length) {
+            const classes = data.map((item: any) => ({
+              id: item.id,
+              day: item.day,
+              startTime: item.start_time,
+              endTime: item.end_time,
+              className: item.class_name_display || item.class_name,
+              location: item.location || '',
+              color: item.color || getThemeForClass(className).primary,
+              type: item.type || 'curriculum',
+              yearGroupId: item.year_group_id,
+              recurringUnitId: item.recurring_unit_id
+            }));
+            setTimetableClasses(classes);
+            localStorage.setItem(getStorageKey(termId), JSON.stringify(classes));
+            return;
+          }
+        }
       }
-      
-      // Fallback to localStorage
-      const saved = localStorage.getItem(`timetable-${className}`);
-      if (saved) {
-        setTimetableClasses(JSON.parse(saved));
-      }
+      setTimetableClasses([]);
     } catch (error) {
       console.error('Error loading timetable:', error);
-      // Fallback to localStorage
-      const saved = localStorage.getItem(`timetable-${className}`);
-      if (saved) {
-        setTimetableClasses(JSON.parse(saved));
-      }
+      setTimetableClasses([]);
     }
-  };
+  }, [className, getThemeForClass]);
 
-  const saveTimetable = async (classes: TimetableClass[]) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    loadTimetable(selectedTermId);
+    if (initialEditClass) setEditingClass(initialEditClass);
+    else setEditingClass(null);
+  }, [isOpen, className, selectedTermId, initialEditClass, loadTimetable]);
+
+  useEffect(() => {
+    const flag = localStorage.getItem(globalFlagKey()) === 'true';
+    setIsGlobalTimetable(flag);
+  }, [isOpen, className]);
+
+  const saveTimetable = async (classes: TimetableClass[], termId?: string) => {
+    const useGlobal = localStorage.getItem(globalFlagKey()) === 'true';
+    const term = termId ?? selectedTermId;
     setIsSaving(true);
     try {
-      // Save to localStorage
-      localStorage.setItem(`timetable-${className}`, JSON.stringify(classes));
-      
-      // Save to Supabase
+      if (useGlobal) {
+        localStorage.setItem(`timetable-${className}`, JSON.stringify(classes));
+      } else {
+        localStorage.setItem(getStorageKey(term), JSON.stringify(classes));
+      }
+      if (termId === undefined) {
+        setTimetableClasses(classes);
+      }
+      if (onTimetableUpdate && termId === undefined) {
+        onTimetableUpdate(classes);
+      }
       if (isSupabaseConfigured()) {
-        // Delete existing classes for this class name
         await supabase
           .from(TABLES.TIMETABLE_CLASSES || 'timetable_classes')
           .delete()
           .eq('class_name', className);
-        
-        // Insert new classes
         if (classes.length > 0) {
           const insertData = classes.map(cls => ({
             class_name: className,
@@ -142,22 +184,65 @@ export function TimetableBuilder({
             year_group_id: cls.yearGroupId || null,
             recurring_unit_id: cls.recurringUnitId || null
           }));
-          
           await supabase
             .from(TABLES.TIMETABLE_CLASSES || 'timetable_classes')
             .insert(insertData);
         }
-      }
-      
-      setTimetableClasses(classes);
-      if (onTimetableUpdate) {
-        onTimetableUpdate(classes);
       }
     } catch (error) {
       console.error('Error saving timetable:', error);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const copyFromPreviousTerm = () => {
+    if (isGlobalTimetable) {
+      alert('Turn off "Same timetable for all terms" first to copy from a specific term.');
+      return;
+    }
+    const idx = TERM_IDS.indexOf(selectedTermId as any);
+    if (idx <= 0) {
+      alert('There is no previous term. Autumn 1 is the first term.');
+      return;
+    }
+    const prevTermId = TERM_IDS[idx - 1];
+    const saved = localStorage.getItem(getStorageKey(prevTermId));
+    if (!saved) {
+      alert(`No timetable saved for ${TERM_LABELS[prevTermId]}. Set that term first or add classes here.`);
+      return;
+    }
+    const classes = JSON.parse(saved);
+    const withNewIds = classes.map((c: TimetableClass) => ({ ...c, id: `class-${Date.now()}-${Math.random().toString(36).slice(2)}` }));
+    saveTimetable(withNewIds).then(() => {
+      setTimetableClasses(withNewIds);
+      if (onTimetableUpdate) onTimetableUpdate(withNewIds);
+    });
+  };
+
+  const setSameForWholeYear = () => {
+    const classes = timetableClasses.length
+      ? timetableClasses.map(c => ({ ...c, id: `class-${Date.now()}-${Math.random().toString(36).slice(2)}` }))
+      : [];
+    if (classes.length === 0) {
+      alert('Add or copy a timetable first, then use "Same timetable for all terms".');
+      return;
+    }
+    localStorage.setItem(globalFlagKey(), 'true');
+    localStorage.setItem(`timetable-${className}`, JSON.stringify(classes));
+    setIsGlobalTimetable(true);
+    setTimetableClasses(classes);
+    if (onTimetableUpdate) onTimetableUpdate(classes);
+    alert('Timetable is now used for all terms. Changing the semester will not change the grid; edits apply to the whole year. Turn off "Same timetable for all terms" to edit per term again.');
+  };
+
+  const setPerTermTimetable = () => {
+    const current = timetableClasses.map(c => ({ ...c, id: `class-${Date.now()}-${Math.random().toString(36).slice(2)}` }));
+    localStorage.setItem(globalFlagKey(), 'false');
+    setIsGlobalTimetable(false);
+    localStorage.setItem(getStorageKey(selectedTermId), JSON.stringify(current));
+    loadTimetable(selectedTermId);
+    alert('Each term now has its own timetable. Change the semester to see or edit that term\'s timetable.');
   };
 
   const handleAddYearGroup = (day: number, timeSlot: string, yearGroup: any) => {
@@ -208,24 +293,38 @@ export function TimetableBuilder({
     setEditingClass(null);
   };
 
-  // Get classes for a specific day and time slot
-  const getClassesForSlot = (day: number, timeSlot: string) => {
-    return timetableClasses.filter(cls => {
-      if (cls.day !== day) return false;
-      const slotHour = parseInt(timeSlot.split(':')[0]);
-      const slotMinute = parseInt(timeSlot.split(':')[1] || '0');
-      const slotTotalMinutes = slotHour * 60 + slotMinute;
-      
-      const startHour = parseInt(cls.startTime.split(':')[0]);
-      const startMinute = parseInt(cls.startTime.split(':')[1] || '0');
-      const startTotalMinutes = startHour * 60 + startMinute;
-      
-      const endHour = parseInt(cls.endTime.split(':')[0]);
-      const endMinute = parseInt(cls.endTime.split(':')[1] || '0');
-      const endTotalMinutes = endHour * 60 + endMinute;
-      
-      return slotTotalMinutes >= startTotalMinutes && slotTotalMinutes < endTotalMinutes;
-    });
+  // Get all classes for a day (for continuous time column)
+  const getClassesForDay = (day: number) => {
+    return timetableClasses.filter(cls => cls.day === day);
+  };
+
+  // Parse time string to total minutes from midnight
+  const timeToMinutes = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+
+  // Update class end time (for resize handle)
+  const handleResizeClass = (classId: string, newEndTime: string) => {
+    const cls = timetableClasses.find(c => c.id === classId);
+    if (!cls) return;
+    const startMin = timeToMinutes(cls.startTime);
+    const endMin = timeToMinutes(newEndTime);
+    if (endMin <= startMin) return; // at least 1 min duration
+    saveTimetable(timetableClasses.map(c => c.id === classId ? { ...c, endTime: newEndTime } : c));
+  };
+
+  // Move a class to a new day and/or new start time (drag-and-drop)
+  const handleMoveClass = (classId: string, newDay: number, newStartTime: string) => {
+    const cls = timetableClasses.find(c => c.id === classId);
+    if (!cls) return;
+    const durationMin = timeToMinutes(cls.endTime) - timeToMinutes(cls.startTime);
+    const newStartMin = timeToMinutes(newStartTime);
+    const newEndMin = Math.min(DAY_END_MINUTES, newStartMin + Math.max(5, durationMin));
+    const newEndTime = minutesToTime(newEndMin);
+    saveTimetable(timetableClasses.map(c =>
+      c.id === classId ? { ...c, day: newDay, startTime: newStartTime, endTime: newEndTime } : c
+    ));
   };
 
   // Get all unique classes with their scheduled days
@@ -292,14 +391,52 @@ export function TimetableBuilder({
             {/* Semester/Term Selection */}
             <div className="p-4 border-b border-gray-200 bg-white">
               <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">Semester</h3>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                <option>Autumn 1</option>
-                <option>Autumn 2</option>
-                <option>Spring 1</option>
-                <option>Spring 2</option>
-                <option>Summer 1</option>
-                <option>Summer 2</option>
+              <select
+                value={selectedTermId}
+                onChange={(e) => setSelectedTermId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3"
+              >
+                {TERM_IDS.map(id => (
+                  <option key={id} value={id}>{TERM_LABELS[id]}</option>
+                ))}
               </select>
+              <label className="flex items-center gap-2 mb-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isGlobalTimetable}
+                  onChange={(e) => {
+                    if (e.target.checked) setSameForWholeYear();
+                    else setPerTermTimetable();
+                  }}
+                  className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+                <span className="text-sm text-gray-700">Same timetable for all terms</span>
+              </label>
+              {!isGlobalTimetable && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={copyFromPreviousTerm}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-teal-700 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition-colors"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy from previous term
+                  </button>
+                  <button
+                    type="button"
+                    onClick={setSameForWholeYear}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    <CopyPlus className="h-4 w-4" />
+                    Apply this timetable to whole year
+                  </button>
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-2">
+                {isGlobalTimetable
+                  ? 'One timetable for the whole year. Uncheck above to edit per term.'
+                  : 'Each term has its own timetable. Change semester to view or edit that term.'}
+              </p>
             </div>
 
             {/* Class List */}
@@ -417,52 +554,55 @@ export function TimetableBuilder({
             </div>
           </div>
 
-          {/* Timetable Grid */}
-          <div className="flex-1 overflow-auto bg-white">
-            {/* Grid Container */}
-            <div className="flex-1 overflow-auto">
-              <table className="w-full border-collapse">
-                <thead className="sticky top-0 bg-white z-10 border-b-2 border-gray-300">
-                  <tr>
-                    <th className="w-24 p-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300 bg-gray-50 sticky left-0 z-20">
-                      <button className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
-                        Rotation
-                      </button>
-                    </th>
-                    {displayDayIndices.map((dayIndex, index) => (
-                      <th key={dayIndex} className="p-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-300 bg-gray-50">
-                        {viewMode === 'days' ? `Day ${index + 1}` : displayDays[index]}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {TIME_SLOTS.map((slot, slotIndex) => (
-                    <tr key={slotIndex} className="border-b border-gray-200">
-                      {/* Time Column */}
-                      <td className="sticky left-0 bg-white z-20 border-r border-gray-300 px-3 py-2 text-xs text-gray-600 font-medium w-24">
-                        {slot.label}
-                      </td>
-                      {/* Day Columns */}
-                      {displayDayIndices.map((dayIndex) => (
-                        <TimetableGridCell
-                          key={`${dayIndex}-${slotIndex}`}
-                          day={dayIndex}
-                          timeSlot={slot.value}
-                          slotHour={slot.hour}
-                          slotMinute={slot.minute}
-                          classes={getClassesForSlot(dayIndex, slot.value)}
-                          onAddYearGroup={(yearGroup) => handleAddYearGroup(dayIndex, slot.value, yearGroup)}
-                          onAddNonCurriculum={() => handleAddNonCurriculum(dayIndex, slot.value)}
-                          onEdit={(cls) => setEditingClass(cls)}
-                          onDelete={handleDeleteClass}
-                          onSelect={() => setSelectedSlot({ day: dayIndex, time: slot.value })}
-                        />
-                      ))}
-                    </tr>
+          {/* Timetable Grid - continuous time strip */}
+          <div className="flex-1 overflow-auto bg-white flex flex-col">
+            {/* Header row: Rotation | Day 1 | Day 2 ... */}
+            <div className="flex flex-shrink-0 border-b-2 border-gray-300 bg-gray-50 sticky top-0 z-30">
+              <div className="w-20 flex-shrink-0 p-3 border-r border-gray-300 flex items-center">
+                <button className="px-2 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors flex items-center">
+                  Rotation
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </button>
+              </div>
+              {displayDayIndices.map((dayIndex, index) => (
+                <div key={dayIndex} className="flex-1 min-w-[140px] p-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-300">
+                  {viewMode === 'days' ? `Day ${index + 1}` : displayDays[index]}
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-1 overflow-auto min-h-0">
+              {/* Time ruler column */}
+              <div className="w-20 flex-shrink-0 sticky left-0 z-20 bg-gray-50 border-r border-gray-300" style={{ height: GRID_HEIGHT_PX }}>
+                <div className="relative" style={{ height: GRID_HEIGHT_PX }}>
+                  {HOUR_LABELS.map(({ hour, label, topPx }) => (
+                    <div key={hour} className="absolute left-1 text-xs text-gray-600 font-medium" style={{ top: topPx }}>
+                      {label}
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              </div>
+              {/* Day columns */}
+              {displayDayIndices.map((dayIndex, index) => (
+              <TimetableDayColumn
+                key={dayIndex}
+                day={dayIndex}
+                dayLabel={viewMode === 'days' ? `Day ${index + 1}` : displayDays[index]}
+                classes={getClassesForDay(dayIndex)}
+                dayStartMinutes={DAY_START_MINUTES}
+                dayEndMinutes={DAY_END_MINUTES}
+                pxPerMinute={PX_PER_MINUTE}
+                gridHeightPx={GRID_HEIGHT_PX}
+                onAddYearGroup={(timeSlot) => (yearGroup: any) => handleAddYearGroup(dayIndex, timeSlot, yearGroup)}
+                onAddNonCurriculum={(timeSlot) => () => handleAddNonCurriculum(dayIndex, timeSlot)}
+                onEdit={(cls) => setEditingClass(cls)}
+                onDelete={handleDeleteClass}
+                onResize={handleResizeClass}
+                onMoveClass={handleMoveClass}
+                onSelectSlot={(timeSlot) => setSelectedSlot({ day: dayIndex, time: timeSlot })}
+                timeToMinutes={timeToMinutes}
+                minutesToTime={minutesToTime}
+              />
+            ))}
             </div>
           </div>
         </div>
@@ -482,6 +622,254 @@ export function TimetableBuilder({
         </div>
       </div>
     </DndProvider>
+  );
+}
+
+// Format minutes from midnight as HH:MM
+function minutesToTime(totalMinutes: number): string {
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return `${h}:${m.toString().padStart(2, '0')}`;
+}
+
+// Single day column with continuous time and stretchable blocks
+function TimetableDayColumn({
+  day,
+  dayLabel,
+  classes,
+  dayStartMinutes,
+  dayEndMinutes,
+  pxPerMinute,
+  gridHeightPx,
+  onAddYearGroup,
+  onAddNonCurriculum,
+  onEdit,
+  onDelete,
+  onResize,
+  onMoveClass,
+  onSelectSlot,
+  timeToMinutes,
+  minutesToTime
+}: {
+  day: number;
+  dayLabel: string;
+  classes: TimetableClass[];
+  dayStartMinutes: number;
+  dayEndMinutes: number;
+  pxPerMinute: number;
+  gridHeightPx: number;
+  onAddYearGroup: (timeSlot: string) => (yearGroup: any) => void;
+  onAddNonCurriculum: (timeSlot: string) => () => void;
+  onEdit: (cls: TimetableClass) => void;
+  onDelete: (id: string) => void;
+  onResize: (classId: string, newEndTime: string) => void;
+  onMoveClass: (classId: string, newDay: number, newStartTime: string) => void;
+  onSelectSlot: (timeSlot: string) => void;
+  timeToMinutes: (time: string) => number;
+  minutesToTime: (totalMinutes: number) => string;
+}) {
+  const [resizingId, setResizingId] = useState<string | null>(null);
+  const columnRef = React.useRef<HTMLDivElement>(null);
+
+  const [{ isOver, isDraggingBlock }, drop] = useDrop(() => ({
+    accept: [DRAG_TYPE_TIMETABLE_BLOCK, 'year-group'],
+    drop: (item: any, monitor) => {
+      const offset = monitor.getSourceClientOffset();
+      const clientOffset = monitor.getClientOffset();
+      const dropY = (clientOffset?.y ?? offset?.y) ?? 0;
+      if (!columnRef.current) return;
+      const rect = columnRef.current.getBoundingClientRect();
+      const scrollEl = columnRef.current.closest('.overflow-auto') as HTMLElement | null;
+      const scrollTop = scrollEl?.scrollTop ?? 0;
+      const y = dropY - rect.top + scrollTop;
+      const minutes = dayStartMinutes + Math.round(y / pxPerMinute);
+      const clamped = Math.max(dayStartMinutes, Math.min(dayEndMinutes - 5, minutes));
+      const timeSlot = minutesToTime(clamped);
+
+      if (item.type === DRAG_TYPE_TIMETABLE_BLOCK && item.class) {
+        onMoveClass(item.class.id, day, timeSlot);
+      } else if (item.yearGroup) {
+        onAddYearGroup(timeSlot)(item.yearGroup);
+      }
+    },
+    collect: (monitor) => {
+      const item = monitor.getItem() as any;
+      const isBlock = item?.type === DRAG_TYPE_TIMETABLE_BLOCK;
+      return {
+        isOver: monitor.isOver(),
+        isDraggingBlock: isBlock
+      };
+    }
+  }), [day, onAddYearGroup, onMoveClass, pxPerMinute, dayStartMinutes, dayEndMinutes]);
+
+  const showDropHint = isOver && isDraggingBlock;
+
+  const handleColumnClick = (e: React.MouseEvent) => {
+    if (!columnRef.current || (e.target as HTMLElement).closest('[data-class-block]')) return;
+    const rect = columnRef.current.getBoundingClientRect();
+    const y = e.clientY - rect.top - 40;
+    const minutes = dayStartMinutes + Math.round(y / pxPerMinute);
+    const clamped = Math.max(dayStartMinutes, Math.min(dayEndMinutes - 30, minutes));
+    onSelectSlot(minutesToTime(clamped));
+  };
+
+  return (
+    <div
+      ref={drop}
+      data-day-column
+      className={`flex-1 min-w-[140px] border-r border-gray-200 relative transition-colors ${
+        showDropHint ? 'bg-teal-100 ring-2 ring-teal-400 ring-inset' : isOver ? 'bg-teal-50' : 'bg-white'
+      }`}
+      style={{ height: gridHeightPx }}
+    >
+      <div
+        ref={columnRef}
+        className="relative cursor-pointer"
+        style={{ height: gridHeightPx }}
+        onClick={handleColumnClick}
+      >
+        {classes.map((cls) => {
+          const startMin = timeToMinutes(cls.startTime);
+          const endMin = timeToMinutes(cls.endTime);
+          const topPx = (startMin - dayStartMinutes) * pxPerMinute;
+          const heightPx = (endMin - startMin) * pxPerMinute;
+          const minHeight = 24;
+          if (heightPx < 2) return null;
+          return (
+            <TimetableClassBlock
+              key={cls.id}
+              class={cls}
+              currentDay={day}
+              topPx={topPx}
+              heightPx={Math.max(heightPx, minHeight)}
+              onEdit={() => onEdit(cls)}
+              onDelete={() => onDelete(cls.id)}
+              onResize={(newEndTime) => onResize(cls.id, newEndTime)}
+              resizing={resizingId === cls.id}
+              onResizeStart={() => setResizingId(cls.id)}
+              onResizeEnd={() => setResizingId(null)}
+              pxPerMinute={pxPerMinute}
+              dayStartMinutes={dayStartMinutes}
+              dayEndMinutes={dayEndMinutes}
+              timeToMinutes={timeToMinutes}
+              minutesToTime={minutesToTime}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// One class block with start time label, draggable, and bottom resize handle
+function TimetableClassBlock({
+  class: cls,
+  currentDay,
+  topPx,
+  heightPx,
+  onEdit,
+  onDelete,
+  onResize,
+  resizing,
+  onResizeStart,
+  onResizeEnd,
+  pxPerMinute,
+  dayStartMinutes,
+  dayEndMinutes,
+  timeToMinutes,
+  minutesToTime
+}: {
+  class: TimetableClass;
+  currentDay: number;
+  topPx: number;
+  heightPx: number;
+  onEdit: () => void;
+  onDelete: () => void;
+  onResize: (newEndTime: string) => void;
+  resizing: boolean;
+  onResizeStart: () => void;
+  onResizeEnd: () => void;
+  pxPerMinute: number;
+  dayStartMinutes: number;
+  dayEndMinutes: number;
+  timeToMinutes: (time: string) => number;
+  minutesToTime: (min: number) => string;
+}) {
+  const blockRef = React.useRef<HTMLDivElement>(null);
+  const startMin = timeToMinutes(cls.startTime);
+  const endMin = timeToMinutes(cls.endTime);
+
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: DRAG_TYPE_TIMETABLE_BLOCK,
+    item: () => ({ type: DRAG_TYPE_TIMETABLE_BLOCK, class: cls }),
+    canDrag: () => !resizing,
+    collect: (monitor) => ({ isDragging: monitor.isDragging() })
+  }), [cls, resizing]);
+
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onResizeStart();
+    const move = (ev: MouseEvent) => {
+      const parentEl = blockRef.current?.parentElement;
+      const scrollEl = parentEl?.closest('.overflow-auto') as HTMLElement | null;
+      if (!parentEl) return;
+      const parent = parentEl.getBoundingClientRect();
+      const scrollTop = scrollEl?.scrollTop ?? 0;
+      const y = ev.clientY - parent.top + scrollTop;
+      const minutes = dayStartMinutes + y / pxPerMinute;
+      const newEnd = Math.max(startMin + 5, Math.min(dayEndMinutes, Math.round(minutes)));
+      onResize(minutesToTime(newEnd));
+    };
+    const up = () => {
+      onResizeEnd();
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  };
+
+  return (
+    <div
+      data-class-block
+      ref={blockRef}
+      className={`absolute left-0.5 right-0.5 rounded px-2 py-1 text-xs font-medium text-white flex flex-col z-10 ${
+        isDragging ? 'opacity-50 shadow-lg' : 'hover:opacity-95 transition-opacity'
+      }`}
+      style={{
+        backgroundColor: cls.color,
+        top: `${topPx}px`,
+        height: `${heightPx}px`,
+        minHeight: 20
+      }}
+      onClick={(e) => { e.stopPropagation(); onEdit(); }}
+      title={`${cls.className} (${cls.startTime} - ${cls.endTime}). Drag to move; drag bottom edge to resize.`}
+    >
+      <div
+        ref={drag}
+        className={`flex items-center justify-between flex-1 min-h-0 cursor-grab active:cursor-grabbing ${isDragging ? 'cursor-grabbing' : ''}`}
+      >
+        <div className="truncate flex-1">
+          <span className="font-semibold text-white/90">{cls.startTime}</span>
+          <span className="ml-1 truncate">{cls.className}</span>
+        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="ml-1 opacity-80 hover:opacity-100 p-0.5 shrink-0"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </div>
+      <div
+        className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize flex items-center justify-center group"
+        onMouseDown={handleResizeMouseDown}
+        title="Drag to change duration"
+      >
+        {resizing && <div className="absolute inset-0 bg-white/30 rounded-b" />}
+        <div className="w-8 h-0.5 bg-white/60 group-hover:bg-white rounded" />
+      </div>
+    </div>
   );
 }
 
@@ -614,6 +1002,13 @@ function TimetableGridCell({
   );
 }
 
+// Normalize time to HH:MM for <input type="time"> (e.g. "9:0" -> "09:00")
+function normalizeTimeForInput(time: string | undefined): string {
+  if (!time) return '09:00';
+  const [h, m] = time.split(':').map(s => parseInt(s, 10) || 0);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
 // Edit Modal Component
 function EditTimetableClassModal({
   class: cls,
@@ -632,7 +1027,20 @@ function EditTimetableClassModal({
   theme: any;
   isNew?: boolean;
 }) {
-  const [editedClass, setEditedClass] = useState<TimetableClass>(cls);
+  const [editedClass, setEditedClass] = useState<TimetableClass>(() => ({
+    ...cls,
+    startTime: normalizeTimeForInput(cls.startTime) || '09:00',
+    endTime: normalizeTimeForInput(cls.endTime) || '10:00'
+  }));
+
+  // Always default form to the class being edited (what shows on the timetable)
+  useEffect(() => {
+    setEditedClass({
+      ...cls,
+      startTime: normalizeTimeForInput(cls.startTime) || '09:00',
+      endTime: normalizeTimeForInput(cls.endTime) || '10:00'
+    });
+  }, [cls.id, cls.startTime, cls.endTime, cls.className, cls.day, cls.type, cls.location, cls.color]);
 
   const handleSave = () => {
     if (!editedClass.className.trim()) {
@@ -698,7 +1106,7 @@ function EditTimetableClassModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
               <input
                 type="time"
-                value={editedClass.startTime}
+                value={normalizeTimeForInput(editedClass.startTime)}
                 onChange={(e) => setEditedClass({ ...editedClass, startTime: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
               />
@@ -707,7 +1115,7 @@ function EditTimetableClassModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
               <input
                 type="time"
-                value={editedClass.endTime}
+                value={normalizeTimeForInput(editedClass.endTime)}
                 onChange={(e) => setEditedClass({ ...editedClass, endTime: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
               />

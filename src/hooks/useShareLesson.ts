@@ -517,8 +517,6 @@ export function useShareLesson() {
         throw new Error(errorMsg);
       }
 
-      // PDF generation is handled by Netlify function, no API key check needed here
-
       // Generate HTML content
       const [htmlContent, footerContent] = generateHTMLContent(lessonNumber);
       const encodedHtml = encodeUnicodeBase64(htmlContent);
@@ -534,16 +532,15 @@ export function useShareLesson() {
       const timestamp = Date.now();
       const fileName = `shared-pdfs/${timestamp}_${currentSheetInfo.sheet}_Lesson_${lessonDisplayNumber}.pdf`;
 
-      // Use Netlify function to generate PDF and upload (bypasses CORS)
-      // Use helper to route through Netlify subdomain on custom domains (fixes SSL issues)
-      const { getNetlifyFunctionUrl } = await import('../utils/netlifyFunctions');
-      const netlifyFunctionUrl = getNetlifyFunctionUrl('/.netlify/functions/generate-pdf');
+      // Use Vercel API when on Vercel, otherwise Netlify function (bypasses CORS)
+      const { getPdfApiUrl } = await import('../utils/pdfApi');
+      const pdfApiUrl = getPdfApiUrl();
       
-      console.log('Generating PDF via Netlify function:', netlifyFunctionUrl);
+      console.log('Generating PDF via API:', pdfApiUrl);
       
       let uploadResponse;
       try {
-        uploadResponse = await fetch(netlifyFunctionUrl, {
+        uploadResponse = await fetch(pdfApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -555,9 +552,9 @@ export function useShareLesson() {
           })
         });
       } catch (fetchError: any) {
-        console.error('Network error calling Netlify function:', fetchError);
-        console.error('Function URL attempted:', netlifyFunctionUrl);
-        throw new Error(`Failed to connect to PDF generation service. This might be a network issue or the function may not be deployed. Please check Netlify function logs. Error: ${fetchError.message || 'Network error'}`);
+        console.error('Network error calling PDF API:', fetchError);
+        console.error('API URL attempted:', pdfApiUrl);
+        throw new Error(`Failed to connect to PDF generation service. This might be a network issue or the API may not be deployed. Error: ${fetchError.message || 'Network error'}`);
       }
 
       if (!uploadResponse.ok) {
@@ -577,12 +574,12 @@ export function useShareLesson() {
         
         // If it's a server configuration error, provide helpful message
         if (errorData.error === 'Server configuration error' || uploadResponse.status === 500) {
-          throw new Error('Server configuration error: Please ensure SUPABASE_SERVICE_ROLE_KEY is set in Netlify environment variables.');
+          throw new Error('Server configuration error: Please ensure SUPABASE_SERVICE_ROLE_KEY is set in your host (Vercel or Netlify) environment variables.');
         }
         
-        // If function not found
+        // If function/API not found
         if (uploadResponse.status === 404) {
-          throw new Error('Upload function not found. Please ensure the Netlify function is deployed correctly.');
+          throw new Error('PDF API not found. On Vercel ensure api/generate-pdf is deployed; on Netlify ensure the function is deployed.');
         }
         
         throw new Error(errorData.error || `Upload failed: ${uploadResponse.status}`);
