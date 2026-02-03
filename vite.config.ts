@@ -45,9 +45,10 @@ export default defineConfig({
     },
   },
   server: {
-    host: 'localhost',
+    host: true, // listen on 0.0.0.0 so http://127.0.0.1:5173 and http://localhost:5173 both work
     port: 5173,
     strictPort: false,
+    open: '/', // open browser when server starts (use npm run open-app if it doesn't)
     hmr: {
       protocol: 'ws',
       host: 'localhost',

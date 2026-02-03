@@ -1,5 +1,26 @@
 # 🚀 Quick Start - WordPress Multi-User Integration
 
+## Local dev server won't open?
+
+1. **Test if the server is running**  
+   Open in your browser: **http://localhost:5173/test.html**  
+   If you see "Server is running", the server is fine. Then open **http://localhost:5173/** for the app.
+
+2. **Try 127.0.0.1 instead of localhost**  
+   Use **http://127.0.0.1:5173/** (some networks/VPNs break `localhost`).
+
+3. **Start the server from Terminal (not from Cursor)**  
+   ```bash
+   cd "/Users/robreich-storer/Library/Mobile Documents/com~apple~CloudDocs/CC Designer/boston"
+   npm run dev
+   ```  
+   Wait for "ready", then open **http://localhost:5173/** or run `npm run open-app` in another terminal.
+
+4. **Project in iCloud can be slow**  
+   If the project lives in iCloud Drive, copy it to a local folder (e.g. `~/Projects/boston`) and run `npm run dev` from there—often fixes hangs and "can't open".
+
+---
+
 ## Ready to Test in 5 Minutes!
 
 Your app is **fully coded and ready**. Just need to configure and test.
