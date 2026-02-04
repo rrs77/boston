@@ -913,7 +913,7 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       console.log('API Key:', PDFBOLT_API_KEY ? 'Set' : 'Not set');
       console.log('HTML content length:', htmlContent.length);
 
-      // PDFBolt API request - try with different format
+      // PDFBolt API: emulateMediaType 'screen' keeps resource hyperlinks clickable in the PDF
       const response = await fetch(PDFBOLT_API_URL, {
         method: 'POST',
         headers: {
@@ -933,7 +933,8 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
           },
           displayHeaderFooter: true,
           footerTemplate: footerContent,
-          headerTemplate: encodeUnicodeBase64(`<div></div>`)
+          headerTemplate: encodeUnicodeBase64(`<div></div>`),
+          emulateMediaType: 'screen'
         })
       });
 
@@ -1189,7 +1190,8 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
           },
           displayHeaderFooter: true,
           footerTemplate: footerContent,
-          headerTemplate: encodeUnicodeBase64(`<div></div>`)
+          headerTemplate: encodeUnicodeBase64(`<div></div>`),
+          emulateMediaType: 'screen'
         })
       });
 

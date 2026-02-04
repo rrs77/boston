@@ -73,7 +73,8 @@ exports.handler = async (event, context) => {
         },
         displayHeaderFooter: true,
         footerTemplate: footerTemplate || '',
-        headerTemplate: ''
+        headerTemplate: '',
+        emulateMediaType: 'screen'
       })
     });
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Download, Edit3, Save, Check, Tag, Clock, Users, ExternalLink, FileText, Trash2, Share2, Target } from 'lucide-react';
+import { X, Download, Edit3, Save, Check, Tag, Clock, Users, ExternalLink, FileText, Trash2, Share2, Target, Link } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useSettings } from '../contexts/SettingsContextNew';
 import { ActivityDetails } from './ActivityDetails';
@@ -7,6 +7,7 @@ import { EditableText } from './EditableText';
 import { NestedStandardsBrowser } from './NestedStandardsBrowser';
 import { LessonPrintModal } from './LessonPrintModal';
 import { ResourceViewer } from './ResourceViewer';
+import { useShareLesson } from '../hooks/useShareLesson';
 import toast from 'react-hot-toast';
 import type { Activity, LessonData } from '../contexts/DataContext';
 
@@ -50,7 +51,18 @@ export function LessonDetailsModal({
   const [lessonTitleValue, setLessonTitleValue] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
-  
+  const { shareLesson, isSharing: isSharingLink } = useShareLesson();
+
+  const handleCopyLink = async () => {
+    try {
+      const url = await shareLesson(lessonNumber);
+      if (url) {
+        toast.success('Link copied to clipboard', { duration: 3000, icon: '🔗' });
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to copy link', { duration: 5000 });
+    }
+  };
 
   const lessonData = allLessonsData[lessonNumber];
 
@@ -228,7 +240,7 @@ export function LessonDetailsModal({
                 <span className="text-sm font-medium">Standards</span>
               </button>
               
-              {/* Export PDF Button - Single Click */}
+              {/* Export PDF Button */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -242,7 +254,21 @@ export function LessonDetailsModal({
                 <Download className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
                 <span className="text-sm font-medium">Export PDF</span>
               </button>
-              
+              {/* Copy Link Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCopyLink();
+                }}
+                disabled={isSharingLink}
+                className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 group flex items-center space-x-2 disabled:opacity-60"
+                title="Copy link to lesson PDF"
+              >
+                <Link className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                <span className="text-sm font-medium">Copy Link</span>
+              </button>
               <button
                 onClick={onClose}
                 className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 group"

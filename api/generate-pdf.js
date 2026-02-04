@@ -47,7 +47,8 @@ export async function POST(request) {
       return jsonResponse({ error: 'PDFBOLT_API_KEY or VITE_PDFBOLT_API_KEY not set' }, 500);
     }
 
-    // Pass base64 HTML and footer directly to PDFBolt (API expects base64 - same as Netlify)
+    // Pass base64 HTML and footer directly to PDFBolt. Use emulateMediaType: 'screen' so
+    // hyperlinks in the HTML (e.g. resource links) are preserved as clickable in the PDF.
     const pdfResponse = await fetch(PDFBOLT_API_URL, {
       method: 'POST',
       headers: {
@@ -63,6 +64,7 @@ export async function POST(request) {
         displayHeaderFooter: true,
         footerTemplate: encodedFooter || '',
         headerTemplate: '',
+        emulateMediaType: 'screen',
       }),
     });
 
