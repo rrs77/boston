@@ -39,6 +39,10 @@ interface LessonPrintModalProps {
   isUnitPrint?: boolean;
   /** When true, modal runs PDF export once and then closes (no preview). */
   autoDownload?: boolean;
+  /** When true, no modal UI; open system print dialog immediately with lesson content, then close. */
+  systemPrintOnly?: boolean;
+  /** When true, no modal UI; run PDFBolt export (PDF with working hyperlinks) and download, then close. */
+  pdfDownloadOnly?: boolean;
 }
 
 export function LessonPrintModal({
@@ -50,7 +54,9 @@ export function LessonPrintModal({
                                    unitName,
                                    lessonNumbers,
                                    isUnitPrint = false,
-                                   autoDownload = false
+                                   autoDownload = false,
+                                   systemPrintOnly = false,
+                                   pdfDownloadOnly = false
                                  }: LessonPrintModalProps) {
   const { 
     allLessonsData, 
@@ -1332,6 +1338,52 @@ const PDFBOLT_API_KEY = '146bdd01-146f-43f8-92aa-26201c38aa11'
       .then(() => onClose())
       .catch(() => { autoDownloadDone.current = false; });
   }, [autoDownload, lessonsToRender.length, isExporting]);
+
+  // When systemPrintOnly is true, open system print dialog immediately (no modal UI)
+  const systemPrintDone = useRef(false);
+  useEffect(() => {
+    if (!systemPrintOnly || lessonsToRender.length === 0 || systemPrintDone.current) return;
+    systemPrintDone.current = true;
+    const run = () => {
+      try {
+        const [fullHtml] = generateHTMLContent();
+        const printWin = window.open('', '_blank');
+        if (!printWin) {
+          toast.error('Please allow pop-ups to use Print');
+          onClose();
+          return;
+        }
+        printWin.document.write(fullHtml);
+        printWin.document.close();
+        printWin.focus();
+        // Small delay so content is painted before print dialog
+        setTimeout(() => {
+          printWin.print();
+          onClose();
+          setTimeout(() => printWin.close(), 500);
+        }, 150);
+      } catch (e) {
+        toast.error('Failed to open print dialog');
+        onClose();
+      }
+    };
+    const t = setTimeout(run, 100);
+    return () => clearTimeout(t);
+  }, [systemPrintOnly, lessonsToRender.length]);
+
+  // When pdfDownloadOnly is true, run PDFBolt export (PDF with working hyperlinks) and download, no modal UI
+  const pdfDownloadDone = useRef(false);
+  useEffect(() => {
+    if (!pdfDownloadOnly || lessonsToRender.length === 0 || pdfDownloadDone.current) return;
+    pdfDownloadDone.current = true;
+    handleExport()
+      .then(() => onClose())
+      .catch(() => { pdfDownloadDone.current = false; });
+  }, [pdfDownloadOnly, lessonsToRender.length]);
+
+  if (systemPrintOnly || pdfDownloadOnly) {
+    return null;
+  }
 
   return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">

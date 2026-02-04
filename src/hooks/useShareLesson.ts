@@ -574,7 +574,11 @@ export function useShareLesson() {
         
         // If it's a server configuration error, provide helpful message
         if (errorData.error === 'Server configuration error' || uploadResponse.status === 500) {
-          throw new Error('Server configuration error: Please ensure SUPABASE_SERVICE_ROLE_KEY is set in your host (Vercel or Netlify) environment variables.');
+          throw new Error(
+            'Copy Link needs SUPABASE_SERVICE_ROLE_KEY on the server. ' +
+            'In Vercel: Project → Settings → Environment Variables → add SUPABASE_SERVICE_ROLE_KEY (from Supabase Dashboard → Project Settings → API). ' +
+            'Then redeploy.'
+          );
         }
         
         // If function/API not found

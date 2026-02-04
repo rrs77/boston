@@ -123,7 +123,7 @@ export function LessonExporter({ lessonNumber, onClose }: LessonExporterProps) {
               <input
                 type="checkbox"
                 checked={showStandards}
-                onChange={() => setShowEyfs(!showStandards)}
+                onChange={() => setShowStandards(!showStandards)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span>Include EYFS Standards</span>

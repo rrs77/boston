@@ -60,7 +60,8 @@ export function LessonDetailsModal({
         toast.success('Link copied to clipboard', { duration: 3000, icon: '🔗' });
       }
     } catch (err: any) {
-      toast.error(err.message || 'Failed to copy link', { duration: 5000 });
+      const msg = err?.message || 'Failed to copy link';
+      toast.error(msg, { duration: 8000 });
     }
   };
 
@@ -684,7 +685,7 @@ export function LessonDetailsModal({
         </div>
       )}
 
-      {/* Print Modal */}
+      {/* Print Modal - pdfDownloadOnly: PDFBolt export (PDF with working hyperlinks), no modal UI */}
       {showPrintModal && (
         <LessonPrintModal
           lessonNumber={lessonNumber}
@@ -693,6 +694,7 @@ export function LessonDetailsModal({
           unitName={unitName}
           halfTermId={halfTermId}
           halfTermName={halfTermName}
+          pdfDownloadOnly
         />
       )}
     </div>
