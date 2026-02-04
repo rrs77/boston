@@ -1241,6 +1241,16 @@ export const categoryGroupsApi = {
 
 // Export/Import all data
 export const dataApi = {
+  /** Lightweight check that Supabase is reachable (used for connection status). Uses only the activities table. */
+  checkConnection: async (): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from(TABLES.ACTIVITIES).select('id').limit(1);
+      return !error;
+    } catch {
+      return false;
+    }
+  },
+
   exportAll: async () => {
     try {
       // Get all data from core tables (always exist)

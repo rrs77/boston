@@ -28,12 +28,11 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
     try {
       setServerStatus('checking');
       
-      // Check if Supabase is configured
+      // Check if Supabase is configured and reachable (lightweight check, not full export)
       if (isSupabaseConfigured()) {
         try {
-          // Try to fetch from Supabase
-          await dataApi.exportAll();
-          setServerStatus('online');
+          const ok = await dataApi.checkConnection();
+          setServerStatus(ok ? 'online' : 'offline');
         } catch (error) {
           console.warn('Supabase connection failed:', error);
           setServerStatus('offline');
@@ -656,8 +655,13 @@ export function DataSourceSettings({ embedded = false }: DataSourceSettingsProps
                   <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm text-yellow-700 font-medium mb-1">Supabase is disconnected</p>
-                    <p className="text-sm text-yellow-600">
+                    <p className="text-sm text-yellow-600 mb-2">
                       The application is currently using local storage for data. Connect to Supabase to enable cloud storage and synchronization.
+                    </p>
+                    <p className="text-sm text-yellow-700">
+                      <strong>If you use Supabase free tier:</strong> your project may be <strong>paused</strong> after inactivity. Go to{' '}
+                      <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" className="underline">Supabase Dashboard</a>
+                      , open your project, and click <strong>Restore project</strong>. Then refresh this page.
                     </p>
                   </div>
                 </div>
