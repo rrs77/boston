@@ -1114,6 +1114,7 @@ export const yearGroupsApi = {
 };
 
 // API endpoints for custom categories
+// Supabase/Postgres use snake_case (year_groups); app uses camelCase (yearGroups)
 export const customCategoriesApi = {
   getAll: async () => {
     try {
@@ -1123,7 +1124,15 @@ export const customCategoriesApi = {
         .order('position');
       
       if (error) throw error;
-      return data || [];
+      const rows = data || [];
+      return rows.map((row: any) => ({
+        name: row.name,
+        color: row.color,
+        position: row.position,
+        group: row.group ?? row.group_name,
+        groups: row.groups ?? [],
+        yearGroups: row.year_groups ?? {}
+      }));
     } catch (error) {
       console.warn('Failed to get custom categories from Supabase:', error);
       throw error;
@@ -1132,13 +1141,29 @@ export const customCategoriesApi = {
 
   upsert: async (categories: any[]) => {
     try {
+      const rows = categories.map((cat: any) => ({
+        name: cat.name,
+        color: cat.color,
+        position: cat.position,
+        group_name: cat.group,
+        groups: cat.groups ?? [],
+        year_groups: cat.yearGroups ?? {}
+      }));
       const { data, error } = await supabase
         .from(TABLES.CUSTOM_CATEGORIES)
-        .upsert(categories, { onConflict: 'name' })
+        .upsert(rows, { onConflict: 'name' })
         .select();
       
       if (error) throw error;
-      return data;
+      const result = data || [];
+      return result.map((row: any) => ({
+        name: row.name,
+        color: row.color,
+        position: row.position,
+        group: row.group ?? row.group_name,
+        groups: row.groups ?? [],
+        yearGroups: row.year_groups ?? {}
+      }));
     } catch (error) {
       console.warn('Failed to upsert custom categories to Supabase:', error);
       throw error;
