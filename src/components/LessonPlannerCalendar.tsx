@@ -811,19 +811,22 @@ export function LessonPlannerCalendar({
     const isInsetDayDate = isInsetDay(date);
     
     // Find timetable classes that overlap with this time slot
-    const timetableClassesForSlot = timetableClasses.filter(tClass => {
-      if (tClass.day !== dayOfWeek) return false;
-      
-      const classStartHour = parseInt(tClass.startTime.split(':')[0]);
-      const classEndHour = parseInt(tClass.endTime.split(':')[0]);
-      
-      return hour >= classStartHour && hour < classEndHour;
+    const timetableClassesForSlot = (timetableClasses || []).filter(tClass => {
+      if (!tClass || tClass.day !== dayOfWeek) return false;
+      if (!tClass.startTime || !tClass.endTime) return false;
+      try {
+        const classStartHour = parseInt(tClass.startTime.split(':')[0], 10);
+        const classEndHour = parseInt(tClass.endTime.split(':')[0], 10);
+        return hour >= classStartHour && hour < classEndHour;
+      } catch {
+        return false;
+      }
     });
     
     // Find lesson plans for this time slot
     const plansForTimeSlot = plansForDate.filter(plan => {
       if (!plan.time) return false;
-      const planHour = parseInt(plan.time.split(':')[0]);
+      const planHour = parseInt(plan.time.split(':')[0], 10);
       return planHour === hour;
     });
     
@@ -1326,181 +1329,29 @@ export function LessonPlannerCalendar({
           )}
         </div>
         
-        {/* Timetable for this day */}
+        {/* Timetable for this day - use DayTimeSlot so useDrop is not called inside a loop (Rules of Hooks) */}
         <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 300px)' }}>
-          {/* Time slots */}
           <div className="flex flex-col">
-            {dayViewHours.map(hour => {
-              // Find timetable classes that overlap with this time slot
-              const timetableClassesForSlot = (timetableClasses || []).filter(tClass => {
-                if (!tClass || tClass.day !== dayOfWeek) return false;
-                if (!tClass.startTime || !tClass.endTime) return false;
-                
-                try {
-                  const classStartHour = parseInt(tClass.startTime.split(':')[0]);
-                  const classEndHour = parseInt(tClass.endTime.split(':')[0]);
-                  
-                  return hour >= classStartHour && hour < classEndHour;
-                } catch (error) {
-                  console.error('Error parsing timetable class time:', error, tClass);
-                  return false;
-                }
-              });
-              
-              // Find lesson plans for this time slot
-              const plansForTimeSlot = plansForDate.filter(plan => {
-                if (!plan.time) return false;
-                const planHour = parseInt(plan.time.split(':')[0]);
-                return planHour === hour;
-              });
-              
-              // Set up drop target for activities and units
-              const [{ isOver }, drop] = useDrop(() => ({
-                accept: ['activity', 'unit'],
-                drop: (item: any) => {
-                  if (item.activity) {
-                    // Create a new lesson plan with this activity at this time
-                    const weekNumber = getWeekNumber(dayViewDate);
-                    
-                    const newPlan = {
-                      id: `plan-${Date.now()}`,
-                      date: dayViewDate,
-                      week: weekNumber,
-                      className,
-                      activities: [item.activity],
-                      duration: item.activity.time || 0,
-                      notes: '',
-                      status: 'planned',
-                      time: `${hour}:00`, // Set the time to this hour
-                      createdAt: new Date(),
-                      updatedAt: new Date()
-                    };
-                    
-                    onUpdateLessonPlan(newPlan);
-                  } else if (item.unit) {
-                    // Handle dropped unit - schedule all lessons in the unit
-                    console.log('Unit dropped:', item.unit);
-                    
-                    // This would be implemented in the parent component
-                    // For now, we'll just log it
-                  }
-                },
-                collect: (monitor) => ({
-                  isOver: monitor.isOver()
-                })
-              }), [dayViewDate, hour, onUpdateLessonPlan]);
-              
-              return (
-                <div 
-                  key={hour}
-                  ref={drop}
-                  className={`border border-gray-200 p-2 min-h-[100px] ${
-                    isOver ? 'bg-blue-100' : 'bg-white'
-                  } ${isHolidayDate || isInsetDayDate ? 'bg-gray-100' : ''}`}
-                  onClick={() => !isHolidayDate && !isInsetDayDate && handleTimeSlotClick(dayOfWeek, dayViewDate, hour)}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="text-sm font-medium text-gray-700">{hour}:00</div>
-                    {!isHolidayDate && !isInsetDayDate && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTimeSlotClick(dayOfWeek, dayViewDate, hour);
-                        }}
-                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                  
-                  {/* Timetable classes */}
-                  {timetableClassesForSlot.length > 0 && !isHolidayDate && !isInsetDayDate && (
-                    <div className="space-y-1 mb-2">
-                      {timetableClassesForSlot.map((tClass, idx) => (
-                        <div 
-                          key={idx}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingTimetableClass(tClass);
-                            setShowTimetableBuilder(true);
-                          }}
-                          className="text-sm p-1 rounded cursor-pointer hover:opacity-80 transition-opacity group"
-                          style={{ 
-                            backgroundColor: `${tClass.color}10`,
-                            color: tClass.color,
-                            borderLeft: `3px solid ${tClass.color}`
-                          }}
-                          title="Click to edit timetable entry"
-                        >
-                          <div className="font-medium flex items-center justify-between">
-                            <span>{tClass.className}</span>
-                            <Edit3 className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
-                          <div className="text-xs">{tClass.startTime} - {tClass.endTime}</div>
-                          {tClass.location && (
-                            <div className="text-xs">{tClass.location}</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* Lesson plans */}
-                  {plansForTimeSlot.length > 0 && !isHolidayDate && !isInsetDayDate && (
-                    <div className="space-y-1">
-                      {plansForTimeSlot.map((plan, idx) => {
-                        // Get the unit color if this plan is part of a unit
-                        const unitColor = plan.unitId 
-                          ? units.find(u => u.id === plan.unitId)?.color || theme.primary
-                          : theme.primary;
-                        
-                        return (
-                          <div 
-                            key={idx}
-                            className="text-sm p-1 rounded"
-                            style={{
-                              backgroundColor: `${unitColor}10`,
-                              color: unitColor,
-                              borderLeft: `3px solid ${unitColor}`
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedDateWithPlans({date: dayViewDate, plans: [plan]});
-                              setIsLessonSummaryOpen(true);
-                            }}
-                          >
-                            <div className="font-medium">{plan.title || `Lesson ${plan.lessonNumber || ''}`}</div>
-                            <div className="text-xs">{plan.time} ({plan.duration} mins)</div>
-                            {plan.lessonNumber && (
-                              <div className="text-xs">Lesson {plan.lessonNumber}</div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  
-                  {/* Empty state */}
-                  {timetableClassesForSlot.length === 0 && plansForTimeSlot.length === 0 && !isHolidayDate && !isInsetDayDate && (
-                    <div className="flex items-center justify-center h-12 text-gray-400">
-                      <Plus className="h-5 w-5" />
-                    </div>
-                  )}
-                  
-                  {/* Holiday or Inset Day Indicator */}
-                  {(isHolidayDate || isInsetDayDate) && (
-                    <div className="flex items-center justify-center h-12">
-                      <div className={`text-sm px-2 py-1 rounded ${
-                        isHolidayDate ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'
-                      }`}>
-                        {isHolidayDate ? 'Holiday' : 'Inset Day'}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {dayViewHours.map(hour => (
+              <DayTimeSlot
+                key={hour}
+                date={dayViewDate}
+                hour={hour}
+                dayOfWeek={dayOfWeek}
+                getLessonPlansForDate={getLessonPlansForDate}
+                isHoliday={isHoliday}
+                isInsetDay={isInsetDay}
+                timetableClasses={timetableClasses || []}
+                getWeekNumber={getWeekNumber}
+                className={className}
+                onUpdateLessonPlan={onUpdateLessonPlan}
+                handleTimeSlotClick={handleTimeSlotClick}
+                units={units}
+                theme={theme}
+                setSelectedDateWithPlans={setSelectedDateWithPlans}
+                setIsLessonSummaryOpen={setIsLessonSummaryOpen}
+              />
+            ))}
           </div>
         </div>
       </div>

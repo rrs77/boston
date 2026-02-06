@@ -95,7 +95,7 @@ interface SettingsContextType {
   deleteYearGroup: (yearGroupId: string) => Promise<void>;
   forceSyncYearGroups: () => Promise<YearGroup[] | null>;
   cleanupDuplicates: () => Promise<void>;
-  forceSyncToSupabase: () => Promise<boolean>;
+  forceSyncToSupabase: (override?: { categories?: Category[]; yearGroups?: YearGroup[] }) => Promise<boolean>;
   forceRefreshFromSupabase: () => Promise<boolean>;
   forceSyncCurrentYearGroups: () => Promise<boolean>;
   forceSafariSync: () => Promise<boolean>;
@@ -209,6 +209,18 @@ const FIXED_CATEGORIES: Category[] = [
     position: 14,
     yearGroups: {}, // Empty - must be explicitly assigned in settings
   },
+  {
+    name: 'Drama Games',
+    color: '#8b5cf6',
+    position: 15,
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
+  },
+  {
+    name: 'Vocal Warmups',
+    color: '#ec4899',
+    position: 16,
+    yearGroups: {}, // Empty - must be explicitly assigned in settings
+  },
 ];
 
 // Default settings
@@ -291,7 +303,7 @@ export const useSettings = () => {
       deleteYearGroup: async () => {},
       forceSyncYearGroups: async () => null,
       cleanupDuplicates: async () => {},
-      forceSyncToSupabase: async () => false,
+      forceSyncToSupabase: async (_override?) => false,
       forceRefreshFromSupabase: async () => false,
       forceSyncCurrentYearGroups: async () => false,
       forceSafariSync: async () => false,
@@ -521,17 +533,32 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
       console.error('Failed to load settings:', error);
     }
 
-    // Load any saved categories from localStorage
+    // Load any saved categories from localStorage (merge in any missing FIXED_CATEGORIES so new options like Drama Games, Vocal Warmups appear)
     try {
       const savedCategories = localStorage.getItem('saved-categories');
       if (savedCategories) {
         const parsed = JSON.parse(savedCategories);
-        if (Array.isArray(parsed) && parsed.length > FIXED_CATEGORIES.length) {
-          console.log(
-            '📦 Loading saved categories from localStorage:',
-            parsed.length
-          );
-          setCategories(parsed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const deletedCats = new Set<string>();
+          try {
+            const deletedStr = localStorage.getItem('deleted-fixed-categories');
+            if (deletedStr) {
+              const arr = JSON.parse(deletedStr);
+              if (Array.isArray(arr)) arr.forEach((n: string) => deletedCats.add(n));
+            }
+          } catch (_) {}
+          const namesInSaved = new Set(parsed.map((c: any) => c.name));
+          const missingFixed = FIXED_CATEGORIES.filter(f => !namesInSaved.has(f.name) && !deletedCats.has(f.name));
+          const merged = missingFixed.length > 0
+            ? (() => {
+                const combined = [...parsed];
+                missingFixed.forEach(f => combined.push({ ...f }));
+                combined.sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0));
+                return combined;
+              })()
+            : parsed;
+          setCategories(merged);
+          console.log('📦 Loading saved categories from localStorage:', merged.length, missingFixed.length ? `(added ${missingFixed.map(c => c.name).join(', ')})` : '');
         }
       }
       
@@ -760,12 +787,18 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
               };
             });
             
-            // Use categories from Supabase directly - no longer force FIXED_CATEGORIES
-            // If Supabase has categories, use those. Only use FIXED_CATEGORIES as initial defaults.
+            // Use categories from Supabase; merge in any FIXED_CATEGORIES that are missing (e.g. new categories like Drama Games, Vocal Warmups)
             if (formattedCategories.length > 0) {
-              setCategories(formattedCategories);
-              console.log('📦 Loaded categories from Supabase:', formattedCategories.length, 'categories');
-              console.log('📦 Category groups mapping:', formattedCategories.map(cat => ({ name: cat.name, groups: cat.groups })));
+              const namesInSupabase = new Set(formattedCategories.map(c => c.name));
+              const missingFixed = FIXED_CATEGORIES.filter(f => !namesInSupabase.has(f.name) && !deletedFixedCategories.has(f.name));
+              const merged = [...formattedCategories];
+              if (missingFixed.length > 0) {
+                missingFixed.forEach(f => merged.push({ ...f }));
+                merged.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+                console.log('📦 Merged missing fixed categories:', missingFixed.map(c => c.name));
+              }
+              setCategories(merged);
+              console.log('📦 Loaded categories from Supabase:', merged.length, 'categories');
             } else {
               // No categories in Supabase, use FIXED_CATEGORIES as defaults (excluding deleted ones)
               const activeFixed = FIXED_CATEGORIES.filter(fixed => !deletedFixedCategories.has(fixed.name));
@@ -858,9 +891,19 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
                   }
                 }
                 
-                // Use the full categories from localStorage
-                setCategories(localCategories);
-                console.log('📦 Using categories from localStorage:', localCategories.length);
+                // Use categories from localStorage; merge in any missing FIXED_CATEGORIES (e.g. Drama Games, Vocal Warmups)
+                const namesInLocal = new Set(localCategories.map((c: any) => c.name));
+                const missingFixed = FIXED_CATEGORIES.filter(f => !namesInLocal.has(f.name) && !deletedFixedCategories.has(f.name));
+                const merged = missingFixed.length > 0
+                  ? (() => {
+                      const combined = [...localCategories];
+                      missingFixed.forEach(f => combined.push({ ...f }));
+                      combined.sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0));
+                      return combined;
+                    })()
+                  : localCategories;
+                setCategories(merged);
+                console.log('📦 Using categories from localStorage:', merged.length, missingFixed.length ? `(merged ${missingFixed.length} missing: ${missingFixed.map(c => c.name).join(', ')})` : '');
               } catch (error) {
                 console.warn('Failed to parse localStorage categories:', error);
                 const activeFixed = FIXED_CATEGORIES.filter(fixed => !deletedFixedCategories.has(fixed.name));
@@ -1108,6 +1151,23 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
       }
     };
   }, []);
+
+  // Ensure Drama Games and Vocal Warmups (and any new FIXED_CATEGORIES) are always in the list when Categories tab is used
+  const REQUIRED_FIXED_NAMES = ['Drama Games', 'Vocal Warmups'];
+  useEffect(() => {
+    const names = new Set(categories.map(c => c.name));
+    const missing = REQUIRED_FIXED_NAMES.filter(
+      name => !names.has(name) && !deletedFixedCategories.has(name)
+    );
+    if (missing.length === 0) return;
+    const toAdd = FIXED_CATEGORIES.filter(f => missing.includes(f.name));
+    if (toAdd.length === 0) return;
+    const merged = [...categories];
+    toAdd.forEach(f => merged.push({ ...f }));
+    merged.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    setCategories(merged);
+    console.log('📦 Ensured missing categories in list:', missing.join(', '));
+  }, [categories, deletedFixedCategories]);
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
@@ -1695,18 +1755,21 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
     };
   };
 
-  // Manual sync function to force save to Supabase
-  const forceSyncToSupabase = async () => {
+  // Manual sync function to force save to Supabase.
+  // Optional override: when provided (e.g. from Save Settings), sync that data so it persists immediately.
+  // Uses same filter as categories useEffect: include fixed categories that have year group assignments.
+  const forceSyncToSupabase = async (override?: { categories?: Category[]; yearGroups?: YearGroup[] }) => {
     if (!isSupabaseConfigured()) {
       console.warn('⚠️ Supabase not configured, cannot sync');
       return false;
     }
 
     try {
-      console.log('🔄 Force syncing settings to Supabase...');
+      const categoriesToSync = override?.categories ?? categories;
+      const yearGroupsToSync = override?.yearGroups ?? customYearGroups;
+      console.log('🔄 Force syncing settings to Supabase...', { categoriesCount: categoriesToSync.length, yearGroupsCount: yearGroupsToSync.length });
       
-      // Sync year groups
-      const yearGroupsSuccess = await yearGroupsApi.upsert(customYearGroups)
+      const yearGroupsSuccess = await yearGroupsApi.upsert(yearGroupsToSync)
         .then(() => {
           console.log('✅ Year groups synced to Supabase');
           return true;
@@ -1716,25 +1779,32 @@ export const SettingsProviderNew: React.FC<{ children: React.ReactNode }> = ({
           return false;
         });
 
-      // Sync categories
-      const customCategories = categories.filter(cat => 
-        !FIXED_CATEGORIES.some(fixed => fixed.name === cat.name)
-      );
+      // Same filter as categories useEffect: save custom OR with group assignments OR with year group assignments (including fixed categories like Welcome, Kodaly Songs)
+      const categoriesToSave = categoriesToSync.filter(cat => {
+        const isCustom = !FIXED_CATEGORIES.some(fixed => fixed.name === cat.name);
+        const hasGroupAssignments = (cat.groups && cat.groups.length > 0) || cat.group;
+        const hasYearGroupAssignments = cat.yearGroups && Object.keys(cat.yearGroups).length > 0 && 
+          Object.values(cat.yearGroups).some(v => v === true);
+        return isCustom || hasGroupAssignments || hasYearGroupAssignments;
+      });
       
       let categoriesSuccess = true;
-      if (customCategories.length > 0) {
-        const categoriesForSupabase = customCategories.map(cat => ({
+      if (categoriesToSave.length > 0) {
+        const categoriesForSupabase = categoriesToSave.map(cat => ({
           name: cat.name,
           color: cat.color,
           position: cat.position,
-          group: cat.group,                    // Single group (backward compatibility)
-          groups: cat.groups || [],           // Multiple groups
-          yearGroups: cat.yearGroups          // Correct field name
+          group: cat.group,
+          groups: cat.groups || [],
+          yearGroups: typeof cat.yearGroups === 'object' && cat.yearGroups !== null && !Array.isArray(cat.yearGroups) ? cat.yearGroups : {}
         }));
-        
+        const withYearGroups = categoriesForSupabase.filter(c => c.yearGroups && Object.keys(c.yearGroups).length > 0 && Object.values(c.yearGroups).some(v => v === true));
+        if (override?.categories && withYearGroups.length > 0) {
+          console.log('📤 Syncing categories with year group assignments:', withYearGroups.length, withYearGroups.map(c => ({ name: c.name, yearGroups: c.yearGroups })));
+        }
         categoriesSuccess = await customCategoriesApi.upsert(categoriesForSupabase)
           .then(() => {
-            console.log('✅ Categories synced to Supabase');
+            console.log('✅ Categories synced to Supabase', categoriesForSupabase.length);
             return true;
           })
           .catch(error => {

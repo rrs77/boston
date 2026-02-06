@@ -126,6 +126,11 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
   const [tempSettings, setTempSettings] = useState(settings);
   const [tempCategories, setTempCategories] = useState(categories);
   const [tempYearGroups, setTempYearGroups] = useState(customYearGroups);
+  // Refs hold the latest categories/year groups so Save uses current values (avoids stale closure when user toggles then clicks Save)
+  const tempCategoriesRef = useRef(categories);
+  const tempYearGroupsRef = useRef(customYearGroups);
+  tempCategoriesRef.current = tempCategories;
+  tempYearGroupsRef.current = tempYearGroups;
   const [tempResourceLinks, setTempResourceLinks] = useState(resourceLinks);
   const [activeTab, setActiveTab] = useState<'yeargroups' | 'categories' | 'purchases' | 'manage-packs' | 'data' | 'admin' | 'resource-links'>('yeargroups');
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
@@ -213,14 +218,18 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
       alert('View-only mode: Cannot save settings.');
       return;
     }
+    // Use refs so we always save the latest state (avoids stale closure if user toggled year groups then clicked Save)
+    const latestCategories = tempCategoriesRef.current;
+    const latestYearGroups = tempYearGroupsRef.current;
     try {
       console.log('🔄 Saving all settings...');
-      console.log('📋 Current tempCategories:', tempCategories.map(cat => ({ 
+      console.log('📋 Latest categories (with yearGroups):', latestCategories.map(cat => ({ 
         name: cat.name, 
         groups: cat.groups, 
-        group: cat.group 
+        group: cat.group,
+        yearGroups: cat.yearGroups 
       })));
-      console.log('📋 Current tempYearGroups:', tempYearGroups.map(group => ({
+      console.log('📋 Latest year groups:', latestYearGroups.map(group => ({
         id: group.id,
         name: group.name,
         color: group.color
@@ -229,30 +238,25 @@ export function UserSettings({ isOpen, onClose }: UserSettingsProps) {
       // Save settings (this doesn't need to be async as it's just local state)
     updateSettings(tempSettings);
       
-      // Save categories and year groups
+      // Save categories and year groups to state
       console.log('🔄 Saving categories and year groups...');
+      updateCategories(latestCategories);
+      updateYearGroups(latestYearGroups);
       
-      // Update the state (this will trigger the useEffect hooks that save to Supabase)
-    updateCategories(tempCategories);
-    updateYearGroups(tempYearGroups);
+      // Push to Supabase immediately so category year group assignments persist
+      const synced = await forceSyncToSupabase({ categories: latestCategories, yearGroups: latestYearGroups });
+      if (!synced) {
+        console.warn('⚠️ Supabase sync returned false - queue may still save shortly');
+      }
       
-      // Wait a moment for the async saves to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Show success message
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000); // Hide after 3 seconds
       
       console.log('✅ All settings saved successfully');
-      
-      // Don't close the modal - let users continue making changes
     } catch (error: unknown) {
       console.error('❌ Failed to save settings:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      const err = error as Error;
+      console.error('❌ Error details:', { message: err?.message, stack: err?.stack, name: err?.name });
       alert('Failed to save settings. Please try again.');
     }
   };
@@ -1616,6 +1620,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                               [yearGroupKey]: e.target.checked
                                             }
                                           };
+                                          tempCategoriesRef.current = updatedCategories;
                                           setTempCategories(updatedCategories);
                                           updateCategories(updatedCategories);
                                         }}
@@ -1669,6 +1674,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                                   [yearGroupKey]: e.target.checked
                                                 }
                                           };
+                                          tempCategoriesRef.current = updatedCategories;
                                           setTempCategories(updatedCategories);
                                           updateCategories(updatedCategories);
                                         }}
@@ -1686,6 +1692,7 @@ This action CANNOT be undone. Are you absolutely sure you want to continue?`;
                                             ...updatedCategories[index], 
                                             yearGroups: {} // Clear all year group assignments
                                           };
+                                          tempCategoriesRef.current = updatedCategories;
                                           setTempCategories(updatedCategories);
                                           updateCategories(updatedCategories);
                                         }}

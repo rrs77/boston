@@ -1113,6 +1113,21 @@ export const yearGroupsApi = {
   }
 };
 
+// Normalise year_groups from DB (can be object or string from JSONB)
+function normaliseYearGroups(raw: any): Record<string, boolean> {
+  if (raw == null) return {};
+  if (typeof raw === 'object' && !Array.isArray(raw)) return raw as Record<string, boolean>;
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
 // API endpoints for custom categories
 // Supabase/Postgres use snake_case (year_groups); app uses camelCase (yearGroups)
 export const customCategoriesApi = {
@@ -1131,7 +1146,7 @@ export const customCategoriesApi = {
         position: row.position,
         group: row.group ?? row.group_name,
         groups: row.groups ?? [],
-        yearGroups: row.year_groups ?? {}
+        yearGroups: normaliseYearGroups(row.year_groups)
       }));
     } catch (error) {
       console.warn('Failed to get custom categories from Supabase:', error);
@@ -1141,20 +1156,27 @@ export const customCategoriesApi = {
 
   upsert: async (categories: any[]) => {
     try {
-      const rows = categories.map((cat: any) => ({
-        name: cat.name,
-        color: cat.color,
-        position: cat.position,
-        group_name: cat.group,
-        groups: cat.groups ?? [],
-        year_groups: cat.yearGroups ?? {}
-      }));
+      const rows = categories.map((cat: any) => {
+        const yearGroups = cat.yearGroups ?? {};
+        const yearGroupsObj = typeof yearGroups === 'object' && !Array.isArray(yearGroups) ? yearGroups : {};
+        return {
+          name: cat.name,
+          color: cat.color,
+          position: cat.position,
+          group_name: cat.group,
+          groups: cat.groups ?? [],
+          year_groups: yearGroupsObj
+        };
+      });
       const { data, error } = await supabase
         .from(TABLES.CUSTOM_CATEGORIES)
         .upsert(rows, { onConflict: 'name' })
         .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase custom_categories upsert error:', error.message, error.details);
+        throw error;
+      }
       const result = data || [];
       return result.map((row: any) => ({
         name: row.name,
@@ -1162,7 +1184,7 @@ export const customCategoriesApi = {
         position: row.position,
         group: row.group ?? row.group_name,
         groups: row.groups ?? [],
-        yearGroups: row.year_groups ?? {}
+        yearGroups: normaliseYearGroups(row.year_groups)
       }));
     } catch (error) {
       console.warn('Failed to upsert custom categories to Supabase:', error);
